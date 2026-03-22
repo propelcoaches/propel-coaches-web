@@ -91,10 +91,10 @@ export default function Sidebar({ userEmail, isDemo }: { userEmail?: string | nu
         <div className="flex items-center gap-3 mb-4">
           <img
             src={theme === 'dark' ? '/logo/icon-dark.png' : '/logo/icon-light.png'}
-            alt="BC Coaching"
+            alt="CB Coaching"
             className="w-8 h-8 object-contain flex-shrink-0"
           />
-          <span className="font-semibold text-sm leading-tight">BC Coaching</span>
+          <span className="font-semibold text-sm leading-tight">CB Coaching</span>
         </div>
         {isDemo && (
           <div className="px-2 py-1.5 bg-white/20 border border-white/30 rounded-md text-white text-[10px] font-semibold text-center">

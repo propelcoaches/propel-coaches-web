@@ -38,7 +38,7 @@ export default function LoginPage() {
             <div className="bg-[#2B2B2B] rounded-xl p-6 flex justify-center">
               <img
                 src="/logo/full-dark.png"
-                alt="BC Coaching"
+                alt="CB Coaching"
                 style={{ width: 180, height: 'auto' }}
               />
             </div>
