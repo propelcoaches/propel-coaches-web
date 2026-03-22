@@ -1,10 +1,39 @@
 'use client'
 
-import { useState, KeyboardEvent } from 'react'
-import { User, Bell, Shield, CreditCard, Palette, ChevronRight, Bot, X } from 'lucide-react'
+import { useState, KeyboardEvent, useEffect } from 'react'
+import { User, Bell, Shield, CreditCard, Palette, ChevronRight, Bot, X, Dumbbell, UtensilsCrossed, ClipboardCheck, HeartPulse, ListTodo, BookOpen, MessageSquare, TrendingUp } from 'lucide-react'
 import clsx from 'clsx'
+import { createClient } from '@/lib/supabase/client'
+
+interface ClientFeatures {
+  training: boolean
+  nutrition: boolean
+  check_ins: boolean
+  habits: boolean
+  tasks: boolean
+  resources: boolean
+  messaging: boolean
+  progress: boolean
+}
+
+const FEATURES_DISPLAY = [
+  { key: 'training' as const, label: 'Training / Workouts', icon: Dumbbell },
+  { key: 'nutrition' as const, label: 'Nutrition Plans', icon: UtensilsCrossed },
+  { key: 'check_ins' as const, label: 'Check-ins', icon: ClipboardCheck },
+  { key: 'habits' as const, label: 'Habits', icon: HeartPulse },
+  { key: 'tasks' as const, label: 'Tasks', icon: ListTodo },
+  { key: 'resources' as const, label: 'Resources', icon: BookOpen },
+  { key: 'messaging' as const, label: 'Messaging', icon: MessageSquare },
+  { key: 'progress' as const, label: 'Progress Tracking', icon: TrendingUp },
+]
 
 const SECTIONS = [
+  {
+    id: 'client_access',
+    label: 'Client Access',
+    icon: Shield,
+    description: 'Control which features your clients can access',
+  },
   {
     id: 'profile',
     label: 'Profile',
@@ -46,7 +75,7 @@ function inputCls() {
 }
 
 export default function SettingsPage() {
-  const [activeSection, setActiveSection] = useState('profile')
+  const [activeSection, setActiveSection] = useState('client_access')
   const [saved, setSaved] = useState(false)
   const [toggles, setToggles] = useState<Record<string, boolean>>({
     'Client logs a workout': true,
@@ -54,12 +83,70 @@ export default function SettingsPage() {
     "Client hasn't logged in": false,
   })
 
+  // Client Access state
+  const [clientFeatures, setClientFeatures] = useState<ClientFeatures>({
+    training: true,
+    nutrition: true,
+    check_ins: true,
+    habits: true,
+    tasks: true,
+    resources: true,
+    messaging: true,
+    progress: true,
+  })
+  const [profession, setProfession] = useState<string | null>(null)
+  const [featuresSaving, setFeaturesSaving] = useState(false)
+  const [featuresSaved, setFeaturesSaved] = useState(false)
+  const [featuresLoading, setFeaturesLoading] = useState(true)
+
   // AI Voice state
   const [aiProfileBio, setAiProfileBio] = useState('')
   const [toneKeywords, setToneKeywords] = useState<string[]>(['direct', 'encouraging'])
   const [tagInput, setTagInput] = useState('')
   const [aiSaving, setAiSaving] = useState(false)
   const [aiSaved, setAiSaved] = useState(false)
+
+  // Load client features on mount
+  useEffect(() => {
+    const loadFeatures = async () => {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('client_features, profession')
+          .eq('id', user.id)
+          .single()
+        if (data?.client_features) {
+          setClientFeatures(data.client_features)
+        }
+        if (data?.profession) {
+          setProfession(data.profession)
+        }
+      }
+      setFeaturesLoading(false)
+    }
+    loadFeatures()
+  }, [])
+
+  function toggleFeature(key: keyof ClientFeatures) {
+    setClientFeatures((prev) => ({ ...prev, [key]: !prev[key] }))
+  }
+
+  async function handleFeaturesSave() {
+    setFeaturesSaving(true)
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      await supabase
+        .from('profiles')
+        .update({ client_features: clientFeatures })
+        .eq('id', user.id)
+    }
+    setFeaturesSaving(false)
+    setFeaturesSaved(true)
+    setTimeout(() => setFeaturesSaved(false), 2000)
+  }
 
   function handleSave() {
     setSaved(true)
@@ -128,7 +215,81 @@ export default function SettingsPage() {
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          {section && activeSection !== 'ai_voice' && (
+          {section && activeSection === 'client_access' && (
+            <div className="bg-surface border border-cb-border rounded-xl p-6">
+              <div className="mb-6">
+                <h2 className="text-base font-semibold text-cb-text">{section.label}</h2>
+                <p className="text-sm text-cb-muted mt-0.5">{section.description}</p>
+              </div>
+
+              {profession && (
+                <div className="mb-6 p-4 bg-surface-light rounded-lg border border-cb-border">
+                  <p className="text-xs font-medium text-cb-secondary mb-1">Profession</p>
+                  <p className="text-sm text-cb-text capitalize">{profession.replace(/_/g, ' ')}</p>
+                </div>
+              )}
+
+              {featuresLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="w-4 h-4 border-2 border-cb-border border-t-brand rounded-full animate-spin" />
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    {FEATURES_DISPLAY.map(({ key, label, icon: Icon }) => (
+                      <div
+                        key={key}
+                        onClick={() => toggleFeature(key)}
+                        className={`p-4 rounded-lg border-2 cursor-pointer transition-colors ${
+                          clientFeatures[key]
+                            ? 'border-brand bg-brand/10'
+                            : 'border-cb-border bg-surface-light'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-3 flex-1">
+                            <Icon
+                              size={20}
+                              className={clientFeatures[key] ? 'text-brand' : 'text-cb-muted'}
+                            />
+                            <span className="text-sm font-medium text-cb-text">{label}</span>
+                          </div>
+                          <div
+                            className={`relative w-10 h-5.5 rounded-full transition-colors flex-shrink-0 mt-0.5 ${
+                              clientFeatures[key] ? 'bg-brand' : 'bg-cb-border'
+                            }`}
+                            style={{ height: '22px', width: '40px' }}
+                          >
+                            <span
+                              className={`absolute top-0.5 w-4.5 h-4.5 rounded-full bg-white shadow transition-transform ${
+                                clientFeatures[key] ? 'translate-x-5' : 'translate-x-0.5'
+                              }`}
+                              style={{ width: '18px', height: '18px' }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={handleFeaturesSave}
+                      disabled={featuresSaving}
+                      className="flex items-center gap-2 px-5 py-2 bg-brand hover:bg-brand/90 disabled:opacity-60 text-white text-sm font-medium rounded-lg transition-colors"
+                    >
+                      {featuresSaving && (
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      )}
+                      {featuresSaved ? 'Saved!' : 'Save Changes'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {section && activeSection !== 'ai_voice' && activeSection !== 'client_access' && (
             <div className="bg-surface border border-cb-border rounded-xl p-6">
               <div className="mb-6">
                 <h2 className="text-base font-semibold text-cb-text">{section.label}</h2>
