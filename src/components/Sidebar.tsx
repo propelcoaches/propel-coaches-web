@@ -18,17 +18,47 @@ import {
   Bell,
   MessageSquare,
   ClipboardCheck,
+  HeartPulse,
+  BookOpen,
+  ListTodo,
 } from 'lucide-react'
 
-const NAV_ITEMS = [
-  { href: '/dashboard',       label: 'Dashboard',      icon: LayoutDashboard },
-  { href: '/clients',         label: 'Clients',        icon: Users },
-  { href: '/messages',        label: 'Messages',       icon: MessageSquare },
-  { href: '/check-ins',       label: 'Check-ins',      icon: ClipboardCheck },
-  { href: '/training',        label: 'Programs',       icon: Dumbbell },
-  { href: '/nutrition',       label: 'Nutrition',      icon: UtensilsCrossed },
-  { href: '/notifications',   label: 'Notifications',  icon: Bell },
-  { href: '/settings',        label: 'Settings',       icon: Settings },
+type NavSection = {
+  label?: string
+  items: Array<{ href: string; label: string; icon: React.ComponentType<any> }>
+}
+
+const NAV_SECTIONS: NavSection[] = [
+  {
+    items: [
+      { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    ],
+  },
+  {
+    label: 'CLIENTS',
+    items: [
+      { href: '/clients', label: 'Clients', icon: Users },
+      { href: '/messages', label: 'Messages', icon: MessageSquare },
+      { href: '/check-ins', label: 'Check-ins', icon: ClipboardCheck },
+    ],
+  },
+  {
+    label: 'COACHING',
+    items: [
+      { href: '/training', label: 'Programs', icon: Dumbbell },
+      { href: '/nutrition', label: 'Nutrition', icon: UtensilsCrossed },
+      { href: '/habits', label: 'Habits', icon: HeartPulse },
+      { href: '/resources', label: 'Resources', icon: BookOpen },
+      { href: '/tasks', label: 'Tasks', icon: ListTodo },
+    ],
+  },
+  {
+    label: 'BUSINESS',
+    items: [
+      { href: '/notifications', label: 'Notifications', icon: Bell },
+      { href: '/settings', label: 'Settings', icon: Settings },
+    ],
+  },
 ]
 
 export default function Sidebar({ userEmail, isDemo }: { userEmail?: string | null; isDemo?: boolean }) {
@@ -55,55 +85,66 @@ export default function Sidebar({ userEmail, isDemo }: { userEmail?: string | nu
   const initials = userEmail ? userEmail.slice(0, 2).toUpperCase() : 'CB'
 
   return (
-    <aside className="w-56 flex-shrink-0 bg-surface border-r border-cb-border flex flex-col h-screen">
-      {/* Logo */}
-      <div className="px-5 py-5 border-b border-cb-border">
-        <div className="flex items-center gap-3">
+    <aside className="w-[220px] flex-shrink-0 bg-surface border-r border-cb-border flex flex-col h-screen">
+      {/* Gradient Header */}
+      <div className="bg-gradient-to-b from-brand to-brand-light px-5 py-5 text-white">
+        <div className="flex items-center gap-3 mb-4">
           <img
             src={theme === 'dark' ? '/logo/icon-dark.png' : '/logo/icon-light.png'}
             alt="BC Coaching"
             className="w-8 h-8 object-contain flex-shrink-0"
           />
-          <span className="font-semibold text-cb-text text-sm leading-tight">BC Coaching</span>
+          <span className="font-semibold text-sm leading-tight">BC Coaching</span>
         </div>
         {isDemo && (
-          <div className="mt-3 px-2 py-1 bg-amber-500/10 border border-amber-500/20 rounded-md text-amber-500 text-[11px] font-medium text-center">
+          <div className="px-2 py-1.5 bg-white/20 border border-white/30 rounded-md text-white text-[10px] font-semibold text-center">
             Demo Mode
           </div>
         )}
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-5">
-        <ul className="space-y-1">
-          {NAV_ITEMS.map((item) => {
-            const Icon = item.icon
-            const active = isActive(item.href)
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className={clsx(
-                    'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                    active
-                      ? 'bg-brand/10 text-brand'
-                      : 'text-cb-secondary hover:bg-surface-light hover:text-cb-text'
-                  )}
-                >
-                  <Icon
-                    size={17}
-                    className={clsx('flex-shrink-0', active ? 'text-brand' : 'text-cb-muted')}
-                  />
-                  {item.label}
-                </Link>
-              </li>
-            )
-          })}
-        </ul>
+      <nav className="flex-1 py-6 px-3 overflow-y-auto">
+        <div className="space-y-6">
+          {NAV_SECTIONS.map((section, idx) => (
+            <div key={idx}>
+              {section.label && (
+                <div className="section-label">
+                  {section.label}
+                </div>
+              )}
+              <ul className="space-y-1">
+                {section.items.map((item) => {
+                  const Icon = item.icon
+                  const active = isActive(item.href)
+                  return (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        className={clsx(
+                          'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                          active
+                            ? 'bg-brand text-white'
+                            : 'text-cb-secondary hover:bg-surface-light hover:text-cb-text'
+                        )}
+                      >
+                        <Icon
+                          size={16}
+                          className="flex-shrink-0"
+                        />
+                        <span className="truncate">{item.label}</span>
+                      </Link>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          ))}
+        </div>
       </nav>
 
       {/* User footer */}
-      <div className="px-3 pb-4 pt-3 border-t border-cb-border space-y-1">
+      <div className="px-3 py-4 border-t border-cb-border space-y-2">
         <div className="flex items-center gap-2.5 px-3 py-2">
           <div className="w-7 h-7 rounded-full bg-brand/10 border border-brand/20 flex items-center justify-center flex-shrink-0">
             <span className="text-xs font-semibold text-brand">{initials}</span>
@@ -119,10 +160,10 @@ export default function Sidebar({ userEmail, isDemo }: { userEmail?: string | nu
         </div>
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-cb-secondary hover:bg-surface-light hover:text-cb-text transition-colors"
+          className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-sm text-cb-secondary hover:bg-surface-light hover:text-cb-text transition-colors"
         >
-          <LogOut size={15} className="text-cb-muted" />
-          {isDemo ? 'Exit Demo' : 'Sign out'}
+          <LogOut size={15} className="text-cb-muted flex-shrink-0" />
+          <span className="truncate">{isDemo ? 'Exit Demo' : 'Sign out'}</span>
         </button>
       </div>
     </aside>

@@ -11,6 +11,10 @@ const config: Config = {
         bg: 'var(--background)',
         surface: 'var(--surface)',
         'surface-light': 'var(--surface-light)',
+        'surface-elevated': 'var(--surface-elevated)',
+        border: 'var(--border)',
+        'border-light': 'var(--border-light)',
+        text: 'var(--text)',
         cb: {
           border: 'var(--border)',
           teal: 'var(--brand)',
