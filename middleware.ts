@@ -6,7 +6,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
   const pathname = request.nextUrl.pathname
-  if (pathname.startsWith('/auth') || pathname.startsWith('/client-onboarding')) {
+  // Public routes — no auth required
+  if (
+    pathname === '/' ||
+    pathname.startsWith('/auth') ||
+    pathname.startsWith('/client-onboarding')
+  ) {
     return NextResponse.next()
   }
   return await updateSession(request)
