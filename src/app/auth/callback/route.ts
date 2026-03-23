@@ -55,14 +55,17 @@ export async function GET(request: NextRequest) {
 
   // No invitation found — create a minimal profile using user metadata if available
   const metadata = user.user_metadata ?? {}
+  const role = metadata.role ?? 'client'
   await supabase.from('profiles').upsert({
     id: user.id,
-    role: metadata.role ?? 'client',
-    name: metadata.name ?? null,
+    role,
+    name: metadata.full_name ?? metadata.name ?? null,
     email: user.email,
     coach_id: metadata.coach_id ?? null,
     onboarding_completed: false,
   })
 
-  return NextResponse.redirect(`${origin}/`)
+  // Coaches go to their dashboard (middleware will redirect to /onboarding if needed)
+  // Clients with no invitation go to the landing page
+  return NextResponse.redirect(`${origin}${role === 'coach' ? '/dashboard' : '/'}`)
 }
