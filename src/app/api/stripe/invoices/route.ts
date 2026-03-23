@@ -1,86 +1,88 @@
-import { NextResponse } from 'next/server';
-import Stripe from 'stripe';
+import { NextResponse } from 'next/server'
+import { stripeGet, stripePost } from '@/lib/stripe'
 
 export async function GET(request: Request) {
-  const key = process.env.STRIPE_SECRET_KEY;
-  if (!key) return NextResponse.json({ error: 'no_key' }, { status: 200 });
+  if (!process.env.STRIPE_SECRET_KEY) return NextResponse.json({ error: 'no_key' })
 
-  const { searchParams } = new URL(request.url);
-  const action = searchParams.get('action');
-  const invoiceId = searchParams.get('id');
+  const { searchParams } = new URL(request.url)
+  const action = searchParams.get('action')
+  const invoiceId = searchParams.get('id')
 
   try {
-    const stripe = new Stripe(key, { apiVersion: '2024-06-20' });
-
     if (action === 'send' && invoiceId) {
-      await stripe.invoices.sendInvoice(invoiceId);
-      return NextResponse.json({ success: true });
+      await stripePost(`/invoices/${invoiceId}/send`, {})
+      return NextResponse.json({ success: true })
     }
 
-    const invoices = await stripe.invoices.list({ limit: 50, expand: ['data.customer'] });
-
-    const data = invoices.data.map(inv => ({
+    const data = await stripeGet('/invoices', { limit: '50', expand: 'data.customer' })
+    const invoices = (data.data ?? []).map((inv: {
+      id: string; number: string | null; amount_due: number; amount_paid: number
+      currency: string; status: string | null
+      customer: { name?: string; email?: string } | null
+      due_date: number | null; created: number
+      hosted_invoice_url: string | null; invoice_pdf: string | null
+      description: string | null; lines: { data: { description: string }[] }
+    }) => ({
       id: inv.id,
       number: inv.number,
       amount: (inv.amount_due ?? 0) / 100,
       amountPaid: (inv.amount_paid ?? 0) / 100,
       currency: (inv.currency ?? 'aud').toUpperCase(),
       status: inv.status,
-      customerName: (inv.customer as Stripe.Customer)?.name ?? 'Unknown',
-      customerEmail: (inv.customer as Stripe.Customer)?.email ?? '',
+      customerName: inv.customer?.name ?? 'Unknown',
+      customerEmail: inv.customer?.email ?? '',
       dueDate: inv.due_date,
       created: inv.created,
       hostedUrl: inv.hosted_invoice_url,
       pdfUrl: inv.invoice_pdf,
       description: inv.description ?? inv.lines?.data?.[0]?.description ?? '',
-    }));
-
-    return NextResponse.json({ invoices: data });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    }))
+    return NextResponse.json({ invoices })
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Unknown error'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
 
 export async function POST(request: Request) {
-  const key = process.env.STRIPE_SECRET_KEY;
-  if (!key) return NextResponse.json({ error: 'no_key' }, { status: 200 });
+  if (!process.env.STRIPE_SECRET_KEY) return NextResponse.json({ error: 'no_key' })
 
   try {
-    const stripe = new Stripe(key, { apiVersion: '2024-06-20' });
-    const body = await request.json();
+    const body = await request.json()
 
     // Find or create customer
-    let customer: Stripe.Customer;
-    const existingCustomers = await stripe.customers.list({ email: body.email, limit: 1 });
-    if (existingCustomers.data.length > 0) {
-      customer = existingCustomers.data[0];
+    const existing = await stripeGet('/customers', { email: body.email, limit: '1' })
+    let customerId: string
+    if (existing.data?.length > 0) {
+      customerId = existing.data[0].id
     } else {
-      customer = await stripe.customers.create({ name: body.name, email: body.email });
+      const customer = await stripePost('/customers', { name: body.name, email: body.email })
+      customerId = customer.id
     }
 
     // Create invoice
-    const invoice = await stripe.invoices.create({
-      customer: customer.id,
-      description: body.description,
-      due_date: body.dueDate ? Math.floor(new Date(body.dueDate).getTime() / 1000) : undefined,
+    const invoiceBody: Record<string, string> = {
+      customer: customerId,
       collection_method: 'send_invoice',
-      days_until_due: body.dueDate ? undefined : 7,
-    });
+      days_until_due: '7',
+    }
+    if (body.description) invoiceBody.description = body.description
+    const invoice = await stripePost('/invoices', invoiceBody)
 
     // Add line item
-    await stripe.invoiceItems.create({
-      customer: customer.id,
+    await stripePost('/invoiceitems', {
+      customer: customerId,
       invoice: invoice.id,
-      amount: Math.round(body.amount * 100),
+      amount: String(Math.round(body.amount * 100)),
       currency: 'aud',
-      description: body.description,
-    });
+      description: body.description ?? 'Coaching services',
+    })
 
     // Finalize
-    const finalised = await stripe.invoices.finalizeInvoice(invoice.id);
-
-    return NextResponse.json({ invoice: finalised });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    const finalised = await stripePost(`/invoices/${invoice.id}/finalize`, {})
+    return NextResponse.json({ invoice: finalised })
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Unknown error'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

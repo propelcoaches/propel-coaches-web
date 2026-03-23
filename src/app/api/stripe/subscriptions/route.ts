@@ -1,22 +1,21 @@
-import { NextResponse } from 'next/server';
-import Stripe from 'stripe';
+import { NextResponse } from 'next/server'
+import { stripeGet } from '@/lib/stripe'
 
 export async function GET() {
-  const key = process.env.STRIPE_SECRET_KEY;
-  if (!key) return NextResponse.json({ error: 'no_key' }, { status: 200 });
+  if (!process.env.STRIPE_SECRET_KEY) return NextResponse.json({ error: 'no_key' })
 
   try {
-    const stripe = new Stripe(key, { apiVersion: '2024-06-20' });
-    const subscriptions = await stripe.subscriptions.list({
-      limit: 50,
-      expand: ['data.customer', 'data.default_payment_method'],
-    });
-
-    const data = subscriptions.data.map(sub => ({
+    const data = await stripeGet('/subscriptions', { limit: '50', status: 'active', expand: 'data.customer' })
+    const subscriptions = (data.data ?? []).map((sub: {
+      id: string; status: string
+      customer: { name?: string; email?: string } | null
+      items: { data: { price: { nickname: string | null; id: string; unit_amount: number; currency: string; recurring: { interval: string } } }[] }
+      current_period_end: number; cancel_at_period_end: boolean; created: number
+    }) => ({
       id: sub.id,
       status: sub.status,
-      customerName: (sub.customer as Stripe.Customer)?.name ?? 'Unknown',
-      customerEmail: (sub.customer as Stripe.Customer)?.email ?? '',
+      customerName: sub.customer?.name ?? 'Unknown',
+      customerEmail: sub.customer?.email ?? '',
       plan: sub.items.data[0]?.price?.nickname ?? sub.items.data[0]?.price?.id ?? 'Plan',
       amount: (sub.items.data[0]?.price?.unit_amount ?? 0) / 100,
       currency: (sub.items.data[0]?.price?.currency ?? 'aud').toUpperCase(),
@@ -24,10 +23,10 @@ export async function GET() {
       currentPeriodEnd: sub.current_period_end,
       cancelAtPeriodEnd: sub.cancel_at_period_end,
       created: sub.created,
-    }));
-
-    return NextResponse.json({ subscriptions: data });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    }))
+    return NextResponse.json({ subscriptions })
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Unknown error'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
