@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
 
     // Send the invite email via Supabase Auth
     const { error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(clientEmail, {
-      redirectTo: `${siteUrl}/auth/callback`,
+      redirectTo: `${siteUrl}/auth/confirm`,
       data: {
         name: clientName,
         role: 'client',
