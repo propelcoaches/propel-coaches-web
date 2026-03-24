@@ -12,12 +12,39 @@ const GOAL_OPTIONS = [
 ]
 
 export default function ClientOnboardingPage() {
+  const [step, setStep] = useState<'password' | 'details'>('password')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [settingPassword, setSettingPassword] = useState(false)
   const [goal, setGoal] = useState('')
   const [trainingDays, setTrainingDays] = useState(3)
   const [injuries, setInjuries] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
+
+  async function handleSetPassword(e: React.FormEvent) {
+    e.preventDefault()
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters.')
+      return
+    }
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.')
+      return
+    }
+    setSettingPassword(true)
+    setError(null)
+    const supabase = createClient()
+    const { error: updateError } = await supabase.auth.updateUser({ password })
+    if (updateError) {
+      setError(updateError.message)
+      setSettingPassword(false)
+      return
+    }
+    setStep('details')
+    setSettingPassword(false)
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -101,12 +128,63 @@ export default function ClientOnboardingPage() {
     )
   }
 
+  if (step === 'password') {
+    return (
+      <div className="min-h-screen bg-bg flex items-center justify-center p-4">
+        <div className="bg-surface border border-cb-border rounded-2xl p-8 w-full max-w-md shadow-lg">
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-cb-text mb-1">Create your password 🔒</h1>
+            <p className="text-cb-muted text-sm">You'll use this to log into the app on your phone.</p>
+          </div>
+          <form onSubmit={handleSetPassword} className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-cb-text mb-2">Password</label>
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="At least 8 characters"
+                className="w-full px-3 py-2 border border-cb-border rounded-lg text-sm text-cb-text placeholder-cb-muted bg-surface focus:outline-none focus:ring-2 focus:ring-cb-teal"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-cb-text mb-2">Confirm Password</label>
+              <input
+                type="password"
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Re-enter your password"
+                className="w-full px-3 py-2 border border-cb-border rounded-lg text-sm text-cb-text placeholder-cb-muted bg-surface focus:outline-none focus:ring-2 focus:ring-cb-teal"
+              />
+            </div>
+            {error && (
+              <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2">
+                <p className="text-sm text-red-500">{error}</p>
+              </div>
+            )}
+            <button
+              type="submit"
+              disabled={settingPassword}
+              className="w-full bg-cb-teal hover:bg-cb-teal/90 disabled:bg-cb-teal/50 text-white font-semibold py-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors"
+            >
+              {settingPassword ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : 'Continue'}
+            </button>
+          </form>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-bg flex items-center justify-center p-4">
       <div className="bg-surface border border-cb-border rounded-2xl p-8 w-full max-w-md shadow-lg">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-cb-text mb-1">
-            Welcome to Charles Bettiol Coaching! 👋
+            Welcome to Propel! 👋
           </h1>
           <p className="text-cb-muted text-sm">
             Let's get a few details to personalise your program.
