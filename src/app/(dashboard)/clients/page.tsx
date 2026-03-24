@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Profile, ClientInvitation } from '@/lib/types'
 import Link from 'next/link'
 import { format } from 'date-fns'
-import { Users, UserPlus, Search, X, ChevronRight } from 'lucide-react'
+import { Users, UserPlus, Search, X, ChevronRight, Trash2 } from 'lucide-react'
 import { useIsDemo } from '@/lib/demo/useDemoMode'
 import { DEMO_CLIENTS } from '@/lib/demo/mockData'
 
@@ -26,6 +26,8 @@ export default function ClientsPage() {
   const [inviting, setInviting] = useState(false)
   const [inviteError, setInviteError] = useState<string | null>(null)
   const [inviteSuccess, setInviteSuccess] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<{ type: 'client' | 'invitation'; id: string; name: string } | null>(null)
 
   useEffect(() => {
     loadData()
@@ -104,6 +106,25 @@ export default function ClientsPage() {
     setInviting(false)
     loadData()
     setTimeout(() => { setInviteSuccess(false); setShowInviteModal(false) }, 1500)
+  }
+
+  async function handleDeleteClient(clientId: string) {
+    setDeletingId(clientId)
+    const res = await fetch(`/api/clients/${clientId}/delete`, { method: 'DELETE' })
+    if (res.ok) {
+      setClients((prev) => prev.filter((c) => c.id !== clientId))
+    }
+    setDeletingId(null)
+    setConfirmDelete(null)
+  }
+
+  async function handleDeleteInvitation(invId: string) {
+    setDeletingId(invId)
+    const supabase = createClient()
+    await supabase.from('client_invitations').delete().eq('id', invId)
+    setInvitations((prev) => prev.filter((i) => i.id !== invId))
+    setDeletingId(null)
+    setConfirmDelete(null)
   }
 
   const filtered = clients.filter((c) => {
@@ -275,13 +296,21 @@ export default function ClientsPage() {
                     )}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <Link
-                      href={`/clients/${client.id}`}
-                      className="inline-flex items-center gap-1 text-sm text-cb-teal hover:text-cb-teal/80 font-medium"
-                    >
-                      View
-                      <ChevronRight size={14} />
-                    </Link>
+                    <div className="flex items-center justify-end gap-3">
+                      <Link
+                        href={`/clients/${client.id}`}
+                        className="inline-flex items-center gap-1 text-sm text-cb-teal hover:text-cb-teal/80 font-medium"
+                      >
+                        View
+                        <ChevronRight size={14} />
+                      </Link>
+                      <button
+                        onClick={() => setConfirmDelete({ type: 'client', id: client.id, name: client.name ?? 'this client' })}
+                        className="text-cb-muted hover:text-cb-danger transition-colors"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -303,6 +332,7 @@ export default function ClientsPage() {
                   <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-4 py-3">Goal</th>
                   <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-4 py-3">Sent</th>
                   <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-4 py-3">Status</th>
+                  <th className="px-4 py-3" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-cb-border">
@@ -317,10 +347,45 @@ export default function ClientsPage() {
                         Pending
                       </span>
                     </td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        onClick={() => setConfirmDelete({ type: 'invitation', id: inv.id, name: inv.client_name })}
+                        className="text-cb-muted hover:text-cb-danger transition-colors"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Delete Modal */}
+      {confirmDelete && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-surface rounded-xl border border-cb-border shadow-xl w-full max-w-sm p-6">
+            <h2 className="text-lg font-semibold text-cb-text mb-2">Remove {confirmDelete.type === 'client' ? 'Client' : 'Invitation'}?</h2>
+            <p className="text-sm text-cb-secondary mb-6">
+              Are you sure you want to remove <strong>{confirmDelete.name}</strong>? This cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmDelete(null)}
+                className="flex-1 px-4 py-2 border border-cb-border rounded-md text-sm font-medium text-cb-secondary hover:bg-surface-light"
+              >
+                Cancel
+              </button>
+              <button
+                disabled={deletingId === confirmDelete.id}
+                onClick={() => confirmDelete.type === 'client' ? handleDeleteClient(confirmDelete.id) : handleDeleteInvitation(confirmDelete.id)}
+                className="flex-1 px-4 py-2 bg-cb-danger hover:bg-cb-danger/90 disabled:opacity-50 text-white rounded-md text-sm font-medium"
+              >
+                {deletingId === confirmDelete.id ? 'Removing…' : 'Remove'}
+              </button>
+            </div>
           </div>
         </div>
       )}
