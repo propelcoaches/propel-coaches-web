@@ -7,7 +7,7 @@ import {
   WorkoutDay, MacroTargets, FoodLog, ProgressPhoto, PersonalRecord, MealPlan,
 } from '@/lib/types'
 import { format, differenceInDays, addDays, startOfWeek } from 'date-fns'
-import { ArrowLeft, Pin, Plus, Save, ChevronDown, ChevronUp, Edit2, Check, X, Dumbbell, UtensilsCrossed, Sparkles, ChevronLeft, ChevronRight, Bot } from 'lucide-react'
+import { ArrowLeft, Pin, Plus, Save, ChevronDown, ChevronUp, Edit2, Check, X, Dumbbell, UtensilsCrossed, Sparkles, ChevronLeft, ChevronRight, Bot, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import clsx from 'clsx'
@@ -117,6 +117,59 @@ export default function ClientDetailPage() {
   const [aiDurationDays, setAiDurationDays] = useState(7)
   const [aiLoading, setAiLoading] = useState(false)
   const [aiError, setAiError] = useState<string | null>(null)
+
+  // Manual creation modals
+  const [showManualProgramModal, setShowManualProgramModal] = useState(false)
+  const [showManualMealPlanModal, setShowManualMealPlanModal] = useState(false)
+
+  const handleSaveManualProgram = async (data: {
+    name: string; description: string; goal: string
+    programType: 'fixed' | 'calendar'; weeks: number; daysPerWeek: number
+  }) => {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    const { data: newProg, error } = await supabase.from('workout_programs').insert({
+      client_id: clientId,
+      coach_id: user?.id ?? null,
+      name: data.name,
+      description: data.description || null,
+      goal: data.goal || null,
+      weeks: data.weeks,
+      current_week: 1,
+      days_per_week: data.daysPerWeek,
+      is_active: true,
+      ai_generated: false,
+      coach_approved: true,
+    }).select().single()
+    if (!error && newProg) {
+      setPrograms(prev => [newProg as WorkoutProgram, ...prev])
+      setShowManualProgramModal(false)
+    }
+  }
+
+  const handleSaveManualMealPlan = async (data: {
+    name: string; description: string; planType: 'meal' | 'macros'
+    calories: string; protein: string; carbs: string; fat: string
+  }) => {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    const { data: newPlan, error } = await supabase.from('meal_plans').insert({
+      client_id: clientId,
+      coach_id: user?.id ?? '',
+      name: data.name,
+      description: data.description || null,
+      plan_type: data.planType,
+      calories_target: parseInt(data.calories) || null,
+      protein_target: parseInt(data.protein) || null,
+      carbs_target: parseInt(data.carbs) || null,
+      fats_target: parseInt(data.fat) || null,
+      is_template: false,
+    }).select().single()
+    if (!error && newPlan) {
+      setMealPlans(prev => [newPlan as MealPlan, ...prev])
+      setShowManualMealPlanModal(false)
+    }
+  }
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -849,12 +902,15 @@ export default function ClientDetailPage() {
                 <Save size={12} /> Save as Program
               </button>
               <div className="flex items-center gap-2">
-                <button className="flex items-center gap-1.5 px-3 py-1.5 border border-cb-teal/50 text-cb-teal hover:bg-cb-teal/10 rounded-xl text-xs font-medium transition-colors">
+                <Link href="/training" className="flex items-center gap-1.5 px-3 py-1.5 border border-cb-teal/50 text-cb-teal hover:bg-cb-teal/10 rounded-xl text-xs font-medium transition-colors">
                   <Sparkles size={12} /> AI Generate
-                </button>
-                <Link href="/training" className="flex items-center gap-1.5 px-3 py-1.5 bg-cb-teal hover:bg-cb-teal/90 text-white rounded-xl text-xs font-medium transition-colors">
-                  <Plus size={12} /> Create Program
                 </Link>
+                <button
+                  onClick={() => setShowManualProgramModal(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-cb-teal hover:bg-cb-teal/90 text-white rounded-xl text-xs font-medium transition-colors"
+                >
+                  <Plus size={12} /> Create Program
+                </button>
               </div>
               <div className="flex rounded-xl border border-cb-border overflow-hidden">
                 {([1, 2, 4] as const).map((w) => (
@@ -1077,12 +1133,15 @@ export default function ClientDetailPage() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-sm font-semibold text-cb-text">Meal Plans</h2>
               <div className="flex items-center gap-2">
-                <button className="flex items-center gap-1.5 px-3 py-1.5 border border-cb-teal/50 text-cb-teal hover:bg-cb-teal/10 rounded-xl text-xs font-medium transition-colors">
+                <Link href="/nutrition" className="flex items-center gap-1.5 px-3 py-1.5 border border-cb-teal/50 text-cb-teal hover:bg-cb-teal/10 rounded-xl text-xs font-medium transition-colors">
                   <Sparkles size={12} /> AI Generate
-                </button>
-                <Link href="/nutrition" className="flex items-center gap-1.5 px-3 py-1.5 bg-cb-teal hover:bg-cb-teal/90 text-white rounded-xl text-xs font-medium transition-colors">
-                  <Plus size={12} /> Create Plan
                 </Link>
+                <button
+                  onClick={() => setShowManualMealPlanModal(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-cb-teal hover:bg-cb-teal/90 text-white rounded-xl text-xs font-medium transition-colors"
+                >
+                  <Plus size={12} /> Create Plan
+                </button>
               </div>
             </div>
             {mealPlans.length === 0 ? (
@@ -1412,6 +1471,292 @@ export default function ClientDetailPage() {
           </div>
         </div>
       )}
+
+      {/* ── Manual Program Modal ────────────────────────────────────── */}
+      {showManualProgramModal && (
+        <ManualProgramModal
+          clientName={client?.name ?? client?.email ?? 'this client'}
+          onClose={() => setShowManualProgramModal(false)}
+          onSave={handleSaveManualProgram}
+        />
+      )}
+
+      {/* ── Manual Meal Plan Modal ──────────────────────────────────── */}
+      {showManualMealPlanModal && (
+        <ManualMealPlanModal
+          clientName={client?.name ?? client?.email ?? 'this client'}
+          onClose={() => setShowManualMealPlanModal(false)}
+          onSave={handleSaveManualMealPlan}
+        />
+      )}
+    </div>
+  )
+}
+
+// ── ManualProgramModal ─────────────────────────────────────────────────────────
+
+function ManualProgramModal({
+  clientName,
+  onClose,
+  onSave,
+}: {
+  clientName: string
+  onClose: () => void
+  onSave: (data: { name: string; description: string; goal: string; programType: 'fixed' | 'calendar'; weeks: number; daysPerWeek: number }) => Promise<void>
+}) {
+  const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
+  const [goal, setGoal] = useState('')
+  const [programType, setProgramType] = useState<'fixed' | 'calendar'>('fixed')
+  const [weeks, setWeeks] = useState(8)
+  const [daysPerWeek, setDaysPerWeek] = useState(4)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleSubmit() {
+    if (!name.trim()) return
+    setSaving(true)
+    setError(null)
+    try {
+      await onSave({ name: name.trim(), description, goal, programType, weeks, daysPerWeek })
+    } catch {
+      setError('Failed to save program. Please try again.')
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="bg-surface border border-cb-border rounded-2xl w-full max-w-lg shadow-2xl">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-cb-border">
+          <div>
+            <h2 className="text-base font-semibold text-cb-text">New Workout Program</h2>
+            <p className="text-xs text-cb-muted mt-0.5">For {clientName}</p>
+          </div>
+          <button onClick={onClose} className="text-cb-muted hover:text-cb-secondary"><X size={18} /></button>
+        </div>
+        <div className="px-5 py-4 space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-cb-muted mb-1">Program Name *</label>
+            <input
+              autoFocus
+              type="text"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              placeholder="e.g. Hypertrophy Block A"
+              className="w-full px-3 py-2 bg-surface-light border border-cb-border rounded-lg text-sm text-cb-text placeholder-cb-muted focus:outline-none focus:ring-2 focus:ring-cb-teal"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-cb-muted mb-1">Goal</label>
+            <select
+              value={goal}
+              onChange={e => setGoal(e.target.value)}
+              className="w-full px-3 py-2 bg-surface-light border border-cb-border rounded-lg text-sm text-cb-text focus:outline-none focus:ring-2 focus:ring-cb-teal"
+            >
+              <option value="">— Select a goal —</option>
+              {['Hypertrophy', 'Strength', 'Fat Loss', 'Athletic Performance', 'General Fitness', 'Rehabilitation', 'Endurance'].map(g => (
+                <option key={g} value={g}>{g}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-cb-muted mb-1">Description</label>
+            <textarea
+              rows={2}
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              placeholder="Brief overview of the program…"
+              className="w-full px-3 py-2 bg-surface-light border border-cb-border rounded-lg text-sm text-cb-text placeholder-cb-muted focus:outline-none focus:ring-2 focus:ring-cb-teal resize-none"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-cb-muted mb-2">Program Type</label>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { value: 'fixed', label: 'Fixed', desc: 'Repeating weekly structure (e.g. Upper / Lower).' },
+                { value: 'calendar', label: 'Calendar', desc: 'Workouts on specific calendar dates.' },
+              ].map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => setProgramType(opt.value as 'fixed' | 'calendar')}
+                  className={clsx(
+                    'text-left p-3 rounded-lg border transition-colors',
+                    programType === opt.value ? 'border-cb-teal bg-cb-teal/10' : 'border-cb-border bg-surface-light hover:border-cb-teal/50'
+                  )}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className={clsx('w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center', programType === opt.value ? 'border-cb-teal' : 'border-cb-muted')}>
+                      {programType === opt.value && <div className="w-1.5 h-1.5 rounded-full bg-cb-teal" />}
+                    </div>
+                    <span className="text-sm font-medium text-cb-text">{opt.label}</span>
+                  </div>
+                  <p className="text-xs text-cb-muted leading-relaxed">{opt.desc}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-cb-muted mb-1">Duration (weeks)</label>
+              <input
+                type="number" min={1} max={52} value={weeks}
+                onChange={e => setWeeks(Math.max(1, parseInt(e.target.value) || 1))}
+                className="w-full px-3 py-2 bg-surface-light border border-cb-border rounded-lg text-sm text-cb-text focus:outline-none focus:ring-2 focus:ring-cb-teal"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-cb-muted mb-1">Days per Week</label>
+              <input
+                type="number" min={1} max={7} value={daysPerWeek}
+                onChange={e => setDaysPerWeek(Math.min(7, Math.max(1, parseInt(e.target.value) || 1)))}
+                className="w-full px-3 py-2 bg-surface-light border border-cb-border rounded-lg text-sm text-cb-text focus:outline-none focus:ring-2 focus:ring-cb-teal"
+              />
+            </div>
+          </div>
+          {error && <p className="text-xs text-cb-danger">{error}</p>}
+        </div>
+        <div className="flex gap-2 px-5 pb-5">
+          <button onClick={onClose} className="flex-1 bg-surface-light border border-cb-border rounded-lg py-2 text-sm text-cb-secondary hover:border-cb-muted transition-colors">Cancel</button>
+          <button
+            onClick={handleSubmit}
+            disabled={!name.trim() || saving}
+            className="flex-1 bg-cb-teal text-white rounded-lg py-2 text-sm font-medium hover:bg-cb-teal/90 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+          >
+            {saving && <Loader2 size={14} className="animate-spin" />}
+            {saving ? 'Creating…' : 'Create Program'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── ManualMealPlanModal ────────────────────────────────────────────────────────
+
+function ManualMealPlanModal({
+  clientName,
+  onClose,
+  onSave,
+}: {
+  clientName: string
+  onClose: () => void
+  onSave: (data: { name: string; description: string; planType: 'meal' | 'macros'; calories: string; protein: string; carbs: string; fat: string }) => Promise<void>
+}) {
+  const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
+  const [planType, setPlanType] = useState<'meal' | 'macros'>('meal')
+  const [calories, setCalories] = useState('')
+  const [protein, setProtein] = useState('')
+  const [carbs, setCarbs] = useState('')
+  const [fat, setFat] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleSubmit() {
+    if (!name.trim()) return
+    setSaving(true)
+    setError(null)
+    try {
+      await onSave({ name: name.trim(), description, planType, calories, protein, carbs, fat })
+    } catch {
+      setError('Failed to save meal plan. Please try again.')
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="bg-surface border border-cb-border rounded-2xl w-full max-w-md shadow-2xl">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-cb-border">
+          <div>
+            <h2 className="text-base font-semibold text-cb-text">New Meal Plan</h2>
+            <p className="text-xs text-cb-muted mt-0.5">For {clientName}</p>
+          </div>
+          <button onClick={onClose} className="text-cb-muted hover:text-cb-secondary"><X size={18} /></button>
+        </div>
+        <div className="px-5 py-4 space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-cb-muted mb-1">Plan Name *</label>
+            <input
+              autoFocus
+              type="text"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              placeholder="e.g. Lean Bulk Phase 1"
+              className="w-full px-3 py-2 bg-surface-light border border-cb-border rounded-lg text-sm text-cb-text placeholder-cb-muted focus:outline-none focus:ring-2 focus:ring-cb-teal"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-cb-muted mb-2">Plan Type</label>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { value: 'meal', label: 'Full Meal Plan', desc: 'Specify meals, foods, and portions for each day.' },
+                { value: 'macros', label: 'Macros Only', desc: 'Set daily macro targets without prescribing specific meals.' },
+              ].map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => setPlanType(opt.value as 'meal' | 'macros')}
+                  className={clsx(
+                    'text-left p-3 rounded-lg border transition-colors',
+                    planType === opt.value ? 'border-cb-teal bg-cb-teal/10' : 'border-cb-border bg-surface-light hover:border-cb-teal/50'
+                  )}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className={clsx('w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center', planType === opt.value ? 'border-cb-teal' : 'border-cb-muted')}>
+                      {planType === opt.value && <div className="w-1.5 h-1.5 rounded-full bg-cb-teal" />}
+                    </div>
+                    <span className="text-sm font-medium text-cb-text">{opt.label}</span>
+                  </div>
+                  <p className="text-xs text-cb-muted leading-relaxed">{opt.desc}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-cb-muted mb-1">Notes / Instructions</label>
+            <textarea
+              rows={2}
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              placeholder="Any notes for this plan…"
+              className="w-full px-3 py-2 bg-surface-light border border-cb-border rounded-lg text-sm text-cb-text placeholder-cb-muted focus:outline-none focus:ring-2 focus:ring-cb-teal resize-none"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-cb-muted mb-2">Daily Targets</label>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: 'Calories (kcal)', value: calories, set: setCalories, placeholder: '2000' },
+                { label: 'Protein (g)', value: protein, set: setProtein, placeholder: '150' },
+                { label: 'Carbs (g)', value: carbs, set: setCarbs, placeholder: '200' },
+                { label: 'Fat (g)', value: fat, set: setFat, placeholder: '65' },
+              ].map(({ label, value, set, placeholder }) => (
+                <div key={label}>
+                  <label className="block text-xs text-cb-muted mb-1">{label}</label>
+                  <input
+                    type="number" min={0} value={value} placeholder={placeholder}
+                    onChange={e => set(e.target.value)}
+                    className="w-full px-3 py-2 bg-surface-light border border-cb-border rounded-lg text-sm text-cb-text placeholder-cb-muted focus:outline-none focus:ring-2 focus:ring-cb-teal"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+          {error && <p className="text-xs text-cb-danger">{error}</p>}
+        </div>
+        <div className="flex gap-2 px-5 pb-5">
+          <button onClick={onClose} className="flex-1 bg-surface-light border border-cb-border rounded-lg py-2 text-sm text-cb-secondary hover:border-cb-muted transition-colors">Cancel</button>
+          <button
+            onClick={handleSubmit}
+            disabled={!name.trim() || saving}
+            className="flex-1 bg-cb-teal text-white rounded-lg py-2 text-sm font-medium hover:bg-cb-teal/90 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+          >
+            {saving && <Loader2 size={14} className="animate-spin" />}
+            {saving ? 'Creating…' : 'Create Plan'}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
