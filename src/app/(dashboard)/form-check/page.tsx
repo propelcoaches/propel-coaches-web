@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@/lib/supabase/client';
 
 interface FormCheck {
   id: string;
@@ -31,7 +31,7 @@ interface AiAnalysis {
 }
 
 export default function FormCheckPage() {
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
 
   const [formChecks, setFormChecks] = useState<FormCheck[]>([]);
   const [loading, setLoading] = useState(true);

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@/lib/supabase/client';
 
 interface BrandingConfig {
   id?: string;
@@ -57,7 +57,7 @@ const PRESET_COLORS = [
 ];
 
 export default function BrandingPage() {
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const logoInputRef = useRef<HTMLInputElement>(null);
 
   const [config, setConfig] = useState<BrandingConfig>(DEFAULTS);

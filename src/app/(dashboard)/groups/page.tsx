@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@/lib/supabase/client';
 import { RealtimeChannel } from '@supabase/realtime-js';
 
 interface GroupChat {
@@ -49,7 +49,7 @@ interface ClientProfile {
 }
 
 export default function GroupsPage() {
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
 
   // State
   const [groups, setGroups] = useState<GroupChat[]>([]);
