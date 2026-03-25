@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 import OpenAI from 'openai';
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || 'sk-placeholder' });
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || 'sk-placeholder', // apiKey: process.env.OPENAI_API_KEY || 'sk-placeholder' });
 
 export async function POST(req: NextRequest) {
   let parsedFormCheckId: string | undefined;

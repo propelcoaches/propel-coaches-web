@@ -9,7 +9,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder'
 );
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(process.env.RESEND_API_KEY || 're_placeholder');
 
 // This endpoint is called by a cron job every Sunday at 8am
 // Configure in vercel.json: { "crons": [{ "path": "/api/emails/weekly-summary", "schedule": "0 8 * * 0" }] }
