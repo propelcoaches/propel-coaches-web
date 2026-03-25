@@ -21,26 +21,27 @@ export default function RegisterPage() {
     {
       id: 'starter',
       name: 'Starter',
-      price: 29,
+      price: 0,
       description: 'Perfect for getting started',
       features: [
         'Up to 10 clients',
-        'All core features',
-        'AI coach assistant',
-        'Stripe payments',
-        'Email support',
+        'Training programs',
+        'Weekly check-ins',
+        'Nutrition tracking',
+        'Client messaging',
+        'No credit card required',
       ],
       highlighted: false,
     },
     {
       id: 'pro',
       name: 'Pro',
-      price: 59,
+      price: 29,
       description: 'Most popular for growing coaches',
       features: [
         'Unlimited clients',
-        'All core features',
-        'AI coach assistant',
+        'All Starter features',
+        'AI Coach Assistant (24/7)',
         'Custom brand colours & logo',
         'Priority support',
         'Early access to new features',
@@ -48,17 +49,17 @@ export default function RegisterPage() {
       highlighted: true,
     },
     {
-      id: 'clinic',
-      name: 'Clinic',
-      price: 119,
+      id: 'team',
+      name: 'Team',
+      price: 79,
       description: 'For multi-practitioner clinics',
       features: [
         'Unlimited clients',
-        'Up to 5 practitioners',
+        'Up to 5 coaches',
         'All Pro features',
         'Team dashboard',
         'Dedicated onboarding',
-        'Custom contract',
+        'Phone support',
       ],
       highlighted: false,
     },
@@ -368,9 +369,9 @@ export default function RegisterPage() {
 
                       <div className="mb-6">
                         <span className="text-4xl font-bold text-slate-900">
-                          ${plan.price}
+                          {plan.price === 0 ? 'Free' : `£${plan.price}`}
                         </span>
-                        <span className="text-slate-600">/month</span>
+                        {plan.price > 0 && <span className="text-slate-600">/month</span>}
                       </div>
 
                       <button

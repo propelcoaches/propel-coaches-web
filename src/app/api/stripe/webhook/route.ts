@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
+import { sendPaymentFailedEmail } from '@/lib/email';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
 
@@ -127,7 +128,15 @@ export async function POST(request: NextRequest) {
         console.error('Failed to update subscription status to past_due:', updateError);
       }
 
-      // TODO: Send payment failure email notification here
+      // Look up the coach's email and notify them
+      const { data: profile } = await supabaseAdmin
+        .from('profiles')
+        .select('email, full_name')
+        .eq('stripe_customer_id', customerId)
+        .single();
+      if (profile?.email) {
+        await sendPaymentFailedEmail(profile.email, profile.full_name || 'Coach');
+      }
     }
 
     return NextResponse.json({ received: true }, { status: 200 });

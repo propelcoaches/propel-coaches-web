@@ -35,18 +35,14 @@ export default function LoginPage() {
         <div className="bg-surface rounded-xl border border-cb-border shadow-lg p-8">
           {/* Logo */}
           <div className="mb-6 flex justify-center">
-            <div className="bg-[#2B2B2B] rounded-xl p-6 flex justify-center">
-              <img
-                src="/logo/full-dark.png"
-                alt="CB Coaching"
-                style={{ width: 180, height: 'auto' }}
-              />
+            <div className="w-12 h-12 bg-[#0F7B8C] rounded-xl flex items-center justify-center">
+              <span className="text-white font-bold text-xl">P</span>
             </div>
           </div>
 
           <div className="text-center mb-6">
-            <h1 className="text-xl font-bold text-cb-text">Coach Portal</h1>
-            <p className="text-sm text-cb-muted mt-1">Sign in to your dashboard</p>
+            <h1 className="text-xl font-bold text-cb-text">Welcome back</h1>
+            <p className="text-sm text-cb-muted mt-1">Sign in to your Propel dashboard</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -78,6 +74,12 @@ export default function LoginPage() {
                 className="w-full px-3 py-2 border border-cb-border rounded-md text-sm text-cb-text placeholder-cb-muted bg-surface-light focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
                 placeholder="••••••••"
               />
+            </div>
+
+            <div className="flex justify-end">
+              <a href="/forgot-password" className="text-xs text-brand hover:underline">
+                Forgot password?
+              </a>
             </div>
 
             {error && (
@@ -127,7 +129,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-xs text-cb-muted mt-4">
-          Charles Bettiol Coaching &copy; {new Date().getFullYear()}
+          Propel &copy; {new Date().getFullYear()}
         </p>
       </div>
     </div>

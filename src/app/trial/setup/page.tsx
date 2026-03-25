@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Zap, Check, ArrowRight } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
 const PROFESSIONS = [
   { id: 'personal_trainer', label: 'Personal Trainer' },
@@ -77,6 +78,7 @@ export default function TrialSetupPage() {
   const [password, setPassword] = useState('')
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [signupError, setSignupError] = useState('')
 
   const plan = PLAN_DETAILS[planParam as keyof typeof PLAN_DETAILS] || PLAN_DETAILS.pro
 
@@ -87,17 +89,40 @@ export default function TrialSetupPage() {
   }
 
   const handleStep3Submit = async () => {
-    if (!name || !email || !password || !termsAccepted) {
+    if (!name || !email || !password || !termsAccepted) return
+
+    setIsLoading(true)
+    setSignupError('')
+
+    const supabase = createClient()
+
+    // Create Supabase auth account
+    const { data, error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: name } },
+    })
+
+    if (signUpError) {
+      setSignupError(signUpError.message)
+      setIsLoading(false)
       return
     }
 
-    setIsLoading(true)
-    // Simulate account creation
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    // Insert profile row
+    if (data.user) {
+      await supabase.from('profiles').upsert({
+        id: data.user.id,
+        full_name: name,
+        email,
+        profession,
+        plan: planParam,
+        subscription_status: 'trialing',
+        onboarding_completed: false,
+      })
+    }
 
-    // In a real app, this would call an API to create the account
-    // For now, we'll just redirect to the dashboard
-    router.push('/dashboard')
+    router.push('/onboarding')
   }
 
   return (
@@ -308,6 +333,12 @@ export default function TrialSetupPage() {
                 </span>
               </label>
 
+              {signupError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-700">{signupError}</p>
+                </div>
+              )}
+
               <div className="flex gap-3">
                 <button
                   onClick={() => setCurrentStep(2)}
@@ -320,7 +351,12 @@ export default function TrialSetupPage() {
                   disabled={!name || !email || !password || !termsAccepted || isLoading}
                   className="flex-1 bg-[#0F7B8C] hover:bg-[#0d6b7a] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
                 >
-                  {isLoading ? 'Creating account...' : 'Start your free trial'}
+                  {isLoading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Creating account...
+                    </>
+                  ) : 'Start your free trial'}
                 </button>
               </div>
 

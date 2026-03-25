@@ -99,6 +99,15 @@ export default function SettingsPage() {
   const [featuresSaved, setFeaturesSaved] = useState(false)
   const [featuresLoading, setFeaturesLoading] = useState(true)
 
+  // Profile state
+  const [profileData, setProfileData] = useState({ full_name: '', business_name: '', email: '', phone: '', bio: '' })
+  const [profileSaving, setProfileSaving] = useState(false)
+  const [profileSaved, setProfileSaved] = useState(false)
+
+  // Notifications state
+  const [notifSaving, setNotifSaving] = useState(false)
+  const [notifSaved, setNotifSaved] = useState(false)
+
   // AI Voice state
   const [aiProfileBio, setAiProfileBio] = useState('')
   const [toneKeywords, setToneKeywords] = useState<string[]>(['direct', 'encouraging'])
@@ -106,27 +115,35 @@ export default function SettingsPage() {
   const [aiSaving, setAiSaving] = useState(false)
   const [aiSaved, setAiSaved] = useState(false)
 
-  // Load client features on mount
+  // Load all profile data on mount
   useEffect(() => {
-    const loadFeatures = async () => {
+    const loadProfile = async () => {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         const { data } = await supabase
           .from('profiles')
-          .select('client_features, profession')
+          .select('client_features, profession, full_name, business_name, email, phone, bio, ai_coach_style, tone_keywords, notification_prefs')
           .eq('id', user.id)
           .single()
-        if (data?.client_features) {
-          setClientFeatures(data.client_features)
+        if (data?.client_features) setClientFeatures(data.client_features)
+        if (data?.profession) setProfession(data.profession)
+        if (data) {
+          setProfileData({
+            full_name: data.full_name || '',
+            business_name: data.business_name || '',
+            email: data.email || user.email || '',
+            phone: data.phone || '',
+            bio: data.bio || '',
+          })
         }
-        if (data?.profession) {
-          setProfession(data.profession)
-        }
+        if (data?.ai_coach_style) setAiProfileBio(data.ai_coach_style)
+        if (data?.tone_keywords) setToneKeywords(data.tone_keywords)
+        if (data?.notification_prefs) setToggles(data.notification_prefs)
       }
       setFeaturesLoading(false)
     }
-    loadFeatures()
+    loadProfile()
   }, [])
 
   function toggleFeature(key: keyof ClientFeatures) {
@@ -146,6 +163,35 @@ export default function SettingsPage() {
     setFeaturesSaving(false)
     setFeaturesSaved(true)
     setTimeout(() => setFeaturesSaved(false), 2000)
+  }
+
+  async function handleProfileSave() {
+    setProfileSaving(true)
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      await supabase.from('profiles').update({
+        full_name: profileData.full_name,
+        business_name: profileData.business_name,
+        phone: profileData.phone,
+        bio: profileData.bio,
+      }).eq('id', user.id)
+    }
+    setProfileSaving(false)
+    setProfileSaved(true)
+    setTimeout(() => setProfileSaved(false), 2000)
+  }
+
+  async function handleNotifSave() {
+    setNotifSaving(true)
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      await supabase.from('profiles').update({ notification_prefs: toggles }).eq('id', user.id)
+    }
+    setNotifSaving(false)
+    setNotifSaved(true)
+    setTimeout(() => setNotifSaved(false), 2000)
   }
 
   function handleSave() {
@@ -173,7 +219,14 @@ export default function SettingsPage() {
 
   async function handleAiSave() {
     setAiSaving(true)
-    await new Promise((r) => setTimeout(r, 1000))
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      await supabase.from('profiles').update({
+        ai_coach_style: aiProfileBio,
+        tone_keywords: toneKeywords,
+      }).eq('id', user.id)
+    }
     setAiSaving(false)
     setAiSaved(true)
     setTimeout(() => setAiSaved(false), 2000)
@@ -297,16 +350,36 @@ export default function SettingsPage() {
               </div>
 
               <div className="space-y-4">
-                {section.fields?.map((f) => (
-                  <div key={f.label}>
-                    <label className="block text-xs font-medium text-cb-secondary mb-1.5">{f.label}</label>
-                    <input type={f.type} placeholder={f.placeholder} className={inputCls()} />
-                  </div>
-                ))}
+                {section.fields?.map((f) => {
+                  const fieldKey = f.label === 'Full Name' ? 'full_name'
+                    : f.label === 'Business Name' ? 'business_name'
+                    : f.label === 'Email' ? 'email'
+                    : f.label === 'Phone' ? 'phone'
+                    : null
+                  return (
+                    <div key={f.label}>
+                      <label className="block text-xs font-medium text-cb-secondary mb-1.5">{f.label}</label>
+                      <input
+                        type={f.type}
+                        placeholder={f.placeholder}
+                        readOnly={f.label === 'Email'}
+                        value={fieldKey ? profileData[fieldKey as keyof typeof profileData] : ''}
+                        onChange={fieldKey && f.label !== 'Email' ? (e) => setProfileData(p => ({ ...p, [fieldKey]: e.target.value })) : undefined}
+                        className={`${inputCls()} ${f.label === 'Email' ? 'opacity-60 cursor-not-allowed' : ''}`}
+                      />
+                    </div>
+                  )
+                })}
                 {section.textareas?.map((f) => (
                   <div key={f.label}>
                     <label className="block text-xs font-medium text-cb-secondary mb-1.5">{f.label}</label>
-                    <textarea rows={f.rows} placeholder={f.placeholder} className={`${inputCls()} resize-none`} />
+                    <textarea
+                      rows={f.rows}
+                      placeholder={f.placeholder}
+                      value={profileData.bio}
+                      onChange={(e) => setProfileData(p => ({ ...p, bio: e.target.value }))}
+                      className={`${inputCls()} resize-none`}
+                    />
                   </div>
                 ))}
                 {section.toggles?.map((t) => (
@@ -338,10 +411,24 @@ export default function SettingsPage() {
               {section.fields && (
                 <div className="mt-6 flex items-center gap-3">
                   <button
-                    onClick={handleSave}
-                    className="px-5 py-2 bg-brand hover:bg-brand/90 text-white text-sm font-medium rounded-lg transition-colors"
+                    onClick={handleProfileSave}
+                    disabled={profileSaving}
+                    className="flex items-center gap-2 px-5 py-2 bg-brand hover:bg-brand/90 disabled:opacity-60 text-white text-sm font-medium rounded-lg transition-colors"
                   >
-                    {saved ? 'Saved!' : 'Save Changes'}
+                    {profileSaving && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                    {profileSaved ? 'Saved!' : 'Save Changes'}
+                  </button>
+                </div>
+              )}
+              {section.toggles && (
+                <div className="mt-6 flex items-center gap-3">
+                  <button
+                    onClick={handleNotifSave}
+                    disabled={notifSaving}
+                    className="flex items-center gap-2 px-5 py-2 bg-brand hover:bg-brand/90 disabled:opacity-60 text-white text-sm font-medium rounded-lg transition-colors"
+                  >
+                    {notifSaving && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                    {notifSaved ? 'Saved!' : 'Save Changes'}
                   </button>
                 </div>
               )}
