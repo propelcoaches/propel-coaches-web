@@ -2,8 +2,8 @@ import { MealPlan, Task, Autoflow } from '@/lib/types'
 
 export const DEMO_COACH = {
   id: 'demo-coach-1',
-  email: 'demo@charlesbettiolcoaching.com',
-  name: 'Charles Bettiol',
+  email: 'demo@propelcoaches.com',
+  name: 'Demo Coach',
 }
 
 export const DEMO_CLIENTS = [

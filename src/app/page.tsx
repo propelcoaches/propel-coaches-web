@@ -261,7 +261,7 @@ export default function LandingPage() {
               <div className="w-48 bg-gray-50 border-r border-gray-100 p-4 hidden sm:block">
                 <div className="flex items-center gap-2 mb-6">
                   <div className="w-6 h-6 rounded bg-[#0F7B8C] flex items-center justify-center text-white text-[10px] font-bold">P</div>
-                  <span className="text-xs font-bold text-gray-900">CB Coaching</span>
+                  <span className="text-xs font-bold text-gray-900">Propel</span>
                 </div>
                 <nav className="space-y-0.5 text-[11px]">
                   {['Dashboard','Clients','Messages','Check-ins','Coaching','Programs','Nutrition','Habits','Payments'].map((item, i) => (

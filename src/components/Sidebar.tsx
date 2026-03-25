@@ -139,10 +139,10 @@ export default function Sidebar({ userEmail, isDemo }: { userEmail?: string | nu
         <div className="flex items-center gap-2.5">
           <img
             src={theme === 'dark' ? '/logo/icon-dark.png' : '/logo/icon-light.png'}
-            alt="CB Coaching"
+            alt="Propel"
             className="w-7 h-7 object-contain flex-shrink-0"
           />
-          <span className="font-bold text-cb-text text-sm tracking-tight">CB Coaching</span>
+          <span className="font-bold text-cb-text text-sm tracking-tight">Propel</span>
         </div>
         {isDemo && (
           <div className="mt-3 px-2 py-1 bg-amber-50 border border-amber-200 rounded-md text-amber-700 text-[10px] font-semibold text-center dark:bg-amber-500/10 dark:border-amber-500/20 dark:text-amber-400">

@@ -499,7 +499,7 @@ function generatePrintHTML(plan: NutritionPlan): string {
   <div class="doc-header">
     <div>
       <div class="doc-title">Meal Plan</div>
-      <div class="doc-subtitle">Charles Bettiol Coaching</div>
+      <div class="doc-subtitle">Propel</div>
     </div>
     <div class="doc-meta">
       <div><strong>${clientName}</strong></div>
@@ -536,7 +536,7 @@ function generatePrintHTML(plan: NutritionPlan): string {
   ${daysHtml}
 
   <div class="doc-footer">
-    <span>Charles Bettiol Coaching &nbsp;·&nbsp; charlesbettiolcoaching.com</span>
+    <span>Propel &nbsp;·&nbsp; propelcoaches.com</span>
     <span>${planName} &nbsp;·&nbsp; ${dateStr}</span>
   </div>
 </body>

@@ -9,7 +9,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const cookieStore = cookies()
   const isDemo = cookieStore.get('demo_mode')?.value === 'true'
 
-  let userEmail = 'demo@charlesbettiolcoaching.com'
+  let userEmail = 'demo@propelcoaches.com'
 
   if (!isDemo) {
     const supabase = createClient()

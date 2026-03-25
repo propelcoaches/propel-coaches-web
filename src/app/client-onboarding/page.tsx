@@ -57,7 +57,7 @@ export default function ClientOnboardingPage() {
           </div>
           <h2 className="text-xl font-bold text-cb-text mb-2">Password created! 🎉</h2>
           <p className="text-cb-muted text-sm mb-2">
-            Download the <strong className="text-cb-text">CB Coaching</strong> app from TestFlight, then log in with:
+            Download the <strong className="text-cb-text">Propel</strong> app from TestFlight, then log in with:
           </p>
           <div className="bg-surface-light border border-cb-border rounded-lg px-4 py-3 mb-6 text-left">
             <p className="text-xs text-cb-muted mb-1">Your login details</p>

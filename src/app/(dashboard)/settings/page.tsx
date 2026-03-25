@@ -40,8 +40,8 @@ const SECTIONS = [
     icon: User,
     description: 'Your name, bio, and contact details',
     fields: [
-      { label: 'Full Name',          placeholder: 'Charles Bettiol',              type: 'text' },
-      { label: 'Business Name',      placeholder: 'Charles Bettiol Coaching',     type: 'text' },
+      { label: 'Full Name',          placeholder: 'Your Name',                    type: 'text' },
+      { label: 'Business Name',      placeholder: 'Your Business Name',           type: 'text' },
       { label: 'Email',              placeholder: 'coach@example.com',            type: 'email' },
       { label: 'Phone',              placeholder: '+61 400 000 000',              type: 'tel' },
     ],

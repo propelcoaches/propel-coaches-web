@@ -140,7 +140,7 @@ export default function OnboardingPage() {
         {/* Logo */}
         <div className="flex justify-center mb-8">
           <div className="bg-[#2B2B2B] rounded-xl px-8 py-5">
-            <img src="/logo/full-dark.png" alt="CB Coaching" style={{ width: 160, height: 'auto' }} />
+            <img src="/logo/full-dark.png" alt="Propel" style={{ width: 160, height: 'auto' }} />
           </div>
         </div>
 

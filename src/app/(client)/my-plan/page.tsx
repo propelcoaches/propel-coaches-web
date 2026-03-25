@@ -491,7 +491,7 @@ export default function MyPlanPage() {
               <div className="flex-1">
                 <h1 className="text-xl font-bold text-cb-text">{plan.name}</h1>
                 <p className="text-sm text-cb-muted mt-0.5">
-                  Prepared by Coach Charles Bettiol · {plan.days.length} days
+                  Prepared by your coach · {plan.days.length} days
                 </p>
               </div>
               <div className="hidden sm:flex items-center gap-2 text-xs shrink-0">

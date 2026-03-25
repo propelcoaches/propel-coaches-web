@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Zap, Check, ArrowRight } from 'lucide-react'
@@ -65,7 +65,7 @@ const PLAN_DETAILS = {
   },
 }
 
-export default function TrialSetupPage() {
+function TrialSetupContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const planParam = searchParams.get('plan') || 'pro'
@@ -368,5 +368,13 @@ export default function TrialSetupPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function TrialSetupPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-white" />}>
+      <TrialSetupContent />
+    </Suspense>
   )
 }
