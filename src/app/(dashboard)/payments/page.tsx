@@ -564,7 +564,7 @@ export default function PaymentsPage() {
                         className="px-2 py-2 border border-cb-border rounded-lg text-sm text-cb-text bg-surface focus:outline-none focus:ring-2 focus:ring-brand"
                       >
                         <option value="percent">%</option>
-                        <option value="fixed">£</option>
+                        <option value="fixed">$</option>
                       </select>
                     </div>
                   </div>
@@ -628,7 +628,7 @@ export default function PaymentsPage() {
                         </span>
                       </div>
                       <p className="text-xs text-cb-muted mt-0.5">
-                        {promo.discount}{promo.type === 'percent' ? '%' : '£'} off · {durationLabel(promo.duration)} · {promo.uses} uses{promo.maxUses ? ` / ${promo.maxUses}` : ''}
+                        {promo.discount}{promo.type === 'percent' ? '%' : '$'} off · {durationLabel(promo.duration)} · {promo.uses} uses{promo.maxUses ? ` / ${promo.maxUses}` : ''}
                       </p>
                     </div>
                     <div className="flex items-center gap-1">
@@ -671,7 +671,7 @@ export default function PaymentsPage() {
                 <select className="w-full px-3 py-2 border border-cb-border rounded-lg text-sm text-cb-text bg-surface-light focus:outline-none focus:ring-2 focus:ring-brand">
                   <option>AUD - Australian Dollar</option>
                   <option>USD - US Dollar</option>
-                  <option>EUR - Euro</option>
+                  <option>GBP - British Pound</option>
                 </select>
               </div>
               <div>

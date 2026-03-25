@@ -103,7 +103,7 @@ export default function TrialExpiredPage() {
 
                   <div className="flex items-end gap-1 mb-8">
                     <span className={`text-5xl font-black ${plan.highlight ? 'text-white' : 'text-gray-900'}`}>
-                      £{plan.price}
+                      ${plan.price} AUD
                     </span>
                     <span className={`text-sm mb-2 ${plan.highlight ? 'text-white/70' : 'text-gray-500'}`}>
                       {plan.period}

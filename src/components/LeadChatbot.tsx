@@ -13,7 +13,7 @@ interface Message {
 const BOT_RESPONSES = [
   {
     patterns: ['price', 'pricing', 'cost', 'how much', 'plan', 'subscription'],
-    response: "We have three plans! 🎉\n\n**Starter** — Free, up to 5 clients\n**Pro** — £29/mo, up to 30 clients + AI assistant\n**Team** — £79/mo, unlimited clients + up to 5 coaches\n\nAll plans include a 14-day free trial. Want me to walk you through what's included?"
+    response: "We have three plans! 🎉\n\n**Starter** — Free, up to 5 clients\n**Pro** — $29 AUD/mo, up to 30 clients + AI assistant\n**Team** — $79 AUD/mo, unlimited clients + up to 5 coaches\n\nAll plans include a 14-day free trial. Want me to walk you through what's included?"
   },
   {
     patterns: ['free trial', 'trial', 'try', 'test'],

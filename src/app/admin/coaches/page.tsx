@@ -327,7 +327,7 @@ export default function AdminCoachesPage() {
                     </span>
                   </td>
                   <td className="py-4 px-6 text-white font-medium">{coach.clientCount}</td>
-                  <td className="py-4 px-6 text-white font-medium">£{coach.mrrContribution}</td>
+                  <td className="py-4 px-6 text-white font-medium">${coach.mrrContribution} AUD</td>
                   <td className="py-4 px-6 text-gray-400">
                     {format(new Date(coach.lastActive), 'MMM d, yyyy')}
                   </td>

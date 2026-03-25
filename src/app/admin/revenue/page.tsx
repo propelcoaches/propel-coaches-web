@@ -33,12 +33,12 @@ export default function AdminRevenuePage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
           <p className="text-gray-500 text-sm mb-1">Current MRR</p>
-          <p className="text-3xl font-bold text-white">£{latest.mrr.toLocaleString()}</p>
+          <p className="text-3xl font-bold text-white">${latest.mrr.toLocaleString()}</p>
           <p className="text-emerald-400 text-sm mt-1">+{growth}% vs last month</p>
         </div>
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
           <p className="text-gray-500 text-sm mb-1">ARR (projected)</p>
-          <p className="text-3xl font-bold text-white">£{(latest.mrr * 12).toLocaleString()}</p>
+          <p className="text-3xl font-bold text-white">${(latest.mrr * 12).toLocaleString()}</p>
         </div>
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
           <p className="text-gray-500 text-sm mb-1">Net New Coaches (Mar)</p>
@@ -63,15 +63,15 @@ export default function AdminRevenuePage() {
               {PLAN_BREAKDOWN.map((row) => (
                 <tr key={row.plan} className="hover:bg-gray-800/30 transition-colors">
                   <td className="py-4 px-6 font-medium text-white">{row.plan}</td>
-                  <td className="py-4 px-6 text-gray-400">£{row.price}</td>
+                  <td className="py-4 px-6 text-gray-400">${row.price}</td>
                   <td className="py-4 px-6 text-white">{row.coaches}</td>
-                  <td className="py-4 px-6 text-white font-medium">£{row.mrr.toLocaleString()}</td>
+                  <td className="py-4 px-6 text-white font-medium">${row.mrr.toLocaleString()}</td>
                   <td className="py-4 px-6 text-gray-400">{((row.mrr / total_mrr) * 100).toFixed(1)}%</td>
                 </tr>
               ))}
               <tr className="bg-gray-800/30">
                 <td className="py-4 px-6 font-bold text-white" colSpan={3}>Total</td>
-                <td className="py-4 px-6 font-bold text-white">£{total_mrr.toLocaleString()}</td>
+                <td className="py-4 px-6 font-bold text-white">${total_mrr.toLocaleString()}</td>
                 <td className="py-4 px-6 text-gray-400">100%</td>
               </tr>
             </tbody>
@@ -95,7 +95,7 @@ export default function AdminRevenuePage() {
               {[...MONTHLY].reverse().map((row) => (
                 <tr key={row.month} className="hover:bg-gray-800/30 transition-colors">
                   <td className="py-4 px-6 text-gray-300">{row.month}</td>
-                  <td className="py-4 px-6 font-medium text-white">£{row.mrr.toLocaleString()}</td>
+                  <td className="py-4 px-6 font-medium text-white">${row.mrr.toLocaleString()}</td>
                   <td className="py-4 px-6 text-emerald-400">+{row.newCoaches}</td>
                   <td className="py-4 px-6 text-red-400">-{row.churned}</td>
                   <td className="py-4 px-6 text-white font-medium">+{row.net}</td>

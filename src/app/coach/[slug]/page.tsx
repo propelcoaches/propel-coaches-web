@@ -24,21 +24,21 @@ When James isn't coaching, you'll find him training, experimenting with new reci
     services: [
       {
         name: '1:1 Online Coaching',
-        price: '£249',
+        price: '$249 AUD',
         period: '/month',
         description: 'Fully customized training programmes, nutrition coaching, weekly check-ins, and direct messaging access.',
         features: ['Custom workout plans', 'Nutrition coaching', 'Weekly check-ins', 'Direct messaging', 'Progress tracking'],
       },
       {
         name: 'Nutrition Only',
-        price: '£149',
+        price: '$149 AUD',
         period: '/month',
         description: 'If you already have a training programme, James can provide macro targets, meal planning, and nutrition accountability.',
         features: ['Macro targets', 'Meal plan suggestions', 'Weekly check-ins', 'Nutrition guidance', 'Food logging support'],
       },
       {
         name: 'Programme Only',
-        price: '£79',
+        price: '$79 AUD',
         period: '/month',
         description: 'Custom training programme with exercise videos, form cues, and monthly programming adjustments.',
         features: ['Custom workout plans', 'Exercise videos', 'Monthly adjustments', 'Form cues', 'Progress tracking'],

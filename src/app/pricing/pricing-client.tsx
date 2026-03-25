@@ -69,7 +69,7 @@ export default function PricingClient({ plans }: { plans: PricingPlan[] }) {
                 {/* Price */}
                 <div className="flex items-end gap-1 mb-6">
                   <span className="text-5xl font-black text-gray-900">
-                    {plan.price === '0' ? 'Free' : `£${plan.price}`}
+                    {plan.price === '0' ? 'Free' : `$${plan.price} AUD`}
                   </span>
                   {plan.price !== '0' && (
                     <span className="text-sm text-gray-500 mb-2">{plan.period}</span>

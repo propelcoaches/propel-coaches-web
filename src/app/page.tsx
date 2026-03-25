@@ -489,8 +489,8 @@ export default function LandingPage() {
                 <h3 className="text-lg font-bold text-gray-900">{plan.name}</h3>
                 <p className="text-sm text-gray-500 mt-1 mb-4">{plan.desc}</p>
                 <div className="mb-6">
-                  <span className="text-4xl font-extrabold text-gray-900">${plan.price}</span>
-                  <span className="text-gray-400 text-sm">/month</span>
+                  <span className="text-4xl font-extrabold text-gray-900">{plan.price === '0' ? 'Free' : `$${plan.price}`}</span>
+                  {plan.price !== '0' && <span className="text-gray-400 text-sm"> AUD/month</span>}
                 </div>
                 <Link href="/register" className={`block text-center font-bold py-3 px-6 rounded-xl text-sm transition-colors mb-6 ${plan.popular ? 'bg-white text-[#0F7B8C] hover:bg-gray-50 border border-[#0F7B8C]/20' : 'bg-[#0F7B8C] text-white hover:bg-[#0d6b7a]'}`}>
                   {plan.cta}

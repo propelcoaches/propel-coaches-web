@@ -23,7 +23,7 @@ const CLIENT_RANGES = [
 const PLAN_DETAILS = {
   starter: {
     name: 'Starter',
-    price: '£0',
+    price: '$0',
     period: '/month',
     features: [
       'Up to 5 active clients',
@@ -38,7 +38,7 @@ const PLAN_DETAILS = {
   },
   pro: {
     name: 'Pro',
-    price: '£29',
+    price: '$29 AUD',
     period: '/month',
     features: [
       'Up to 30 active clients',
@@ -54,7 +54,7 @@ const PLAN_DETAILS = {
   },
   team: {
     name: 'Team',
-    price: '£79',
+    price: '$79 AUD',
     period: '/month',
     features: [
       'Unlimited active clients',

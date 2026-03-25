@@ -369,7 +369,7 @@ export default function RegisterPage() {
 
                       <div className="mb-6">
                         <span className="text-4xl font-bold text-slate-900">
-                          {plan.price === 0 ? 'Free' : `£${plan.price}`}
+                          {plan.price === 0 ? 'Free' : `$${plan.price} AUD`}
                         </span>
                         {plan.price > 0 && <span className="text-slate-600">/month</span>}
                       </div>
