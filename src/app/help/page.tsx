@@ -34,7 +34,7 @@ const faqItems: FAQItem[] = [
     id: 'free-trial',
     category: 'Account & Billing',
     question: 'How does the 14-day free trial work?',
-    answer: 'Your free trial includes access to all Pro features for 14 days. No credit card is required to start. After the trial ends, you\'ll need to upgrade to a paid plan to continue using Propel.'
+    answer: 'Your free trial includes access to all features for 14 days. A credit card is required to start — you will not be charged until the trial ends. After the trial, you\'ll need to stay on a paid plan to continue using Propel.'
   },
   {
     id: 'upgrade-downgrade',

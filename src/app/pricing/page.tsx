@@ -16,16 +16,15 @@ const PRICING_PLANS = [
     description: 'Perfect for coaches just getting started',
     highlight: false,
     features: [
-      'Up to 10 clients',
-      'Training programs with templates',
-      'Weekly check-ins with photos',
-      'Nutrition tracking',
+      'Up to 5 active clients',
+      'Training program builder',
+      'Weekly check-ins with progress photos',
+      'Nutrition & macro tracking',
       'Habit tracking with streaks',
       'Client messaging',
       'Basic progress metrics',
-      'Email support',
       'iOS & Android apps',
-      'No credit card required',
+      'Email support',
     ],
   },
   {
@@ -36,16 +35,15 @@ const PRICING_PLANS = [
     description: 'For established coaches scaling their business',
     highlight: true,
     features: [
-      'Unlimited clients',
-      'All Starter features',
+      'Up to 30 active clients',
+      'Everything in Starter',
       'AI Coach Assistant (24/7)',
-      'Loom video feedback',
-      'Body fat % tracking',
-      'Custom brand colours & logo',
-      'Advanced progress reports',
-      'Priority support',
+      'Video feedback via Loom',
+      'Body composition tracking',
+      'Custom branding (logo & colours)',
+      'Advanced analytics & reports',
       'Stripe payments built-in',
-      'Early access to new features',
+      'Priority support',
     ],
   },
   {
@@ -56,16 +54,14 @@ const PRICING_PLANS = [
     description: 'For multi-practitioner clinics and teams',
     highlight: false,
     features: [
-      'Unlimited clients',
-      'Up to 5 coaches/practitioners',
-      'All Pro features',
+      'Unlimited active clients',
+      'Up to 5 coaches / practitioners',
+      'Everything in Pro',
       'Team dashboard & permissions',
-      'Shared client library',
-      'Dedicated onboarding call',
-      'Custom contracts template',
-      'Phone support',
+      'Shared exercise & template library',
       'Revenue analytics',
-      'Team activity logs',
+      'Dedicated onboarding call',
+      'Phone support',
     ],
   },
 ]
@@ -73,7 +69,7 @@ const PRICING_PLANS = [
 const FAQ = [
   {
     question: 'Do I need a credit card for the trial?',
-    answer: 'No! Your 14-day free trial requires zero credit card information. You get full access to all features with no strings attached. When your trial ends, you can choose to upgrade to a paid plan.',
+    answer: 'Yes, a credit card is required to start your 14-day free trial. You will not be charged until the trial ends. Cancel anytime before the trial is up and you will not be billed.',
   },
   {
     question: 'What happens after the trial ends?',
@@ -120,7 +116,7 @@ export default function PricingPage() {
       <section className="pt-32 pb-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-5xl md:text-6xl font-black text-gray-900 mb-6">Simple, transparent pricing</h1>
-          <p className="text-xl text-gray-500 mb-8">Start free for 14 days. No credit card required.</p>
+          <p className="text-xl text-gray-500 mb-8">Start free for 14 days. Cancel anytime.</p>
         </div>
       </section>
 
@@ -159,7 +155,7 @@ export default function PricingPage() {
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-4xl font-black text-gray-900 mb-4">Ready to get started?</h2>
           <p className="text-lg text-gray-500 mb-10">
-            Pick a plan above and start your free trial. No credit card required.
+            Pick a plan above and start your 14-day free trial.
           </p>
           <Link
             href="/pricing"

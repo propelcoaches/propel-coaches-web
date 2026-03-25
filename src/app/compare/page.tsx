@@ -68,7 +68,7 @@ export default function ComparePage() {
       <section className="py-24 px-6 bg-gray-50 border-y border-gray-100">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-4xl font-black text-gray-900 mb-4">Ready to upgrade your coaching?</h2>
-          <p className="text-lg text-gray-500 mb-10">Start your 14-day free trial of Propel today. No credit card required.</p>
+          <p className="text-lg text-gray-500 mb-10">Start your 14-day free trial of Propel today.</p>
           <Link href="/register" className="inline-flex items-center gap-2 bg-[#0F7B8C] hover:bg-[#0d6b7a] text-white font-bold px-10 py-4 rounded-2xl text-base transition-colors shadow-lg shadow-[#0F7B8C]/20">
             Start for free →
           </Link>

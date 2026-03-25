@@ -26,13 +26,14 @@ const PLAN_DETAILS = {
     price: '£0',
     period: '/month',
     features: [
-      'Up to 10 clients',
-      'Training programs',
-      'Weekly check-ins',
-      'Nutrition tracking',
-      'Habit tracking',
+      'Up to 5 active clients',
+      'Training program builder',
+      'Weekly check-ins with progress photos',
+      'Nutrition & macro tracking',
+      'Habit tracking with streaks',
       'Client messaging',
-      'Progress metrics',
+      'Basic progress metrics',
+      'iOS & Android apps',
     ],
   },
   pro: {
@@ -40,12 +41,14 @@ const PLAN_DETAILS = {
     price: '£29',
     period: '/month',
     features: [
-      'Unlimited clients',
-      'All Starter features',
-      'AI Coach Assistant',
-      'Loom video feedback',
-      'Body fat % tracking',
-      'Custom branding',
+      'Up to 30 active clients',
+      'Everything in Starter',
+      'AI Coach Assistant (24/7)',
+      'Video feedback via Loom',
+      'Body composition tracking',
+      'Custom branding (logo & colours)',
+      'Advanced analytics & reports',
+      'Stripe payments built-in',
       'Priority support',
     ],
   },
@@ -54,12 +57,13 @@ const PLAN_DETAILS = {
     price: '£79',
     period: '/month',
     features: [
-      'Unlimited clients',
-      'Up to 5 coaches',
-      'All Pro features',
-      'Team dashboard',
-      'Shared library',
-      'Dedicated onboarding',
+      'Unlimited active clients',
+      'Up to 5 coaches / practitioners',
+      'Everything in Pro',
+      'Team dashboard & permissions',
+      'Shared exercise & template library',
+      'Revenue analytics',
+      'Dedicated onboarding call',
       'Phone support',
     ],
   },
@@ -400,7 +404,7 @@ function TrialSetupContent() {
               </div>
 
               <p className="text-xs text-gray-500 text-center mt-4">
-                14-day free trial · No credit card required · Cancel anytime
+                14-day free trial · Cancel anytime · No lock-in contracts
               </p>
             </div>
           )}

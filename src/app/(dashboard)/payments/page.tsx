@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useIsDemo } from '@/lib/demo/useDemoMode'
-import { Plus, CreditCard, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { Plus, CreditCard, Tag, Copy, Trash2 } from 'lucide-react'
 import clsx from 'clsx'
 
 const DEMO_INVOICES = [
@@ -161,9 +161,62 @@ const DEMO_BILLING_EVENTS = [
 type InvoiceFilter = 'all' | 'paid' | 'pending' | 'overdue'
 type Tab = 'invoices' | 'subscriptions' | 'settings'
 
+type PromoCode = {
+  id: string
+  code: string
+  discount: string
+  type: 'percent' | 'fixed'
+  duration: string
+  uses: number
+  maxUses: number | null
+  active: boolean
+}
+
+const INITIAL_PROMO_CODES: PromoCode[] = []
+
 export default function PaymentsPage() {
   const isDemo = useIsDemo()
   const [activeTab, setActiveTab] = useState<Tab>('invoices')
+  const [promoCodes, setPromoCodes] = useState<PromoCode[]>(INITIAL_PROMO_CODES)
+  const [showPromoForm, setShowPromoForm] = useState(false)
+  const [newPromo, setNewPromo] = useState({ code: '', discount: '', type: 'percent' as 'percent' | 'fixed', duration: '1_month', maxUses: '' })
+  const [copiedCode, setCopiedCode] = useState<string | null>(null)
+
+  const handleCreatePromo = () => {
+    if (!newPromo.code || !newPromo.discount) return
+    const entry: PromoCode = {
+      id: Date.now().toString(),
+      code: newPromo.code.toUpperCase(),
+      discount: newPromo.discount,
+      type: newPromo.type,
+      duration: newPromo.duration,
+      uses: 0,
+      maxUses: newPromo.maxUses ? parseInt(newPromo.maxUses) : null,
+      active: true,
+    }
+    setPromoCodes(prev => [entry, ...prev])
+    setNewPromo({ code: '', discount: '', type: 'percent', duration: '1_month', maxUses: '' })
+    setShowPromoForm(false)
+  }
+
+  const handleCopyCode = (code: string) => {
+    navigator.clipboard.writeText(code)
+    setCopiedCode(code)
+    setTimeout(() => setCopiedCode(null), 2000)
+  }
+
+  const handleTogglePromo = (id: string) => {
+    setPromoCodes(prev => prev.map(p => p.id === id ? { ...p, active: !p.active } : p))
+  }
+
+  const handleDeletePromo = (id: string) => {
+    setPromoCodes(prev => prev.filter(p => p.id !== id))
+  }
+
+  const durationLabel = (d: string) => {
+    const map: Record<string, string> = { '1_month': '1 month free', '2_months': '2 months free', '3_months': '3 months free', 'forever': 'Forever' }
+    return map[d] ?? d
+  }
   const [invoiceFilter, setInvoiceFilter] = useState<InvoiceFilter>('all')
 
   const invoices = isDemo ? DEMO_INVOICES : []
@@ -465,6 +518,146 @@ export default function PaymentsPage() {
                 Add Payment Method
               </button>
             </div>
+          </div>
+
+          {/* Promo Codes */}
+          <div className="bg-surface border border-cb-border rounded-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Tag size={16} className="text-brand" />
+                <h3 className="text-sm font-semibold text-cb-text">Promo Codes</h3>
+              </div>
+              <button
+                onClick={() => setShowPromoForm(v => !v)}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-brand text-white hover:bg-brand/90 transition-colors"
+              >
+                <Plus size={13} /> New code
+              </button>
+            </div>
+
+            {showPromoForm && (
+              <div className="mb-5 p-4 bg-surface-light border border-cb-border rounded-lg space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-semibold text-cb-muted block mb-1 uppercase tracking-wide">Code</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. LAUNCH50"
+                      value={newPromo.code}
+                      onChange={e => setNewPromo(p => ({ ...p, code: e.target.value.toUpperCase() }))}
+                      className="w-full px-3 py-2 border border-cb-border rounded-lg text-sm text-cb-text bg-surface placeholder-cb-muted focus:outline-none focus:ring-2 focus:ring-brand font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-cb-muted block mb-1 uppercase tracking-wide">Discount</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="number"
+                        placeholder={newPromo.type === 'percent' ? '50' : '29'}
+                        value={newPromo.discount}
+                        onChange={e => setNewPromo(p => ({ ...p, discount: e.target.value }))}
+                        className="flex-1 px-3 py-2 border border-cb-border rounded-lg text-sm text-cb-text bg-surface placeholder-cb-muted focus:outline-none focus:ring-2 focus:ring-brand"
+                      />
+                      <select
+                        value={newPromo.type}
+                        onChange={e => setNewPromo(p => ({ ...p, type: e.target.value as 'percent' | 'fixed' }))}
+                        className="px-2 py-2 border border-cb-border rounded-lg text-sm text-cb-text bg-surface focus:outline-none focus:ring-2 focus:ring-brand"
+                      >
+                        <option value="percent">%</option>
+                        <option value="fixed">£</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-semibold text-cb-muted block mb-1 uppercase tracking-wide">Duration</label>
+                    <select
+                      value={newPromo.duration}
+                      onChange={e => setNewPromo(p => ({ ...p, duration: e.target.value }))}
+                      className="w-full px-3 py-2 border border-cb-border rounded-lg text-sm text-cb-text bg-surface focus:outline-none focus:ring-2 focus:ring-brand"
+                    >
+                      <option value="1_month">1 month free</option>
+                      <option value="2_months">2 months free</option>
+                      <option value="3_months">3 months free</option>
+                      <option value="forever">Forever (ongoing %)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-cb-muted block mb-1 uppercase tracking-wide">Max uses (blank = unlimited)</label>
+                    <input
+                      type="number"
+                      placeholder="Unlimited"
+                      value={newPromo.maxUses}
+                      onChange={e => setNewPromo(p => ({ ...p, maxUses: e.target.value }))}
+                      className="w-full px-3 py-2 border border-cb-border rounded-lg text-sm text-cb-text bg-surface placeholder-cb-muted focus:outline-none focus:ring-2 focus:ring-brand"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <button
+                    onClick={handleCreatePromo}
+                    disabled={!newPromo.code || !newPromo.discount}
+                    className="px-4 py-2 text-sm font-medium rounded-lg bg-brand text-white hover:bg-brand/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Create code
+                  </button>
+                  <button
+                    onClick={() => setShowPromoForm(false)}
+                    className="px-4 py-2 text-sm font-medium rounded-lg border border-cb-border text-cb-secondary hover:bg-surface-light transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {promoCodes.length === 0 ? (
+              <div className="text-center py-6 text-cb-muted text-sm">
+                No promo codes yet. Create one to share with your marketing campaigns.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {promoCodes.map(promo => (
+                  <div key={promo.id} className={clsx('flex items-center gap-3 p-3 rounded-lg border', promo.active ? 'border-cb-border bg-surface-light' : 'border-cb-border/50 bg-surface opacity-60')}>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-sm font-bold text-cb-text">{promo.code}</span>
+                        <span className={clsx('text-xs px-2 py-0.5 rounded-full font-semibold', promo.active ? 'bg-cb-success/15 text-cb-success' : 'bg-cb-muted/20 text-cb-muted')}>
+                          {promo.active ? 'Active' : 'Paused'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-cb-muted mt-0.5">
+                        {promo.discount}{promo.type === 'percent' ? '%' : '£'} off · {durationLabel(promo.duration)} · {promo.uses} uses{promo.maxUses ? ` / ${promo.maxUses}` : ''}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleCopyCode(promo.code)}
+                        className="p-1.5 rounded-md text-cb-muted hover:text-cb-text hover:bg-surface transition-colors"
+                        title="Copy code"
+                      >
+                        <Copy size={13} />
+                      </button>
+                      {copiedCode === promo.code && <span className="text-xs text-cb-success">Copied!</span>}
+                      <button
+                        onClick={() => handleTogglePromo(promo.id)}
+                        className="px-2 py-1 text-xs font-medium rounded-md border border-cb-border text-cb-secondary hover:bg-surface transition-colors"
+                      >
+                        {promo.active ? 'Pause' : 'Activate'}
+                      </button>
+                      <button
+                        onClick={() => handleDeletePromo(promo.id)}
+                        className="p-1.5 rounded-md text-cb-muted hover:text-cb-danger hover:bg-cb-danger/10 transition-colors"
+                        title="Delete"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Invoice settings */}

@@ -336,7 +336,7 @@ export default function BlogPage() {
           <Link href="/register" className="inline-flex items-center gap-2 bg-[#0F7B8C] hover:bg-[#0d6b7a] text-white font-bold px-10 py-4 rounded-2xl text-base transition-colors shadow-lg shadow-[#0F7B8C]/20">
             Start for free →
           </Link>
-          <p className="text-sm text-gray-400 mt-4">14-day free trial · No credit card required</p>
+          <p className="text-sm text-gray-400 mt-4">14-day free trial · Cancel anytime</p>
         </div>
       </section>
 

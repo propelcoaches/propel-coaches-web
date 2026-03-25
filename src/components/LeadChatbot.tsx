@@ -13,11 +13,11 @@ interface Message {
 const BOT_RESPONSES = [
   {
     patterns: ['price', 'pricing', 'cost', 'how much', 'plan', 'subscription'],
-    response: "We have three plans! 🎉\n\n**Starter** — Free, up to 10 clients\n**Pro** — £29/mo, unlimited clients + AI assistant\n**Team** — £79/mo, up to 5 coaches\n\nAll plans include a 14-day free trial. Want me to walk you through what's included?"
+    response: "We have three plans! 🎉\n\n**Starter** — Free, up to 5 clients\n**Pro** — £29/mo, up to 30 clients + AI assistant\n**Team** — £79/mo, unlimited clients + up to 5 coaches\n\nAll plans include a 14-day free trial. Want me to walk you through what's included?"
   },
   {
     patterns: ['free trial', 'trial', 'try', 'test'],
-    response: "Yes! Every plan starts with a **14-day free trial** — no credit card required. You get full access to every feature so you can see if Propel is the right fit before paying a thing. Want to get started?"
+    response: "Yes! Every plan starts with a **14-day free trial**. You'll need a credit card to start but you won't be charged until the trial ends — cancel anytime before then. Want to get started?"
   },
   {
     patterns: ['feature', 'what can', 'include', 'does it'],
@@ -45,7 +45,7 @@ const BOT_RESPONSES = [
   },
   {
     patterns: ['signup', 'sign up', 'register', 'get started', 'create account'],
-    response: "You can get started in under 2 minutes! 🚀 Just click the **'Start free trial'** button at the top of the page. No credit card needed — you'll get 14 days full access to build your setup before you even think about paying."
+    response: "You can get started in under 2 minutes! 🚀 Just click the **'Start free trial'** button at the top of the page. You'll get 14 days full access — you won't be charged until the trial ends."
   },
 ]
 

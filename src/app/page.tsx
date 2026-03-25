@@ -474,13 +474,13 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">Simple, transparent pricing</h2>
-            <p className="mt-4 text-gray-500">14-day free trial on all plans. No credit card required.</p>
+            <p className="mt-4 text-gray-500">14-day free trial on all plans. Cancel anytime.</p>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
             {[
-              {name:'Starter',desc:'Perfect for coaches just getting started',price:'29',features:['Up to 10 clients','All core features','AI coach assistant','Stripe payments','Email support'],popular:false,cta:'Start free trial'},
-              {name:'Pro',desc:'For established coaches scaling their business',price:'59',features:['Unlimited clients','All core features','AI coach assistant','Custom brand colours & logo','Priority support','Early access to new features'],popular:true,cta:'Start free trial'},
-              {name:'Clinic',desc:'For multi-practitioner clinics and teams',price:'119',features:['Unlimited clients','Up to 5 practitioners','All Pro features','Team dashboard','Dedicated onboarding','Custom contract'],popular:false,cta:'Contact us'},
+              {name:'Starter',desc:'Perfect for coaches just getting started',price:'0',features:['Up to 5 active clients','Training program builder','Nutrition & macro tracking','Habit tracking','Client messaging'],popular:false,cta:'Start free trial'},
+              {name:'Pro',desc:'For established coaches scaling their business',price:'29',features:['Up to 30 active clients','Everything in Starter','AI Coach Assistant','Custom branding','Stripe payments','Priority support'],popular:true,cta:'Start free trial'},
+              {name:'Team',desc:'For multi-practitioner clinics and teams',price:'79',features:['Unlimited active clients','Up to 5 coaches','Everything in Pro','Team dashboard','Revenue analytics','Phone support'],popular:false,cta:'Start free trial'},
             ].map((plan, i) => (
               <div key={i} className={`rounded-2xl p-6 border ${plan.popular ? 'border-[#0F7B8C] bg-[#0F7B8C]/[0.02] ring-1 ring-[#0F7B8C]/20 relative' : 'border-gray-200'}`}>
                 {plan.popular && (
@@ -523,7 +523,7 @@ export default function LandingPage() {
               Get started free <span aria-hidden="true">→</span>
             </Link>
           </div>
-          <p className="mt-4 text-xs text-gray-400">14-day free trial · No credit card required · Cancel anytime</p>
+          <p className="mt-4 text-xs text-gray-400">14-day free trial · Cancel anytime · No lock-in contracts</p>
         </div>
       </section>
 

@@ -104,22 +104,6 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-cb-border" />
-            </div>
-            <div className="relative flex justify-center text-xs">
-              <span className="px-2 bg-surface text-cb-muted">or</span>
-            </div>
-          </div>
-
-          <a
-            href="/api/demo"
-            className="block w-full text-center py-2 px-4 rounded-md border border-cb-border text-cb-secondary text-sm font-medium hover:bg-surface-light transition-colors"
-          >
-            Try Demo
-          </a>
-
           <p className="text-center text-sm text-cb-muted mt-5">
             Don&apos;t have an account?{' '}
             <a href="/register" className="text-brand hover:underline font-medium">
