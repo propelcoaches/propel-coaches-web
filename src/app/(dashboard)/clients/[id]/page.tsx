@@ -23,7 +23,7 @@ import {
   DEMO_MEAL_PLANS,
 } from '@/lib/demo/mockData'
 
-type Tab = 'overview' | 'checkins' | 'training' | 'progress' | 'nutrition' | 'photos' | 'metrics' | 'notes' | 'settings'
+type Tab = 'overview' | 'checkins' | 'training' | 'progress' | 'nutrition' | 'habits' | 'autoflow' | 'photos' | 'metrics' | 'notes' | 'settings'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'overview',  label: 'Overview' },
@@ -31,21 +31,39 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'training',  label: 'Training' },
   { id: 'progress',  label: 'Progress' },
   { id: 'nutrition', label: 'Nutrition' },
+  { id: 'habits',    label: 'Habits' },
+  { id: 'autoflow',  label: 'Autoflow' },
   { id: 'photos',    label: 'Photos' },
   { id: 'metrics',   label: 'Metrics' },
   { id: 'notes',     label: 'Notes' },
   { id: 'settings',  label: 'Settings' },
 ]
 
-const FEATURE_TOGGLES = [
-  { key: 'log_activities', label: 'Log Activities', description: 'Let your client add extra workouts or unassigned activities', icon: '🏃' },
-  { key: 'tasks', label: 'Tasks', description: 'Schedule to-dos and deliver education material', icon: '📋' },
-  { key: 'food_journal', label: 'Food Journal', description: 'Monitor client food intake and easily provide feedback', icon: '🥗' },
-  { key: 'macros', label: 'Macros', description: 'Track client nutrition using macros and daily calories', icon: '📊' },
-  { key: 'meal_plan', label: 'Meal Plan', description: 'Create personalized dietary plans for your clients', icon: '🍽️' },
-  { key: 'messages', label: 'Messages', description: 'Message your client directly through the platform', icon: '💬' },
-  { key: 'progress_photo', label: 'Progress Photo', description: 'Visualize improvement with before and after photos', icon: '📷' },
-  { key: 'body_metrics', label: 'Body Metrics', description: 'Track client progress using various body metrics', icon: '📈' },
+const FEATURE_TOGGLE_GROUPS = [
+  {
+    group: 'General',
+    toggles: [
+      { key: 'messaging', label: 'Messaging', description: 'Message your client directly through the platform', icon: '💬' },
+      { key: 'check_ins', label: 'Check-Ins', description: 'Send scheduled check-in forms to track progress', icon: '✅' },
+      { key: 'habit', label: 'Habit', description: 'Assign and track daily habits for your client', icon: '🔥' },
+      { key: 'photos', label: 'Photos', description: 'Visualize improvement with progress photos', icon: '📷' },
+      { key: 'metrics', label: 'Metrics', description: 'Track client progress using body metrics', icon: '📈' },
+      { key: 'vault', label: 'Vault', description: 'Share resources, PDFs, and guides with your client', icon: '🗂️' },
+    ],
+  },
+  {
+    group: 'Training',
+    toggles: [
+      { key: 'workout', label: 'Workout', description: 'Assign and manage workout programs for your client', icon: '🏋️' },
+      { key: 'workout_tracker', label: 'Workout Tracker', description: 'Let your client log sets, reps, and weights', icon: '📊' },
+    ],
+  },
+  {
+    group: 'Nutrition',
+    toggles: [
+      { key: 'nutrition', label: 'Nutrition', description: 'Assign meal plans and track nutrition compliance', icon: '🥗' },
+    ],
+  },
 ]
 
 function ScoreBadge({ value, label }: { value: number | null; label: string }) {
@@ -100,15 +118,50 @@ export default function ClientDetailPage() {
 
   // Settings feature toggles
   const [featureToggles, setFeatureToggles] = useState<Record<string, boolean>>({
-    log_activities: true,
-    tasks: true,
-    food_journal: false,
-    macros: false,
-    meal_plan: false,
-    messages: true,
-    progress_photo: true,
-    body_metrics: true,
+    messaging: true,
+    check_ins: true,
+    habit: true,
+    photos: true,
+    metrics: true,
+    vault: true,
+    workout: true,
+    workout_tracker: true,
+    nutrition: true,
   })
+
+  // Nutrition sub-tab
+  const [nutritionSubTab, setNutritionSubTab] = useState<'meal_plans' | 'logger'>('meal_plans')
+
+  // Mock habit data for this client
+  const mockHabits = [
+    { id: 'h1', title: 'Hit daily protein target', category: 'Nutrition', currentStreak: 5, bestStreak: 12, completions: 23, totalDays: 30, completionRate: 77, logs: [
+      { date: '2026-03-25', value: '162g', memo: 'Hit target with chicken and Greek yogurt' },
+      { date: '2026-03-24', value: '155g', memo: '' },
+      { date: '2026-03-23', value: '170g', memo: 'Post-workout shake helped' },
+    ]},
+    { id: 'h2', title: 'Complete assigned workout', category: 'Training', currentStreak: 3, bestStreak: 8, completions: 18, totalDays: 30, completionRate: 60, logs: [
+      { date: '2026-03-25', value: 'Yes', memo: 'Upper body session' },
+      { date: '2026-03-24', value: 'No', memo: 'Rest day' },
+      { date: '2026-03-23', value: 'Yes', memo: '' },
+    ]},
+    { id: 'h3', title: 'Drink 2.5L of water', category: 'Hydration', currentStreak: 7, bestStreak: 14, completions: 26, totalDays: 30, completionRate: 87, logs: [
+      { date: '2026-03-25', value: '2.7L', memo: '' },
+      { date: '2026-03-24', value: '2.5L', memo: '' },
+      { date: '2026-03-23', value: '3.0L', memo: 'Especially thirsty today' },
+    ]},
+  ]
+  const [selectedHabit, setSelectedHabit] = useState(mockHabits[0])
+
+  // Mock autoflow events
+  const [autoflowView, setAutoflowView] = useState<'month' | 'week' | 'agenda'>('month')
+  const [autoflowDate, setAutoflowDate] = useState(new Date('2026-03-01'))
+  const [showAutoflowEventModal, setShowAutoflowEventModal] = useState(false)
+  const mockAutoflowEvents = [
+    { id: 'af1', date: '2026-03-05', type: 'workout_program', title: 'Start Hypertrophy Block A', color: 'bg-cb-warning/20 text-cb-warning border-cb-warning/40' },
+    { id: 'af2', date: '2026-03-12', type: 'check_in', title: 'Week 2 Check-In', color: 'bg-cb-teal/20 text-cb-teal border-cb-teal/40' },
+    { id: 'af3', date: '2026-03-19', type: 'message', title: 'Motivation message', color: 'bg-cb-success/20 text-cb-success border-cb-success/40' },
+    { id: 'af4', date: '2026-03-26', type: 'check_in', title: 'Week 4 Check-In', color: 'bg-cb-teal/20 text-cb-teal border-cb-teal/40' },
+  ]
   const [weightUnit, setWeightUnit] = useState<'kg' | 'lbs'>('kg')
 
   // AI Mode state
@@ -560,6 +613,8 @@ export default function ClientDetailPage() {
                     ['Date of Birth', client.date_of_birth ? format(new Date(client.date_of_birth), 'd MMM yyyy') : null],
                     ['Training History', client.training_history],
                     ['Injuries / Limitations', client.injuries],
+                    ['Last Check-In', latestCheckIn ? format(new Date(latestCheckIn.date), 'd MMM yyyy') : null],
+                    ['Client Duration', daysSinceStart !== null ? `${Math.floor(daysSinceStart / 7)} weeks` : null],
                   ].map(([label, value]) => (
                     <div key={label as string}>
                       <p className="text-xs text-cb-muted mb-0.5">{label}</p>
@@ -570,6 +625,74 @@ export default function ClientDetailPage() {
                     <p className="text-xs text-cb-muted mb-0.5">Dietary Preferences</p>
                     <p className="text-cb-text">{client.dietary_preferences?.join(', ') ?? '—'}</p>
                   </div>
+                  <div className="col-span-2">
+                    <p className="text-xs text-cb-muted mb-1.5">Tags</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {['Fat Loss', 'Online Client'].map(tag => (
+                        <span key={tag} className="px-2 py-0.5 rounded-full text-xs font-medium bg-cb-teal/10 text-cb-teal border border-cb-teal/20">{tag}</span>
+                      ))}
+                      <button className="px-2 py-0.5 rounded-full text-xs border border-dashed border-cb-border text-cb-muted hover:border-cb-teal hover:text-cb-teal transition-colors">
+                        + Add tag
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Activity Log */}
+              <div className="bg-surface border border-cb-border rounded-xl p-5">
+                <h2 className="text-sm font-semibold text-cb-text mb-4">Activity Log</h2>
+                {programDays.filter((d) => d.completed).length === 0 ? (
+                  <p className="text-sm text-cb-muted">No completed workouts yet.</p>
+                ) : (
+                  <ul className="divide-y divide-cb-border">
+                    {programDays.filter((d) => d.completed).slice(0, 6).map((day) => (
+                      <li key={day.id} className="py-3 flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-3">
+                          <div className="w-7 h-7 rounded-full bg-cb-success/15 flex items-center justify-center">
+                            <Dumbbell size={13} className="text-cb-success" />
+                          </div>
+                          <div>
+                            <p className="text-cb-secondary font-medium">{day.name}</p>
+                            <p className="text-xs text-cb-muted">Workout completed</p>
+                          </div>
+                        </div>
+                        {day.completed_at && (
+                          <span className="text-cb-muted text-xs">{format(new Date(day.completed_at), 'd MMM yyyy · h:mm a')}</span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              {/* Payments summary */}
+              <div className="bg-surface border border-cb-border rounded-xl p-5">
+                <h2 className="text-sm font-semibold text-cb-text mb-4">Payments</h2>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between pb-3 border-b border-cb-border">
+                    <div>
+                      <p className="text-sm font-medium text-cb-text">1:1 Online Coaching</p>
+                      <p className="text-xs text-cb-muted">Active subscription</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold text-cb-text">$249 AUD</p>
+                      <p className="text-xs text-cb-muted">per month</p>
+                    </div>
+                  </div>
+                  {[
+                    { date: '2026-03-01', amount: '$249 AUD', status: 'Paid' },
+                    { date: '2026-02-01', amount: '$249 AUD', status: 'Paid' },
+                    { date: '2026-01-01', amount: '$249 AUD', status: 'Paid' },
+                  ].map((payment, i) => (
+                    <div key={i} className="flex items-center justify-between text-sm">
+                      <span className="text-cb-muted">{format(new Date(payment.date), 'd MMM yyyy')}</span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-cb-secondary">{payment.amount}</span>
+                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-cb-success/15 text-cb-success">{payment.status}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -625,27 +748,6 @@ export default function ClientDetailPage() {
                 </div>
               )}
 
-              {/* Recent Workout Activity */}
-              <div className="bg-surface border border-cb-border rounded-xl p-5">
-                <h2 className="text-sm font-semibold text-cb-text mb-4">Workout Activity</h2>
-                {programDays.filter((d) => d.completed).length === 0 ? (
-                  <p className="text-sm text-cb-muted">No completed workouts yet.</p>
-                ) : (
-                  <ul className="divide-y divide-cb-border">
-                    {programDays.filter((d) => d.completed).slice(0, 8).map((day) => (
-                      <li key={day.id} className="py-2.5 flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-cb-success" />
-                          <span className="text-cb-secondary">{day.name}</span>
-                        </div>
-                        {day.completed_at && (
-                          <span className="text-cb-muted text-xs">{format(new Date(day.completed_at), 'd MMM yyyy')}</span>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
             </div>
 
             {/* Right (1/3) */}
@@ -1041,6 +1143,29 @@ export default function ClientDetailPage() {
       {/* ─── NUTRITION TAB ─── */}
       {activeTab === 'nutrition' && (
         <div className="space-y-6">
+          {/* Sub-tabs */}
+          <div className="flex gap-1 border-b border-cb-border -mt-2 mb-2">
+            {[
+              { id: 'meal_plans' as const, label: 'Meal Plans' },
+              { id: 'logger' as const, label: 'Nutrition Logger' },
+            ].map(st => (
+              <button
+                key={st.id}
+                onClick={() => setNutritionSubTab(st.id)}
+                className={clsx(
+                  'px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px',
+                  nutritionSubTab === st.id
+                    ? 'border-cb-teal text-cb-teal'
+                    : 'border-transparent text-cb-secondary hover:text-cb-text'
+                )}
+              >
+                {st.label}
+              </button>
+            ))}
+          </div>
+
+          {/* ── Meal Plans sub-tab ── */}
+          {nutritionSubTab === 'meal_plans' && (<>
           {/* Macro Targets */}
           <div className="bg-surface border border-cb-border rounded-xl p-5">
             <div className="flex items-center justify-between mb-4">
@@ -1208,6 +1333,409 @@ export default function ClientDetailPage() {
               </div>
             )}
           </div>
+          </>)}
+
+          {/* ── Nutrition Logger sub-tab ── */}
+          {nutritionSubTab === 'logger' && (
+            <div className="grid grid-cols-3 gap-6">
+              {/* Left: weekly macro chart + compliance */}
+              <div className="col-span-2 space-y-5">
+                {/* Weekly macro summary chart */}
+                <div className="bg-surface border border-cb-border rounded-xl p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-semibold text-cb-text">Weekly Macros</h3>
+                    <span className="text-xs text-cb-muted">Last 7 days</span>
+                  </div>
+                  {/* Simple bar chart */}
+                  <div className="space-y-3">
+                    {[
+                      { label: 'Calories', values: [1820, 2100, 1950, 2200, 1780, 2050, 1900], max: 2200, target: macroTargets?.calories ?? 2000, color: 'bg-cb-teal' },
+                      { label: 'Protein (g)', values: [142, 168, 155, 172, 138, 160, 145], max: 180, target: macroTargets?.protein_g ?? 160, color: 'bg-cb-warning' },
+                      { label: 'Carbs (g)', values: [210, 250, 230, 265, 195, 240, 220], max: 280, target: macroTargets?.carbs_g ?? 250, color: 'bg-cb-success' },
+                      { label: 'Fats (g)', values: [68, 75, 72, 80, 65, 77, 70], max: 85, target: macroTargets?.fats_g ?? 75, color: 'bg-cb-danger' },
+                    ].map(row => {
+                      const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                      return (
+                        <div key={row.label}>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="text-xs font-medium text-cb-secondary">{row.label}</span>
+                            <span className="text-xs text-cb-muted">Target: {row.target}</span>
+                          </div>
+                          <div className="flex items-end gap-1 h-10">
+                            {row.values.map((v, i) => (
+                              <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
+                                <div
+                                  className={clsx('w-full rounded-t transition-all', row.color, 'opacity-80')}
+                                  style={{ height: `${(v / row.max) * 100}%` }}
+                                />
+                                <span className="text-[9px] text-cb-muted">{days[i]}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Macro breakdown table */}
+                <div className="bg-surface border border-cb-border rounded-xl overflow-hidden">
+                  <div className="px-5 py-3.5 border-b border-cb-border">
+                    <h3 className="text-sm font-semibold text-cb-text">Weekly Breakdown</h3>
+                  </div>
+                  <table className="w-full text-sm">
+                    <thead className="bg-surface-light border-b border-cb-border">
+                      <tr>
+                        <th className="text-left px-5 py-3 text-xs font-semibold text-cb-muted uppercase">Macro</th>
+                        <th className="text-right px-5 py-3 text-xs font-semibold text-cb-muted uppercase">Avg / Day</th>
+                        <th className="text-right px-5 py-3 text-xs font-semibold text-cb-muted uppercase">Weekly Total</th>
+                        <th className="text-right px-5 py-3 text-xs font-semibold text-cb-muted uppercase">Target</th>
+                        <th className="text-right px-5 py-3 text-xs font-semibold text-cb-muted uppercase">Compliance</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-cb-border">
+                      {[
+                        { label: 'Calories', avg: 1971, total: 13800, target: macroTargets?.calories ?? 2000, unit: 'kcal' },
+                        { label: 'Protein', avg: 154, total: 1080, target: macroTargets?.protein_g ?? 160, unit: 'g' },
+                        { label: 'Carbs', avg: 230, total: 1610, target: macroTargets?.carbs_g ?? 250, unit: 'g' },
+                        { label: 'Fat', avg: 72, total: 507, target: macroTargets?.fats_g ?? 75, unit: 'g' },
+                        { label: 'Fibre', avg: 28, total: 196, target: macroTargets?.fibre_g ?? 30, unit: 'g' },
+                        { label: 'Sugar', avg: 42, total: 294, target: 50, unit: 'g' },
+                        { label: 'Sodium', avg: 1850, total: 12950, target: 2300, unit: 'mg' },
+                      ].map(row => {
+                        const compliance = Math.round((row.avg / row.target) * 100)
+                        const color = compliance >= 90 && compliance <= 110 ? 'text-cb-success' : compliance >= 75 ? 'text-cb-warning' : 'text-cb-danger'
+                        return (
+                          <tr key={row.label} className="hover:bg-surface-light/50">
+                            <td className="px-5 py-3 font-medium text-cb-text">{row.label}</td>
+                            <td className="px-5 py-3 text-right text-cb-secondary">{row.avg} {row.unit}</td>
+                            <td className="px-5 py-3 text-right text-cb-secondary">{row.total} {row.unit}</td>
+                            <td className="px-5 py-3 text-right text-cb-muted">{row.target} {row.unit}</td>
+                            <td className={clsx('px-5 py-3 text-right font-semibold', color)}>{compliance}%</td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Right: compliance calendar */}
+              <div className="space-y-4">
+                <div className="bg-surface border border-cb-border rounded-xl p-5">
+                  <h3 className="text-sm font-semibold text-cb-text mb-1">Weekly Compliance</h3>
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="text-3xl font-black text-cb-teal">71%</div>
+                    <div>
+                      <p className="text-xs text-cb-muted">5 of 7 days</p>
+                      <p className="text-xs text-cb-secondary">logged this week</p>
+                    </div>
+                  </div>
+                  {/* Mini calendar dots */}
+                  <div className="grid grid-cols-7 gap-1">
+                    {['M','T','W','T','F','S','S'].map((d, i) => (
+                      <div key={i} className="flex flex-col items-center gap-1">
+                        <span className="text-[10px] text-cb-muted">{d}</span>
+                        <div className={clsx(
+                          'w-5 h-5 rounded-full flex items-center justify-center text-[9px]',
+                          [true, true, false, true, true, true, false][i]
+                            ? 'bg-cb-teal text-white'
+                            : 'bg-surface-light text-cb-muted border border-cb-border'
+                        )}>
+                          {[true, true, false, true, true, true, false][i] ? '✓' : '–'}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Recent meals */}
+                <div className="bg-surface border border-cb-border rounded-xl p-5">
+                  <h3 className="text-sm font-semibold text-cb-text mb-3">Today&apos;s Log</h3>
+                  {Object.values(foodByDate)[0] ? (
+                    <div className="space-y-2">
+                      {Object.values(foodByDate)[0].slice(0, 4).map(log => (
+                        <div key={log.id} className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-2">
+                            <span className={clsx('w-1.5 h-1.5 rounded-full flex-shrink-0',
+                              log.meal === 'breakfast' ? 'bg-cb-warning' :
+                              log.meal === 'lunch' ? 'bg-cb-teal' :
+                              log.meal === 'dinner' ? 'bg-purple-400' : 'bg-cb-muted'
+                            )} />
+                            <span className="text-cb-secondary">{log.name}</span>
+                          </div>
+                          <span className="text-cb-muted">{log.calories} kcal</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-cb-muted">No logs today.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ─── HABITS TAB ─── */}
+      {activeTab === 'habits' && (
+        <div className="grid grid-cols-3 gap-6">
+          {/* Left: Habit list */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-semibold text-cb-text">Assigned Habits</h2>
+              <button className="flex items-center gap-1 text-xs text-cb-teal hover:text-cb-teal/80 font-medium">
+                <Plus size={12} /> Add Habit
+              </button>
+            </div>
+            {mockHabits.map(habit => (
+              <button
+                key={habit.id}
+                onClick={() => setSelectedHabit(habit)}
+                className={clsx(
+                  'w-full text-left px-4 py-3 rounded-xl border transition-colors',
+                  selectedHabit.id === habit.id
+                    ? 'bg-cb-teal/10 border-cb-teal/40'
+                    : 'bg-surface border-cb-border hover:border-cb-teal/30'
+                )}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-base">🔥</span>
+                  <span className="text-sm font-medium text-cb-text">{habit.title}</span>
+                </div>
+                <div className="flex items-center gap-3 text-xs text-cb-muted">
+                  <span className="px-1.5 py-0.5 rounded bg-surface-light text-cb-secondary">{habit.category}</span>
+                  <span>{habit.currentStreak} day streak</span>
+                  <span className="ml-auto font-medium text-cb-teal">{habit.completionRate}%</span>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Right: Habit detail */}
+          <div className="col-span-2 space-y-5">
+            {/* Stat cards */}
+            <div className="grid grid-cols-4 gap-4">
+              {[
+                { label: 'Current Streak', value: `${selectedHabit.currentStreak}`, unit: 'days', icon: '🔥', color: 'text-cb-warning' },
+                { label: 'Longest Streak', value: `${selectedHabit.bestStreak}`, unit: 'days', icon: '🏆', color: 'text-cb-teal' },
+                { label: 'Habit Completed', value: `${selectedHabit.completions}`, unit: 'times', icon: '✅', color: 'text-cb-success' },
+                { label: 'Completion Rate', value: `${selectedHabit.completionRate}%`, unit: '', icon: '📊', color: 'text-cb-text' },
+              ].map(stat => (
+                <div key={stat.label} className="bg-surface border border-cb-border rounded-xl p-4 text-center">
+                  <div className="text-2xl mb-1">{stat.icon}</div>
+                  <p className={clsx('text-2xl font-bold', stat.color)}>{stat.value}</p>
+                  {stat.unit && <p className="text-xs text-cb-muted">{stat.unit}</p>}
+                  <p className="text-xs text-cb-secondary mt-1">{stat.label}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Completion chart (simple bar chart, last 7 days) */}
+            <div className="bg-surface border border-cb-border rounded-xl p-5">
+              <h3 className="text-sm font-semibold text-cb-text mb-4">Last 7 Days</h3>
+              <div className="flex items-end gap-2 h-20">
+                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, i) => {
+                  const completed = [true, true, false, true, true, true, false][i]
+                  return (
+                    <div key={day} className="flex-1 flex flex-col items-center gap-1">
+                      <div className={clsx(
+                        'w-full rounded-t transition-all',
+                        completed ? 'bg-cb-teal h-full' : 'bg-surface-light h-3'
+                      )} />
+                      <span className="text-[10px] text-cb-muted">{day}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Log table */}
+            <div className="bg-surface border border-cb-border rounded-xl overflow-hidden">
+              <div className="px-5 py-3.5 border-b border-cb-border">
+                <h3 className="text-sm font-semibold text-cb-text">Log History</h3>
+              </div>
+              <table className="w-full text-sm">
+                <thead className="bg-surface-light border-b border-cb-border">
+                  <tr>
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-cb-muted uppercase">Date</th>
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-cb-muted uppercase">Value</th>
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-cb-muted uppercase">Memo</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-cb-border">
+                  {selectedHabit.logs.map((log, i) => (
+                    <tr key={i} className="hover:bg-surface-light/50">
+                      <td className="px-5 py-3 text-cb-secondary">{format(new Date(log.date), 'd MMM yyyy')}</td>
+                      <td className="px-5 py-3 font-medium text-cb-text">{log.value}</td>
+                      <td className="px-5 py-3 text-cb-muted">{log.memo || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── AUTOFLOW TAB ─── */}
+      {activeTab === 'autoflow' && (
+        <div className="space-y-4">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setAutoflowDate(d => new Date(d.getFullYear(), d.getMonth() - 1, 1))}
+                className="p-1.5 rounded-xl border border-cb-border text-cb-secondary hover:bg-surface-light"
+              >
+                <ChevronLeft size={14} />
+              </button>
+              <span className="text-sm font-semibold text-cb-text min-w-[140px] text-center">
+                {format(autoflowDate, 'MMMM yyyy')}
+              </span>
+              <button
+                onClick={() => setAutoflowDate(d => new Date(d.getFullYear(), d.getMonth() + 1, 1))}
+                className="p-1.5 rounded-xl border border-cb-border text-cb-secondary hover:bg-surface-light"
+              >
+                <ChevronRight size={14} />
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex rounded-xl border border-cb-border overflow-hidden">
+                {(['month', 'week', 'agenda'] as const).map(v => (
+                  <button
+                    key={v}
+                    onClick={() => setAutoflowView(v)}
+                    className={clsx(
+                      'px-3 py-1.5 text-xs font-medium capitalize transition-colors',
+                      autoflowView === v ? 'bg-cb-teal text-white' : 'text-cb-secondary hover:bg-surface-light'
+                    )}
+                  >
+                    {v}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => setShowAutoflowEventModal(true)}
+                className="flex items-center gap-1.5 px-4 py-1.5 bg-cb-teal hover:bg-cb-teal/90 text-white rounded-xl text-xs font-medium"
+              >
+                <Plus size={12} /> Add Event
+              </button>
+            </div>
+          </div>
+
+          {/* Month calendar grid */}
+          {autoflowView === 'month' && (
+            <div className="bg-surface border border-cb-border rounded-xl overflow-hidden">
+              <div className="grid grid-cols-7 border-b border-cb-border">
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
+                  <div key={d} className="py-2 text-center text-xs font-semibold text-cb-muted bg-surface-light">{d}</div>
+                ))}
+              </div>
+              {(() => {
+                const year = autoflowDate.getFullYear()
+                const month = autoflowDate.getMonth()
+                const firstDay = new Date(year, month, 1).getDay()
+                const daysInMonth = new Date(year, month + 1, 0).getDate()
+                const cells = Array.from({ length: Math.ceil((firstDay + daysInMonth) / 7) * 7 }, (_, i) => {
+                  const day = i - firstDay + 1
+                  return day > 0 && day <= daysInMonth ? day : null
+                })
+                const rows = []
+                for (let r = 0; r < cells.length / 7; r++) {
+                  rows.push(cells.slice(r * 7, r * 7 + 7))
+                }
+                return rows.map((row, ri) => (
+                  <div key={ri} className="grid grid-cols-7 border-b border-cb-border last:border-b-0">
+                    {row.map((day, ci) => {
+                      const dateStr = day ? `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}` : ''
+                      const events = mockAutoflowEvents.filter(e => e.date === dateStr)
+                      const isToday = day && format(new Date(), 'yyyy-MM-dd') === dateStr
+                      return (
+                        <div key={ci} className="min-h-[90px] border-r border-cb-border last:border-r-0 p-2">
+                          {day && (
+                            <>
+                              <span className={clsx(
+                                'inline-flex w-6 h-6 items-center justify-center rounded-full text-xs font-medium mb-1',
+                                isToday ? 'bg-cb-teal text-white' : 'text-cb-secondary'
+                              )}>{day}</span>
+                              <div className="space-y-1">
+                                {events.map(ev => (
+                                  <div key={ev.id} className={clsx('px-1.5 py-0.5 rounded text-[10px] font-medium border truncate', ev.color)}>
+                                    {ev.title}
+                                  </div>
+                                ))}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                ))
+              })()}
+            </div>
+          )}
+
+          {/* Agenda view */}
+          {autoflowView === 'agenda' && (
+            <div className="bg-surface border border-cb-border rounded-xl overflow-hidden">
+              <div className="px-5 py-3.5 border-b border-cb-border">
+                <p className="text-sm font-semibold text-cb-text">Upcoming Events</p>
+              </div>
+              {mockAutoflowEvents.length === 0 ? (
+                <div className="py-12 text-center text-cb-muted text-sm">No events scheduled.</div>
+              ) : (
+                <div className="divide-y divide-cb-border">
+                  {mockAutoflowEvents.map(ev => (
+                    <div key={ev.id} className="flex items-center gap-4 px-5 py-4">
+                      <div className={clsx('w-2 h-2 rounded-full flex-shrink-0', ev.color.includes('warning') ? 'bg-cb-warning' : ev.color.includes('teal') ? 'bg-cb-teal' : 'bg-cb-success')} />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-cb-text">{ev.title}</p>
+                        <p className="text-xs text-cb-muted capitalize">{ev.type.replace('_', ' ')}</p>
+                      </div>
+                      <span className="text-xs text-cb-secondary">{format(new Date(ev.date), 'd MMM yyyy')}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Week view */}
+          {autoflowView === 'week' && (
+            <div className="bg-surface border border-cb-border rounded-xl overflow-hidden">
+              <div className="grid grid-cols-7 border-b border-cb-border">
+                {Array.from({ length: 7 }, (_, i) => {
+                  const d = addDays(startOfWeek(autoflowDate, { weekStartsOn: 0 }), i)
+                  const isToday = format(d, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
+                  return (
+                    <div key={i} className={clsx('py-3 text-center border-r border-cb-border last:border-r-0', isToday ? 'bg-cb-teal/10' : 'bg-surface-light')}>
+                      <p className="text-xs font-semibold text-cb-muted">{format(d, 'EEE').toUpperCase()}</p>
+                      <p className={clsx('text-sm font-bold mt-0.5', isToday ? 'text-cb-teal' : 'text-cb-secondary')}>{format(d, 'd')}</p>
+                    </div>
+                  )
+                })}
+              </div>
+              <div className="grid grid-cols-7 min-h-[200px]">
+                {Array.from({ length: 7 }, (_, i) => {
+                  const d = addDays(startOfWeek(autoflowDate, { weekStartsOn: 0 }), i)
+                  const dateStr = format(d, 'yyyy-MM-dd')
+                  const events = mockAutoflowEvents.filter(e => e.date === dateStr)
+                  return (
+                    <div key={i} className="border-r border-cb-border last:border-r-0 p-2 space-y-1">
+                      {events.map(ev => (
+                        <div key={ev.id} className={clsx('px-2 py-1 rounded text-[10px] font-medium border', ev.color)}>
+                          {ev.title}
+                        </div>
+                      ))}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -1396,32 +1924,39 @@ export default function ClientDetailPage() {
 
             {/* Features */}
             <div>
-              <h2 className="font-semibold text-cb-text mb-1">Features</h2>
+              <h2 className="font-semibold text-cb-text mb-1">Feature Control</h2>
               <p className="text-xs text-cb-secondary mt-0.5 mb-4">Control which features are visible to this client</p>
-              <div className="divide-y divide-cb-border border border-cb-border rounded-xl overflow-hidden">
-                {FEATURE_TOGGLES.map((f) => (
-                <div key={f.key} className="flex items-center gap-4 px-5 py-4">
-                  <div className="w-9 h-9 rounded-full bg-surface-light flex items-center justify-center flex-shrink-0 text-base">
-                    {f.icon}
+              <div className="space-y-5">
+                {FEATURE_TOGGLE_GROUPS.map(group => (
+                  <div key={group.group}>
+                    <p className="text-xs font-semibold text-cb-muted uppercase tracking-wide mb-2">{group.group}</p>
+                    <div className="divide-y divide-cb-border border border-cb-border rounded-xl overflow-hidden">
+                      {group.toggles.map((f) => (
+                        <div key={f.key} className="flex items-center gap-4 px-5 py-4">
+                          <div className="w-9 h-9 rounded-full bg-surface-light flex items-center justify-center flex-shrink-0 text-base">
+                            {f.icon}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-cb-text">{f.label}</p>
+                            <p className="text-xs text-cb-secondary mt-0.5">{f.description}</p>
+                          </div>
+                          <button
+                            onClick={() => setFeatureToggles(prev => ({ ...prev, [f.key]: !prev[f.key] }))}
+                            className={clsx(
+                              'relative inline-flex w-11 h-6 rounded-full transition-colors duration-200 flex-shrink-0',
+                              featureToggles[f.key] ? 'bg-cb-teal' : 'bg-surface-light border border-cb-border'
+                            )}
+                          >
+                            <span className={clsx(
+                              'absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200',
+                              featureToggles[f.key] ? 'translate-x-5' : 'translate-x-0'
+                            )} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-cb-text">{f.label}</p>
-                    <p className="text-xs text-cb-secondary mt-0.5">{f.description}</p>
-                  </div>
-                  <button
-                    onClick={() => setFeatureToggles(prev => ({ ...prev, [f.key]: !prev[f.key] }))}
-                    className={clsx(
-                      'relative inline-flex w-11 h-6 rounded-full transition-colors duration-200 flex-shrink-0',
-                      featureToggles[f.key] ? 'bg-cb-teal' : 'bg-surface-light border border-cb-border'
-                    )}
-                  >
-                    <span className={clsx(
-                      'absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200',
-                      featureToggles[f.key] ? 'translate-x-5' : 'translate-x-0'
-                    )} />
-                  </button>
-                </div>
-              ))}
+                ))}
               </div>
             </div>
           </div>
@@ -1470,6 +2005,11 @@ export default function ClientDetailPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── Autoflow Add Event Modal ────────────────────────────────── */}
+      {showAutoflowEventModal && (
+        <AutoflowAddEventModal onClose={() => setShowAutoflowEventModal(false)} />
       )}
 
       {/* ── Manual Program Modal ────────────────────────────────────── */}
@@ -1754,6 +2294,75 @@ function ManualMealPlanModal({
           >
             {saving && <Loader2 size={14} className="animate-spin" />}
             {saving ? 'Creating…' : 'Create Plan'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── AutoflowAddEventModal ──────────────────────────────────────────────────────
+
+const AUTOFLOW_EVENT_TYPES = [
+  { type: 'workout_program', label: 'Add Workout Program', desc: 'Assign a workout phase on a specific date', icon: '🏋️', premium: false, color: 'border-cb-warning/40 bg-cb-warning/5' },
+  { type: 'resources', label: 'Add Resources', desc: 'Share files and guides from your vault', icon: '📂', premium: false, color: 'border-cb-teal/40 bg-cb-teal/5' },
+  { type: 'message', label: 'Automated Message', desc: 'Send a scheduled in-app message', icon: '💬', premium: true, color: 'border-cb-success/40 bg-cb-success/5' },
+  { type: 'email', label: 'Automated Email', desc: 'Send a scheduled email to your client', icon: '📧', premium: true, color: 'border-purple-400/40 bg-purple-400/5' },
+  { type: 'notification', label: 'In-App Notification', desc: 'Push a reminder to your client', icon: '🔔', premium: true, color: 'border-cb-warning/40 bg-cb-warning/5' },
+  { type: 'note', label: 'Automated Note', desc: 'Create a coach note automatically', icon: '📝', premium: true, color: 'border-cb-muted/40 bg-surface-light' },
+]
+
+function AutoflowAddEventModal({ onClose }: { onClose: () => void }) {
+  const [selectedType, setSelectedType] = useState<string | null>(null)
+
+  return (
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="bg-surface border border-cb-border rounded-2xl w-full max-w-lg shadow-2xl">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-cb-border">
+          <div>
+            <h2 className="text-base font-semibold text-cb-text">Add Event</h2>
+            <p className="text-xs text-cb-muted mt-0.5">Choose an event type to add to the autoflow calendar</p>
+          </div>
+          <button onClick={onClose} className="text-cb-muted hover:text-cb-secondary"><X size={18} /></button>
+        </div>
+        <div className="px-5 py-4 space-y-2 max-h-[60vh] overflow-y-auto">
+          {AUTOFLOW_EVENT_TYPES.map(ev => (
+            <button
+              key={ev.type}
+              onClick={() => setSelectedType(ev.type)}
+              disabled={ev.premium}
+              className={clsx(
+                'w-full text-left px-4 py-3 rounded-xl border transition-colors',
+                ev.premium ? 'opacity-50 cursor-not-allowed border-cb-border bg-surface' :
+                selectedType === ev.type ? `border-cb-teal bg-cb-teal/10` : `${ev.color} hover:border-cb-teal/50`
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-xl">{ev.icon}</span>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-cb-text">{ev.label}</span>
+                    {ev.premium && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-cb-warning/15 text-cb-warning">Premium</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-cb-muted mt-0.5">{ev.desc}</p>
+                </div>
+                {selectedType === ev.type && !ev.premium && (
+                  <Check size={16} className="text-cb-teal flex-shrink-0" />
+                )}
+              </div>
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-2 px-5 pb-5">
+          <button onClick={onClose} className="flex-1 bg-surface-light border border-cb-border rounded-lg py-2 text-sm text-cb-secondary hover:border-cb-muted transition-colors">Cancel</button>
+          <button
+            disabled={!selectedType}
+            onClick={onClose}
+            className="flex-1 bg-cb-teal text-white rounded-lg py-2 text-sm font-medium hover:bg-cb-teal/90 disabled:opacity-50 transition-colors"
+          >
+            Add Event
           </button>
         </div>
       </div>
