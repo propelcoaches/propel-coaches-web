@@ -127,13 +127,10 @@ export async function POST(req: NextRequest) {
       const { data: dayRow, error: dayError } = await supabase
         .from('meal_plan_days')
         .insert({
-          meal_plan_id: mealPlan.id,
+          plan_id: mealPlan.id,
           day_number: day.day_number,
-          day_label: DAY_LABELS[day.day_number - 1],
+          day_name: DAY_LABELS[day.day_number - 1],
           total_calories: day.total_calories,
-          total_protein_g: day.total_protein_g,
-          total_carbs_g: day.total_carbs_g,
-          total_fat_g: day.total_fat_g,
         })
         .select()
         .single();
@@ -146,21 +143,9 @@ export async function POST(req: NextRequest) {
       for (let i = 0; i < day.meals.length; i++) {
         const meal = day.meals[i];
         await supabase.from('meal_plan_meals').insert({
-          meal_plan_day_id: dayRow.id,
-          meal_type: meal.meal_type,
-          sort_order: i,
-          name: meal.name,
-          description: meal.description,
-          prep_time_minutes: meal.prep_time_minutes,
-          cook_time_minutes: meal.cook_time_minutes,
-          servings: meal.servings || 1,
-          calories: meal.calories,
-          protein_g: meal.protein_g,
-          carbs_g: meal.carbs_g,
-          fat_g: meal.fat_g,
-          fiber_g: meal.fiber_g,
-          ingredients: meal.ingredients,
-          instructions: meal.instructions,
+          day_id: dayRow.id,
+          meal_name: meal.meal_type ?? meal.name,
+          order_index: i,
         });
       }
     }

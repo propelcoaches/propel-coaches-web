@@ -82,7 +82,7 @@ export async function POST(req: NextRequest, { params }: { params: { templateId:
     .insert({
       coach_id:          user.id,
       client_id:         clientId,
-      from_template_id:  template.id,
+      template_id:       template.id,
       name:              programName ?? template.name,
       description:       template.description,
       duration_weeks:    template.duration_weeks,
@@ -90,7 +90,7 @@ export async function POST(req: NextRequest, { params }: { params: { templateId:
       goal:              template.goal,
       difficulty:        template.difficulty,
       status:            'active',
-      start_date:        startDate ?? new Date().toISOString().slice(0, 10),
+      started_at:        startDate ?? new Date().toISOString(),
       notes:             structure.notes ?? null,
     })
     .select()

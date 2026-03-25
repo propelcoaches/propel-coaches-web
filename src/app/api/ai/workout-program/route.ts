@@ -158,9 +158,9 @@ export async function POST(req: NextRequest) {
       for (let i = 0; i < day.exercises.length; i++) {
         const ex = day.exercises[i];
         await supabase.from('workout_exercises').insert({
-          workout_day_id: dayRow.id,
-          sort_order: i,
-          exercise_name: ex.exercise_name,
+          day_id: dayRow.id,
+          order_index: i,
+          name: ex.exercise_name,
           muscle_group: ex.muscle_group,
           sets: ex.sets,
           reps: ex.reps,               // e.g. "8-12" or "5"

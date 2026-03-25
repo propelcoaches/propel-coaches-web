@@ -80,7 +80,7 @@ export async function GET(
   // ── Active program for adherence schedule ─────────────────────
   const { data: activeProgram } = await supabase
     .from('programs')
-    .select('id, name, start_date, workouts:program_workouts(id, name, week_number, day_number)')
+    .select('id, name, started_at, workouts:program_workouts(id, name, week_number, day_number)')
     .eq('client_id', clientId)
     .eq('status', 'active')
     .single()
@@ -142,8 +142,8 @@ export async function GET(
   const logDates = new Set(safeLogs.map((l) => format(new Date(l.logged_at), 'yyyy-MM-dd')))
 
   const scheduledDates = new Set<string>()
-  if (activeProgram?.start_date && (activeProgram.workouts as any[])?.length) {
-    const programStart = new Date(activeProgram.start_date)
+  if (activeProgram?.started_at && (activeProgram.workouts as any[])?.length) {
+    const programStart = new Date(activeProgram.started_at)
     for (const wo of (activeProgram.workouts as any[])) {
       const offset = (wo.week_number - 1) * 7 + (wo.day_number - 1)
       const d = addDays(programStart, offset)

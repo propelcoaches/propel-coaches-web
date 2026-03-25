@@ -113,7 +113,7 @@ async function buildClientSummary(clientId: string, weekStartISO: string): Promi
     // Weight entries this week
     supabase
       .from('weight_logs')
-      .select('weight, created_at')
+      .select('weight_kg, created_at')
       .eq('client_id', clientId)
       .gte('created_at', weekStartISO)
       .order('created_at', { ascending: true }),
@@ -155,13 +155,13 @@ async function buildClientSummary(clientId: string, weekStartISO: string): Promi
   let weightChange = 'No data';
   let currentWeight = 'N/A';
   if (weights.length >= 2) {
-    const first = weights[0].weight;
-    const last = weights[weights.length - 1].weight;
+    const first = weights[0].weight_kg;
+    const last = weights[weights.length - 1].weight_kg;
     const diff = last - first;
     weightChange = diff > 0 ? `+${diff.toFixed(1)}` : diff.toFixed(1);
     currentWeight = `${last.toFixed(1)}`;
   } else if (weights.length === 1) {
-    currentWeight = `${weights[0].weight.toFixed(1)}`;
+    currentWeight = `${weights[0].weight_kg.toFixed(1)}`;
     weightChange = '0.0';
   }
 
