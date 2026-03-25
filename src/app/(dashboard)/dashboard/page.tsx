@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
@@ -150,7 +150,8 @@ export default function DashboardPage() {
   const isDemo = useIsDemo()
   const router = useRouter()
   const [activePrograms, setActivePrograms] = useState<ActiveEntry[]>([])
-  const [activity, setActivity] = useState<ReturnType<typeof buildDemoActivity>>([])
+  type ActivityItem = { id: string; type: string; clientName: string; detail: string; timeLabel: string; icon: React.ComponentType<any> }
+  const [activity, setActivity] = useState<ActivityItem[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -162,7 +163,7 @@ export default function DashboardPage() {
         client: clients.find((c) => c.id === p.client_id) ?? { id: p.client_id },
       }))
       setActivePrograms(entries)
-      setActivity(buildDemoActivity(clients, programs))
+      setActivity(buildDemoActivity(clients, programs) as ActivityItem[])
       setLoading(false)
       return
     }
@@ -185,6 +186,31 @@ export default function DashboardPage() {
         client: clients.find((c) => c.id === p.client_id) ?? { id: p.client_id },
       }))
       setActivePrograms(entries.slice(0, 6))
+
+      // Fetch recent check-ins for activity feed
+      if (clients.length > 0) {
+        const clientIds = clients.map((c) => c.id)
+        const { data: checkInData } = await supabase
+          .from('check_ins')
+          .select('id, client_id, created_at, date')
+          .in('client_id', clientIds)
+          .order('created_at', { ascending: false })
+          .limit(8)
+
+        const recentActivity = (checkInData ?? []).map((ci) => {
+          const client = clients.find((c) => c.id === ci.client_id)
+          return {
+            id: ci.id,
+            type: 'checkin_submitted' as const,
+            clientName: client?.name ?? client?.email ?? 'Client',
+            detail: 'Weekly check-in submitted',
+            timeLabel: formatTimeAgo(ci.created_at ?? ci.date),
+            icon: CheckCircle2,
+          }
+        })
+        setActivity(recentActivity)
+      }
+
       setLoading(false)
     }
     load()
