@@ -1,15 +1,16 @@
 import Link from 'next/link'
 
 export const metadata = {
-  title: 'Propel — The platform that propels your practice',
-  description: 'One platform for personal trainers, dietitians, and exercise physiologists. Programs, nutrition, check-ins, messaging, payments — and an AI coach that works while you sleep.',
+  title: 'Propel — The coaching platform for health professionals',
+  description: 'One platform for personal trainers, dietitians, and exercise physiologists. Training programs, nutrition, check-ins, payments, and an AI coach that works while you sleep.',
 }
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white font-sans">
+
       {/* ─── Header ─── */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2 font-bold text-xl tracking-tight text-gray-900">
             <div className="w-8 h-8 rounded-lg bg-[#0F7B8C] flex items-center justify-center text-white text-sm font-bold">P</div>
@@ -17,15 +18,16 @@ export default function LandingPage() {
           </div>
           <nav className="hidden md:flex items-center gap-8 text-sm text-gray-500">
             <a href="#features" className="hover:text-gray-900 transition-colors">Features</a>
+            <a href="#demo" className="hover:text-gray-900 transition-colors font-medium text-[#0F7B8C]">Watch Demo</a>
             <a href="#how-it-works" className="hover:text-gray-900 transition-colors">How it works</a>
             <a href="#pricing" className="hover:text-gray-900 transition-colors">Pricing</a>
           </nav>
           <div className="flex items-center gap-3">
-            <Link href="/login" className="text-sm font-medium text-[#0F7B8C] hover:text-[#0d6b7a] transition-colors">
+            <Link href="/login" className="text-sm font-medium text-[#0F7B8C] hover:text-[#0d6b7a] transition-colors hidden sm:block">
               Coach login
             </Link>
             <Link href="/register" className="bg-[#0F7B8C] hover:bg-[#0d6b7a] text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors">
-              Sign up free
+              Start free trial
             </Link>
           </div>
         </div>
@@ -37,34 +39,41 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             {/* Left */}
             <div>
-              <p className="text-sm font-semibold text-[#0F7B8C] mb-4 tracking-wide">Built for health &amp; fitness professionals</p>
+              <div className="inline-flex items-center gap-2 bg-[#0F7B8C]/8 border border-[#0F7B8C]/15 rounded-full px-3 py-1.5 mb-5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#0F7B8C] animate-pulse" />
+                <span className="text-xs font-semibold text-[#0F7B8C]">Built for health &amp; fitness professionals</span>
+              </div>
               <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight tracking-tight">
-                The platform that<br />
-                <span className="text-[#0F7B8C]">propels your practice</span>
+                Stop juggling tools.<br />
+                <span className="text-[#0F7B8C]">Start coaching more.</span>
               </h1>
               <p className="mt-6 text-lg text-gray-500 leading-relaxed max-w-lg">
-                One platform for personal trainers, dietitians, and exercise physiologists.
-                Programs, nutrition, check-ins, messaging, payments — and an AI coach that works while you sleep.
+                One platform for PTs, dietitians, and exercise physiologists.
+                Programs, nutrition, check-ins, messaging, and an AI coach that handles clients 24/7 — so you can focus on what you do best.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link href="/register" className="inline-flex items-center justify-center gap-2 bg-[#0F7B8C] hover:bg-[#0d6b7a] text-white font-bold px-8 py-4 rounded-2xl text-base transition-colors shadow-lg shadow-[#0F7B8C]/20">
-                  Start for free <span aria-hidden="true">→</span>
+                  Start free — 14 days <span aria-hidden="true">→</span>
                 </Link>
-                <a href="#how-it-works" className="inline-flex items-center justify-center gap-2 border border-gray-200 text-gray-700 font-semibold px-8 py-4 rounded-2xl text-base transition-colors hover:border-gray-300 hover:bg-gray-50">
-                  See how it works
+                <a href="#demo" className="inline-flex items-center justify-center gap-2 border border-gray-200 text-gray-700 font-semibold px-8 py-4 rounded-2xl text-base transition-colors hover:border-gray-300 hover:bg-gray-50">
+                  <span className="w-5 h-5 rounded-full bg-[#0F7B8C] flex items-center justify-center flex-shrink-0">
+                    <svg width="8" height="9" viewBox="0 0 8 9" fill="white"><path d="M1 1l6 3.5L1 8V1z"/></svg>
+                  </span>
+                  Watch demo
                 </a>
               </div>
               <div className="mt-10 flex items-center gap-6 text-sm text-gray-400">
                 <div className="flex items-center gap-2">
                   <div className="flex -space-x-1.5">
-                    <div className="w-6 h-6 rounded-full bg-[#0F7B8C]/20 border-2 border-white" />
-                    <div className="w-6 h-6 rounded-full bg-[#0F7B8C]/30 border-2 border-white" />
-                    <div className="w-6 h-6 rounded-full bg-[#0F7B8C]/40 border-2 border-white" />
+                    {['#0F7B8C20','#0F7B8C35','#0F7B8C50','#0F7B8C70'].map((c, i) => (
+                      <div key={i} className="w-7 h-7 rounded-full border-2 border-white flex items-center justify-center text-[8px] font-bold text-[#0F7B8C]" style={{backgroundColor: c}}>
+                        {['S','J','M','L'][i]}
+                      </div>
+                    ))}
                   </div>
-                  <span><strong className="text-gray-600">500+</strong> coaches</span>
+                  <span><strong className="text-gray-600">500+</strong> coaches already on Propel</span>
                 </div>
-                <span>No lock-in</span>
-                <span>iOS &amp; Android</span>
+                <span className="hidden sm:block">14-day free trial</span>
               </div>
             </div>
 
@@ -83,27 +92,17 @@ export default function LandingPage() {
                         <p className="text-[9px] text-gray-400">kcal · 980 remaining</p>
                       </div>
                       <div className="space-y-2">
-                        <div>
-                          <div className="flex justify-between items-center mb-0.5">
-                            <span className="text-[9px] text-gray-500">Protein</span>
-                            <span className="text-[9px] font-semibold text-gray-700">133/180g</span>
+                        {[['Protein','133/180g','74','#0F7B8C'],['Carbs','118/220g','54','#f59e0b'],['Fat','24/70g','34','#f43f5e']].map(([n,v,w,c]) => (
+                          <div key={n}>
+                            <div className="flex justify-between items-center mb-0.5">
+                              <span className="text-[9px] text-gray-500">{n}</span>
+                              <span className="text-[9px] font-semibold text-gray-700">{v}</span>
+                            </div>
+                            <div className="w-full h-1.5 bg-gray-100 rounded-full">
+                              <div className="h-1.5 rounded-full" style={{width:`${w}%`,backgroundColor:c}} />
+                            </div>
                           </div>
-                          <div className="w-full h-1.5 bg-gray-100 rounded-full"><div className="h-1.5 bg-[#0F7B8C] rounded-full" style={{width: '74%'}} /></div>
-                        </div>
-                        <div>
-                          <div className="flex justify-between items-center mb-0.5">
-                            <span className="text-[9px] text-gray-500">Carbs</span>
-                            <span className="text-[9px] font-semibold text-gray-700">118/220g</span>
-                          </div>
-                          <div className="w-full h-1.5 bg-gray-100 rounded-full"><div className="h-1.5 bg-amber-400 rounded-full" style={{width: '54%'}} /></div>
-                        </div>
-                        <div>
-                          <div className="flex justify-between items-center mb-0.5">
-                            <span className="text-[9px] text-gray-500">Fat</span>
-                            <span className="text-[9px] font-semibold text-gray-700">24/70g</span>
-                          </div>
-                          <div className="w-full h-1.5 bg-gray-100 rounded-full"><div className="h-1.5 bg-rose-400 rounded-full" style={{width: '34%'}} /></div>
-                        </div>
+                        ))}
                       </div>
                       <div className="space-y-1 pt-1">
                         <div className="bg-gray-50 rounded-lg px-2.5 py-2 text-[9px] text-gray-600">🥣 Breakfast · 420 kcal</div>
@@ -120,7 +119,6 @@ export default function LandingPage() {
               <div className="absolute left-1/2 -translate-x-1/2 top-0 w-[210px] z-20">
                 <div className="bg-gray-900 rounded-[30px] p-[5px] shadow-2xl shadow-black/30" style={{aspectRatio: '9/19'}}>
                   <div className="rounded-[26px] overflow-hidden bg-white h-full flex flex-col">
-                    {/* Status bar + Notch */}
                     <div className="relative bg-white pt-2 pb-1 flex-shrink-0">
                       <div className="absolute top-2 left-1/2 -translate-x-1/2 w-14 h-[5px] bg-gray-900 rounded-full z-10" />
                       <div className="flex justify-between px-4 pt-3">
@@ -130,7 +128,6 @@ export default function LandingPage() {
                         </div>
                       </div>
                     </div>
-                    {/* Screen Content — Client Home */}
                     <div className="px-3.5 pb-4 flex-1">
                       <p className="text-[9px] text-gray-400 mb-0.5">Good morning</p>
                       <p className="text-[13px] font-bold text-gray-900 mb-3">Emma Wilson</p>
@@ -154,20 +151,13 @@ export default function LandingPage() {
                       </div>
                       <p className="text-[9px] font-semibold text-gray-500 mt-2.5 mb-1">Daily Habits</p>
                       <div className="space-y-1">
-                        <div className="flex items-center gap-1.5 bg-gray-50 rounded-lg px-2 py-1.5">
-                          <div className="w-4 h-4 rounded-full bg-green-100 flex items-center justify-center text-[8px]">✓</div>
-                          <span className="text-[9px] text-gray-600">Drink 3L water</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 bg-gray-50 rounded-lg px-2 py-1.5">
-                          <div className="w-4 h-4 rounded-full bg-gray-100 flex items-center justify-center text-[8px] text-gray-300">○</div>
-                          <span className="text-[9px] text-gray-600">10,000 steps</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 bg-gray-50 rounded-lg px-2 py-1.5">
-                          <div className="w-4 h-4 rounded-full bg-green-100 flex items-center justify-center text-[8px]">✓</div>
-                          <span className="text-[9px] text-gray-600">8hrs sleep</span>
-                        </div>
+                        {[['Drink 3L water',true],['10,000 steps',false],['8hrs sleep',true]].map(([h,done]) => (
+                          <div key={h as string} className="flex items-center gap-1.5 bg-gray-50 rounded-lg px-2 py-1.5">
+                            <div className={`w-4 h-4 rounded-full flex items-center justify-center text-[8px] ${done ? 'bg-green-100' : 'bg-gray-100 text-gray-300'}`}>{done ? '✓' : '○'}</div>
+                            <span className="text-[9px] text-gray-600">{h}</span>
+                          </div>
+                        ))}
                       </div>
-                      {/* Bottom nav bar */}
                       <div className="mt-3 flex justify-around border-t border-gray-100 pt-2">
                         <div className="text-center"><div className="text-[10px]">🏠</div><p className="text-[7px] text-[#0F7B8C] font-semibold">Home</p></div>
                         <div className="text-center"><div className="text-[10px]">🏋️</div><p className="text-[7px] text-gray-400">Train</p></div>
@@ -191,9 +181,7 @@ export default function LandingPage() {
                       <p className="text-[9px] text-gray-400">1/4 sessions this week</p>
                       <div className="flex gap-1 mt-1">
                         {['M','T','W','T','F','S','S'].map((d, i) => (
-                          <div key={i} className={`w-[18px] h-[18px] rounded-full flex items-center justify-center text-[7px] font-medium ${i === 2 ? 'bg-[#0F7B8C] text-white' : 'bg-gray-100 text-gray-400'}`}>
-                            {d}
-                          </div>
+                          <div key={i} className={`w-[18px] h-[18px] rounded-full flex items-center justify-center text-[7px] font-medium ${i === 2 ? 'bg-[#0F7B8C] text-white' : 'bg-gray-100 text-gray-400'}`}>{d}</div>
                         ))}
                       </div>
                       <div className="mt-1.5 bg-gray-50 rounded-xl p-2.5">
@@ -201,14 +189,9 @@ export default function LandingPage() {
                         <p className="text-[10px] font-bold text-gray-900 mt-0.5">Upper Body Push</p>
                         <p className="text-[8px] text-gray-400">~55 min · 5 exercises</p>
                       </div>
-                      <div className="bg-gray-50 rounded-xl p-2.5">
-                        <span className="text-[9px] font-semibold text-gray-400">TOMORROW</span>
-                        <p className="text-[10px] font-bold text-gray-900 mt-0.5">Lower Body</p>
-                        <p className="text-[8px] text-gray-400">~50 min · 6 exercises</p>
-                      </div>
                       <div className="bg-gray-50 rounded-xl p-2.5 border-l-4 border-[#0F7B8C]">
                         <p className="text-[9px] font-semibold text-gray-800">Coach Note</p>
-                        <p className="text-[8px] text-gray-500 mt-0.5">Focus on controlled tempo today. 3-1-2 on all presses.</p>
+                        <p className="text-[8px] text-gray-500 mt-0.5">Focus on controlled tempo. 3-1-2 on all presses.</p>
                       </div>
                       <div className="bg-[#0F7B8C] rounded-xl py-2 text-center">
                         <span className="text-[9px] font-semibold text-white">▶ Start Workout</span>
@@ -222,98 +205,152 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ─── Social Proof Stats Bar ─── */}
+      <section className="py-10 bg-[#0F7B8C]">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+            {[
+              { value: '500+', label: 'Coaches on Propel' },
+              { value: '10,000+', label: 'Clients coached' },
+              { value: '97%', label: 'Check-in compliance' },
+              { value: '4.9★', label: 'Average coach rating' },
+            ].map(stat => (
+              <div key={stat.label}>
+                <p className="text-3xl md:text-4xl font-extrabold text-white">{stat.value}</p>
+                <p className="text-sm text-white/70 mt-1">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ─── Professions bar ─── */}
-      <section className="py-12 bg-gray-50 border-y border-gray-100">
+      <section className="py-10 bg-gray-50 border-b border-gray-100">
         <div className="max-w-5xl mx-auto px-6">
           <p className="text-center text-xs font-semibold text-gray-400 tracking-widest uppercase mb-4">Built for every health profession</p>
           <div className="flex flex-wrap justify-center gap-3">
-            {['🏋️ Personal Trainers','🥗 Nutritionists','🍎 Dietitians','🏃 Exercise Physiologists','💪 Strength Coaches','📱 Online Fitness Coaches','🦴 Physiotherapists'].map((p, i) => (
+            {['🏋️ Personal Trainers','🥗 Nutritionists','🍎 Dietitians','🏃 Exercise Physiologists','💪 Strength Coaches','📱 Online Coaches','🦴 Physiotherapists'].map((p, i) => (
               <span key={i} className="px-4 py-2 bg-white rounded-full text-sm text-gray-600 border border-gray-100 shadow-sm">{p}</span>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ─── Coach Dashboard Preview ─── */}
-      <section className="py-24 px-6 bg-white">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">Your coaching HQ, in the browser</h2>
-            <p className="mt-4 text-gray-500 max-w-2xl mx-auto">
-              Build programs, create meal plans with AI, track check-ins and message clients — all from your coach dashboard.
-            </p>
+      {/* ─── Demo Video Section ─── */}
+      <section id="demo" className="py-24 px-6 bg-white">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">See Propel in action</h2>
+            <p className="mt-4 text-gray-500 max-w-xl mx-auto">Watch how coaches use Propel to run their entire practice — from onboarding a new client to delivering programs, tracking nutrition, and getting paid.</p>
           </div>
-          <div className="rounded-2xl overflow-hidden border border-gray-200 shadow-2xl shadow-gray-200/50">
-            {/* Browser chrome */}
-            <div className="bg-gray-100 px-4 py-3 flex items-center gap-2 border-b border-gray-200">
-              <div className="flex gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-red-400" />
-                <div className="w-3 h-3 rounded-full bg-yellow-400" />
-                <div className="w-3 h-3 rounded-full bg-green-400" />
+          {/* Video embed placeholder */}
+          <div className="relative rounded-2xl overflow-hidden border border-gray-200 shadow-2xl shadow-gray-200/60 bg-gray-900 aspect-video group cursor-pointer">
+            {/* Gradient thumbnail background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-[#0F7B8C] via-[#0a5a68] to-gray-900" />
+            {/* Fake screenshot overlay */}
+            <div className="absolute inset-0 opacity-30">
+              <div className="absolute top-6 left-6 right-6 h-8 bg-white/10 rounded-xl" />
+              <div className="absolute top-20 left-6 w-40 bg-white/10 rounded-xl h-full" />
+              <div className="absolute top-20 left-52 right-6 h-48 bg-white/5 rounded-xl" />
+            </div>
+            {/* Play button */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
+              <div className="w-20 h-20 rounded-full bg-white shadow-2xl flex items-center justify-center group-hover:scale-105 transition-transform">
+                <svg width="22" height="26" viewBox="0 0 22 26" fill="#0F7B8C">
+                  <path d="M1 1.5l20 11L1 23.5V1.5z"/>
+                </svg>
               </div>
-              <div className="ml-4 flex-1 bg-white rounded-md px-3 py-1 text-xs text-gray-400 border border-gray-200">
-                app.propelcoaches.com
+              <div className="text-center">
+                <p className="text-white font-bold text-lg">Watch the 3-minute overview</p>
+                <p className="text-white/60 text-sm mt-1">See how Propel works from signup to coaching</p>
               </div>
             </div>
-            {/* Dashboard UI */}
-            <div className="bg-white flex">
-              {/* Sidebar */}
-              <div className="w-48 bg-gray-50 border-r border-gray-100 p-4 hidden sm:block">
-                <div className="flex items-center gap-2 mb-6">
-                  <div className="w-6 h-6 rounded bg-[#0F7B8C] flex items-center justify-center text-white text-[10px] font-bold">P</div>
-                  <span className="text-xs font-bold text-gray-900">Propel</span>
-                </div>
-                <nav className="space-y-0.5 text-[11px]">
-                  {['Dashboard','Clients','Messages','Check-ins','Coaching','Programs','Nutrition','Habits','Payments'].map((item, i) => (
-                    <div key={i} className={`px-3 py-1.5 rounded-md ${i === 1 ? 'bg-[#0F7B8C] text-white font-semibold' : 'text-gray-500 hover:bg-gray-100'}`}>
-                      {item}
-                    </div>
-                  ))}
-                </nav>
+            {/* Duration badge */}
+            <div className="absolute bottom-4 right-4 bg-black/60 text-white text-xs font-medium px-2.5 py-1 rounded-lg">3:24</div>
+          </div>
+          <div className="mt-6 flex items-center justify-center gap-8 text-sm text-gray-400">
+            <span>✓ No sign up required to watch</span>
+            <span>✓ Covers all core features</span>
+            <span>✓ Updated March 2026</span>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Feature Showcase 1: Training Programs ─── */}
+      <section className="py-20 px-6 bg-gray-50">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-16 items-center">
+            <div>
+              <p className="text-sm font-semibold text-[#0F7B8C] tracking-wide mb-3">Training Programs</p>
+              <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight leading-tight">
+                Build programs your clients will actually complete
+              </h2>
+              <p className="mt-4 text-gray-500 leading-relaxed">
+                Design personalised workout programs in minutes, not hours. Drag and drop exercises from a library of thousands, set sets, reps, tempo, and rest — then assign it to a client with one click.
+              </p>
+              <ul className="mt-6 space-y-3">
+                {[
+                  'Thousands of exercises with video demos',
+                  'Supersets, circuits, and warmup blocks',
+                  'Clients log sets and reps live in the app',
+                  'Coach sees completed vs skipped in real time',
+                  'Progress auto-tracked over every session',
+                ].map(item => (
+                  <li key={item} className="flex items-start gap-3 text-sm text-gray-600">
+                    <svg className="w-5 h-5 text-[#0F7B8C] flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Coach dashboard mockup */}
+            <div className="rounded-2xl overflow-hidden border border-gray-200 shadow-xl">
+              <div className="bg-gray-100 px-4 py-2.5 flex items-center gap-2 border-b border-gray-200">
+                <div className="flex gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-red-400"/><div className="w-2.5 h-2.5 rounded-full bg-yellow-400"/><div className="w-2.5 h-2.5 rounded-full bg-green-400"/></div>
+                <div className="ml-3 flex-1 bg-white rounded px-2 py-0.5 text-[10px] text-gray-400 border border-gray-200">app.propelcoaches.com/training</div>
               </div>
-              {/* Main content */}
-              <div className="flex-1 p-6">
+              <div className="bg-white p-5">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h3 className="text-base font-bold text-gray-900">Clients</h3>
-                    <p className="text-xs text-gray-400">Manage your coaching clients</p>
+                    <p className="text-sm font-bold text-gray-900">Hypertrophy Block A</p>
+                    <p className="text-xs text-gray-400">Emma Wilson · Week 3 of 8 · 4 days/week</p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="bg-gray-100 rounded-lg px-3 py-1.5 text-xs text-gray-400">Search clients...</div>
-                    <div className="bg-[#0F7B8C] text-white text-xs font-semibold px-3 py-1.5 rounded-lg">Add Client</div>
-                  </div>
+                  <span className="px-2 py-0.5 bg-[#0F7B8C]/10 text-[#0F7B8C] text-xs font-semibold rounded-full">Active</span>
                 </div>
-                <div className="grid grid-cols-3 gap-3 mb-4">
-                  {[{label:'Total Clients',val:'24'},{label:'Active (Onboarded)',val:'21'},{label:'Pending Invitations',val:'3'}].map((s,i) => (
-                    <div key={i} className="bg-gray-50 rounded-xl p-3">
-                      <p className="text-[10px] text-gray-400">{s.label}</p>
-                      <p className="text-lg font-bold text-gray-900">{s.val}</p>
-                    </div>
+                {/* Day tabs */}
+                <div className="flex gap-1 mb-4">
+                  {['Day 1','Day 2','Day 3','Day 4'].map((d,i) => (
+                    <button key={d} className={`px-3 py-1 rounded-lg text-xs font-medium ${i===0?'bg-[#0F7B8C] text-white':'bg-gray-100 text-gray-500'}`}>{d}</button>
                   ))}
                 </div>
+                <p className="text-xs font-semibold text-gray-500 mb-2">Upper Body Push</p>
                 <div className="space-y-2">
                   {[
-                    {name:'Emma Wilson',goal:'Fat Loss',status:'Active',last:'3 days ago'},
-                    {name:'James Khoury',goal:'Muscle Gain',status:'Active',last:'Today'},
-                    {name:'Mia Torres',goal:'Performance',status:'Active',last:'Yesterday'},
-                    {name:'Liam Chen',goal:'Recomp',status:'Pending',last:'Invite sent'},
-                  ].map((c,i) => (
-                    <div key={i} className="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-gray-50 border border-gray-100">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-[#0F7B8C]/10 flex items-center justify-center text-[10px] font-bold text-[#0F7B8C]">
-                          {c.name.split(' ').map(n => n[0]).join('')}
-                        </div>
-                        <div>
-                          <p className="text-xs font-semibold text-gray-900">{c.name}</p>
-                          <p className="text-[10px] text-gray-400">{c.goal}</p>
-                        </div>
+                    ['Bench Press','4','8-10','75kg'],
+                    ['Incline DB Press','3','10-12','30kg'],
+                    ['Cable Lateral Raise','4','15','12kg'],
+                    ['Tricep Pushdown','3','12-15','25kg'],
+                  ].map(([ex,sets,reps,weight],i) => (
+                    <div key={i} className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2.5 text-xs">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-lg bg-[#0F7B8C]/10 flex items-center justify-center text-[10px] font-bold text-[#0F7B8C]">{i+1}</div>
+                        <span className="font-medium text-gray-800">{ex}</span>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${c.status === 'Active' ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'}`}>{c.status}</span>
-                        <span className="text-[10px] text-gray-400">{c.last}</span>
+                      <div className="flex gap-4 text-gray-400">
+                        <span>{sets} × {reps}</span>
+                        <span className="text-gray-600 font-medium">{weight}</span>
                       </div>
                     </div>
                   ))}
+                </div>
+                <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-2">
+                  <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-[#0F7B8C] rounded-full" style={{width:'62%'}}/>
+                  </div>
+                  <span className="text-xs text-gray-400">Week 3/8</span>
                 </div>
               </div>
             </div>
@@ -321,39 +358,187 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ─── Features ─── */}
-      <section id="features" className="py-24 px-6">
+      {/* ─── Feature Showcase 2: Nutrition ─── */}
+      <section className="py-20 px-6 bg-white">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
+          <div className="grid md:grid-cols-2 gap-16 items-center">
+            {/* Phone mockup */}
+            <div className="flex justify-center">
+              <div className="w-[220px]">
+                <div className="bg-gray-900 rounded-[30px] p-[5px] shadow-2xl shadow-black/20" style={{aspectRatio:'9/19'}}>
+                  <div className="bg-white rounded-[26px] overflow-hidden h-full flex flex-col">
+                    <div className="bg-[#0F7B8C] px-4 py-3">
+                      <p className="text-white text-[11px] font-bold">Meal Plan — Monday</p>
+                      <p className="text-white/70 text-[9px]">Assigned by coach</p>
+                    </div>
+                    <div className="p-3 space-y-2 flex-1 overflow-hidden">
+                      <div className="bg-gray-50 rounded-xl p-2.5">
+                        <p className="text-[9px] font-bold text-gray-700 mb-1">🥣 Breakfast · 520 kcal</p>
+                        <p className="text-[8px] text-gray-500">Greek Yoghurt Parfait</p>
+                        <p className="text-[8px] text-gray-400">38g P · 52g C · 12g F</p>
+                      </div>
+                      <div className="bg-gray-50 rounded-xl p-2.5">
+                        <p className="text-[9px] font-bold text-gray-700 mb-1">🍛 Lunch · 680 kcal</p>
+                        <p className="text-[8px] text-gray-500">Chicken Rice Bowl</p>
+                        <p className="text-[8px] text-gray-400">52g P · 72g C · 14g F</p>
+                      </div>
+                      <div className="bg-[#0F7B8C]/5 rounded-xl p-2.5 border border-[#0F7B8C]/15">
+                        <p className="text-[9px] font-bold text-[#0F7B8C] mb-1.5">Daily Totals</p>
+                        {[['Calories','2,050 kcal','88'],['Protein','165g','92'],['Carbs','210g','84'],['Fat','62g','89']].map(([l,v,p]) => (
+                          <div key={l} className="mb-1">
+                            <div className="flex justify-between text-[8px] mb-0.5">
+                              <span className="text-gray-500">{l}</span>
+                              <span className="font-semibold text-gray-700">{v}</span>
+                            </div>
+                            <div className="h-1 bg-gray-100 rounded-full">
+                              <div className="h-full bg-[#0F7B8C] rounded-full" style={{width:`${p}%`}}/>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm font-semibold text-[#0F7B8C] tracking-wide mb-3">Nutrition & Meal Plans</p>
+              <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight leading-tight">
+                Nutrition coaching without the spreadsheets
+              </h2>
+              <p className="mt-4 text-gray-500 leading-relaxed">
+                Build complete meal plans, set macro targets, or use AI to generate personalised plans in seconds. Clients see their full plan in the app and log food instantly.
+              </p>
+              <ul className="mt-6 space-y-3">
+                {[
+                  'AI-generated meal plans in under 30 seconds',
+                  'Full macro breakdowns per meal and per day',
+                  'Clients log food by barcode, photo, or search',
+                  'Weekly nutrition compliance tracking for coaches',
+                  'Adjust targets week-by-week as clients progress',
+                ].map(item => (
+                  <li key={item} className="flex items-start gap-3 text-sm text-gray-600">
+                    <svg className="w-5 h-5 text-[#0F7B8C] flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Feature Showcase 3: Check-ins & Progress ─── */}
+      <section className="py-20 px-6 bg-gray-50">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-16 items-center">
+            <div>
+              <p className="text-sm font-semibold text-[#0F7B8C] tracking-wide mb-3">Check-ins & Progress Tracking</p>
+              <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight leading-tight">
+                Know exactly how every client is doing, every week
+              </h2>
+              <p className="mt-4 text-gray-500 leading-relaxed">
+                Automated weekly check-ins land in your client&apos;s app. Review responses, leave feedback, and track every metric — weight, body measurements, progress photos, sleep, energy, and more.
+              </p>
+              <ul className="mt-6 space-y-3">
+                {[
+                  'Custom check-in forms with any question type',
+                  'Progress photos with side-by-side comparison',
+                  'Auto-scheduled weekly, biweekly, or monthly',
+                  'Leave coach feedback directly on each check-in',
+                  'Spot compliance trends across all clients at once',
+                ].map(item => (
+                  <li key={item} className="flex items-start gap-3 text-sm text-gray-600">
+                    <svg className="w-5 h-5 text-[#0F7B8C] flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Check-in mockup */}
+            <div className="rounded-2xl overflow-hidden border border-gray-200 shadow-xl bg-white">
+              <div className="bg-gray-100 px-4 py-2.5 flex items-center gap-2 border-b border-gray-200">
+                <div className="flex gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-red-400"/><div className="w-2.5 h-2.5 rounded-full bg-yellow-400"/><div className="w-2.5 h-2.5 rounded-full bg-green-400"/></div>
+                <div className="ml-3 flex-1 bg-white rounded px-2 py-0.5 text-[10px] text-gray-400 border border-gray-200">app.propelcoaches.com/check-ins</div>
+              </div>
+              <div className="p-5">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <p className="text-sm font-bold text-gray-900">Weekly Check-In</p>
+                    <p className="text-xs text-gray-400">Emma Wilson · 25 March 2026</p>
+                  </div>
+                  <span className="px-2 py-0.5 bg-green-50 text-green-600 text-[10px] font-semibold rounded-full">Submitted</span>
+                </div>
+                <div className="grid grid-cols-4 gap-2 mb-4">
+                  {[['Energy','8','bg-green-50 text-green-600'],['Sleep','7','bg-yellow-50 text-yellow-600'],['Stress','4','bg-red-50 text-red-500'],['Training','9','bg-green-50 text-green-600']].map(([l,v,c]) => (
+                    <div key={l} className={`rounded-xl p-2.5 text-center ${c}`}>
+                      <p className="text-lg font-bold">{v}</p>
+                      <p className="text-[9px] mt-0.5 opacity-80">{l}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="space-y-3 text-xs">
+                  <div className="bg-gray-50 rounded-xl p-3">
+                    <p className="font-semibold text-gray-500 mb-1">Wins this week</p>
+                    <p className="text-gray-700">Hit a new squat PR — 95kg for 5! Nutrition was on point all week too.</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-xl p-3">
+                    <p className="font-semibold text-gray-500 mb-1">Coach feedback</p>
+                    <div className="flex gap-2">
+                      <div className="w-5 h-5 rounded-full bg-[#0F7B8C] flex-shrink-0 flex items-center justify-center text-[8px] text-white font-bold mt-0.5">JK</div>
+                      <p className="text-gray-600">Amazing work on the squat PR! Let&apos;s push to 100kg by end of the block. Keep that nutrition consistency going 💪</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between pt-1">
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-full bg-[#0F7B8C]/15 overflow-hidden flex items-center justify-center text-[8px] text-[#0F7B8C] font-bold">EW</div>
+                      <p className="text-gray-400">Current weight: <span className="font-semibold text-gray-600">78.2 kg</span></p>
+                    </div>
+                    <span className="text-[#0F7B8C] text-[10px] font-medium">↓ 0.8kg from last week</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Secondary Features Grid ─── */}
+      <section id="features" className="py-20 px-6 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">
-              Everything you need.<br/>Nothing you don&apos;t.
+              Everything in one platform
             </h2>
             <p className="mt-4 text-gray-500 max-w-2xl mx-auto">
-              Choose which features your clients can access. A dietitian doesn&apos;t need the workout section, and a PT might not need meal plans.
+              Turn features on or off per client. A dietitian doesn&apos;t need workout sections. A PT might not need meal plans. You choose what each client sees.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {[
-              {title:'Training Programs',desc:'Build and assign workout programs with sets, reps, tempo, and coach notes. Clients log sessions live in the app.',icon:'🏋️'},
-              {title:'Nutrition & Meal Plans',desc:'Create AI-generated meal plans, set macro targets, and let clients log food with a barcode scanner or photo.',icon:'🍎'},
-              {title:'Client Messaging',desc:'Chat directly with clients in real time. Send voice notes, use canned templates, and let AI handle after-hours.',icon:'💬'},
-              {title:'Check-ins & Forms',desc:'Weekly progress check-ins with custom questions. Stay on top of how every client is really doing.',icon:'📋'},
-              {title:'Habit Tracking',desc:'Set daily habits and let clients track them in the app. Build consistency one day at a time.',icon:'✅'},
-              {title:'Progress & Metrics',desc:'Weight, measurements, progress photos, and personal bests — every metric in one place.',icon:'📊'},
-              {title:'AI Coach Assistant',desc:'Your AI coach responds to clients 24/7 in your tone and style. It can also generate meal plans and workout programs.',icon:'🤖'},
-              {title:'White Label & Branding',desc:'Make Propel your own. Custom colours, logo, and branding so clients see your brand — not ours.',icon:'🎨'},
-              {title:'Video Exercise Library',desc:'Upload exercise demo videos and attach them to workouts. Clients see exactly how to perform each movement.',icon:'🎬'},
-              {title:'Group Chats',desc:'Create group coaching channels for challenges, accountability groups, or team communication.',icon:'👥'},
-              {title:'Wearable Integration',desc:'Connect Apple Watch, Fitbit, and Garmin. Pull in steps, heart rate, sleep, and activity data automatically.',icon:'⌚'},
-              {title:'AI Form Check',desc:'Clients upload exercise videos and get instant AI-powered form analysis with technique feedback.',icon:'📹'},
-              {title:'Packages & Subscriptions',desc:'Create coaching packages with different tiers. Clients subscribe and get auto-billed through Stripe.',icon:'📦'},
-              {title:'Marketplace',desc:'List your programs and templates on the Propel marketplace. Earn passive income from your expertise.',icon:'🛒'},
-              {title:'Payments & Invoicing',desc:'Send invoices, manage subscriptions, and track revenue — all powered by Stripe.',icon:'💳'},
+              {title:'AI Coach Assistant',desc:'Responds to clients 24/7 in your tone and style',icon:'🤖'},
+              {title:'Habit Tracking',desc:'Daily habits with streaks, charts, and reminders',icon:'✅'},
+              {title:'Client Messaging',desc:'Real-time chat with voice notes and canned replies',icon:'💬'},
+              {title:'Payments & Billing',desc:'Invoicing, subscriptions, and Stripe integration',icon:'💳'},
+              {title:'Autoflow Scheduling',desc:'Automate program delivery, check-ins, and messages',icon:'⚡'},
+              {title:'White Label Branding',desc:'Your logo, colours, and brand — not ours',icon:'🎨'},
+              {title:'Progress Photos',desc:'Side-by-side comparison with date overlays',icon:'📷'},
+              {title:'Video Exercise Library',desc:'Upload your own exercise demos for every movement',icon:'🎬'},
+              {title:'Wearable Sync',desc:'Apple Watch, Fitbit, and Garmin data auto-synced',icon:'⌚'},
+              {title:'AI Form Check',desc:'Clients upload videos for instant technique feedback',icon:'📹'},
+              {title:'Group Coaching',desc:'Channels for challenges, groups, and communities',icon:'👥'},
+              {title:'Marketplace',desc:'Sell programs and templates to earn passive income',icon:'🛒'},
             ].map((f, i) => (
-              <div key={i} className="bg-gray-50 rounded-2xl p-6 border border-gray-100 hover:border-[#0F7B8C]/20 hover:bg-[#0F7B8C]/[0.02] transition-colors">
+              <div key={i} className="bg-gray-50 rounded-2xl p-5 border border-gray-100 hover:border-[#0F7B8C]/30 hover:shadow-sm transition-all">
                 <span className="text-2xl mb-3 block">{f.icon}</span>
-                <h3 className="text-base font-bold text-gray-900 mb-2">{f.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{f.desc}</p>
+                <h3 className="text-sm font-bold text-gray-900 mb-1">{f.title}</h3>
+                <p className="text-xs text-gray-500 leading-relaxed">{f.desc}</p>
               </div>
             ))}
           </div>
@@ -365,17 +550,20 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto">
           <div className="grid md:grid-cols-2 gap-16 items-center">
             <div>
-              <p className="text-sm font-semibold text-white/60 tracking-wide mb-3">AI-powered</p>
+              <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-3 py-1.5 mb-4">
+                <span className="text-xs font-semibold text-white/80">AI-powered coaching</span>
+              </div>
               <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">Your AI coach works while you sleep</h2>
               <p className="mt-4 text-white/70 leading-relaxed">
-                Clients don&apos;t stop needing support at 5pm. Your AI coaching assistant responds to messages around the clock in your tone.
+                Clients don&apos;t stop needing support at 5pm. Your AI coaching assistant handles messages around the clock — in your voice, with your knowledge.
               </p>
               <ul className="mt-6 space-y-3">
                 {[
-                  'Responds instantly to client questions and check-ins',
-                  'Matches your communication style perfectly',
-                  'Hands off to you seamlessly when needed',
-                  'Toggle on or off for any client at any time',
+                  'Responds instantly to client questions, 24/7',
+                  'Trained on your communication style and cues',
+                  'Hands off to you when something needs a human',
+                  'Toggle on or off per client, any time',
+                  'Generates meal plans and programs on demand',
                 ].map((item, i) => (
                   <li key={i} className="flex items-start gap-3 text-sm text-white/80">
                     <svg className="w-5 h-5 text-white/40 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
@@ -388,7 +576,10 @@ export default function LandingPage() {
             </div>
             <div>
               <div className="bg-white/10 backdrop-blur rounded-2xl p-6 border border-white/10">
-                <p className="text-xs font-semibold text-white/40 mb-4">Example conversation</p>
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"/>
+                  <p className="text-xs font-semibold text-white/50">Live conversation example</p>
+                </div>
                 <div className="space-y-4">
                   <div className="flex justify-end">
                     <div className="bg-white/20 rounded-2xl rounded-br-md px-4 py-2.5 max-w-[80%]">
@@ -397,19 +588,19 @@ export default function LandingPage() {
                   </div>
                   <div className="flex justify-start">
                     <div className="bg-white rounded-2xl rounded-bl-md px-4 py-2.5 max-w-[80%]">
-                      <p className="text-sm text-gray-700">Don&apos;t be too hard on yourself — one missed session doesn&apos;t undo your progress. How are you feeling? Want to make it up tomorrow?</p>
-                      <p className="text-[10px] text-[#0F7B8C] font-semibold mt-1">AI Coach</p>
+                      <p className="text-sm text-gray-700">Don&apos;t be too hard on yourself — one missed session won&apos;t undo your progress. How are you feeling? Want to make it up tomorrow?</p>
+                      <p className="text-[10px] text-[#0F7B8C] font-semibold mt-1">🤖 AI Coach (James K.)</p>
                     </div>
                   </div>
                   <div className="flex justify-end">
                     <div className="bg-white/20 rounded-2xl rounded-br-md px-4 py-2.5 max-w-[80%]">
-                      <p className="text-sm">Just been flat out at work. I&apos;ll make it up tomorrow</p>
+                      <p className="text-sm">Yeah, work was crazy. I&apos;ll make it up tomorrow 🙏</p>
                     </div>
                   </div>
                   <div className="flex justify-start">
                     <div className="bg-white rounded-2xl rounded-bl-md px-4 py-2.5 max-w-[80%]">
-                      <p className="text-sm text-gray-700">That&apos;s the spirit. Tomorrow is upper body — get a good sleep and stay hydrated tonight. You&apos;ve got this 💪</p>
-                      <p className="text-[10px] text-[#0F7B8C] font-semibold mt-1">AI Coach</p>
+                      <p className="text-sm text-gray-700">That&apos;s the spirit. Tomorrow is upper body — sleep well tonight and get a good breakfast in. You&apos;ve got this 💪</p>
+                      <p className="text-[10px] text-[#0F7B8C] font-semibold mt-1">🤖 AI Coach (James K.)</p>
                     </div>
                   </div>
                 </div>
@@ -419,22 +610,99 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ─── How it works ─── */}
-      <section id="how-it-works" className="py-24 px-6">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">Up and running in minutes</h2>
-            <p className="mt-4 text-gray-500">No setup call required. No lengthy onboarding. Just you and your clients, coaching.</p>
+      {/* ─── Testimonials ─── */}
+      <section className="py-24 px-6 bg-gray-50">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">Coaches love Propel</h2>
+            <p className="mt-4 text-gray-500">Join hundreds of health professionals who&apos;ve simplified their coaching business.</p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-6">
             {[
-              {step:'1',title:'Sign up in 60 seconds',desc:'Create your account, tell us your profession, and choose which features your clients can access.'},
-              {step:'2',title:'Invite your clients',desc:'Send clients an invite link. They download the app, create a profile, and connect to you instantly.'},
-              {step:'3',title:'Start coaching',desc:'Build programs, send check-ins, chat in real time, and let your AI assistant handle the in-between.'},
+              {quote:'Propel replaced three separate tools I was juggling. My clients love the app, my admin time is down 80%, and I actually enjoy coaching again.',name:'Sarah Mitchell',role:'Online Personal Trainer',location:'Sydney, NSW',initials:'SM'},
+              {quote:'As a dietitian, I only needed the nutrition and check-in features. Being able to hide the workout section keeps it clean for my clients. Game changer.',name:'James Khoury',role:'Accredited Dietitian',location:'Melbourne, VIC',initials:'JK'},
+              {quote:'The AI coach handles all my after-hours messages now. I used to spend 45 minutes every night replying to clients. That time is mine back.',name:'Mia Torres',role:'Exercise Physiologist',location:'Brisbane, QLD',initials:'MT'},
+              {quote:'I was hesitant to move platforms but the Propel team made it so easy. Clients were onboarded within a day and the feedback has been incredibly positive.',name:'Alex Chen',role:'Strength & Conditioning Coach',location:'Perth, WA',initials:'AC'},
+              {quote:'The check-in forms have completely transformed how I understand my clients. I know exactly how they&apos;re feeling before our calls — saves so much time.',name:'Emma Wilson',role:'Nutritionist',location:'Adelaide, SA',initials:'EW'},
+              {quote:'The white-label branding was a big one for me. My clients see my brand everywhere, not a third-party platform. It makes me look so much more professional.',name:'Daniel Park',role:'Online Fitness Coach',location:'Gold Coast, QLD',initials:'DP'},
+            ].map((t, i) => (
+              <div key={i} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex gap-0.5 mb-4">
+                  {[1,2,3,4,5].map(s => <span key={s} className="text-amber-400 text-sm">★</span>)}
+                </div>
+                <p className="text-sm text-gray-600 leading-relaxed mb-5">&ldquo;{t.quote}&rdquo;</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-[#0F7B8C]/10 flex items-center justify-center text-xs font-bold text-[#0F7B8C] flex-shrink-0">{t.initials}</div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">{t.name}</p>
+                    <p className="text-xs text-gray-400">{t.role} · {t.location}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── The Propel Promise (Guarantee) ─── */}
+      <section className="py-20 px-6 bg-white border-y border-gray-100">
+        <div className="max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div>
+              <div className="w-16 h-16 rounded-2xl bg-[#0F7B8C]/10 flex items-center justify-center mb-5">
+                <span className="text-3xl">🤝</span>
+              </div>
+              <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">The Propel Promise</h2>
+              <p className="mt-4 text-gray-500 leading-relaxed">
+                We&apos;re confident Propel will transform how you coach. That&apos;s why we offer a 30-day money-back guarantee — no forms to fill out, no waiting around.
+              </p>
+              <p className="mt-3 text-gray-500 leading-relaxed">
+                If Propel isn&apos;t the best coaching platform you&apos;ve used within your first 30 days, email us and you&apos;ll get a full refund the same day. Simple as that.
+              </p>
+              <Link href="/register" className="mt-6 inline-flex items-center gap-2 bg-[#0F7B8C] hover:bg-[#0d6b7a] text-white font-bold px-6 py-3 rounded-xl text-sm transition-colors shadow-md shadow-[#0F7B8C]/20">
+                Start your free trial →
+              </Link>
+            </div>
+            <div className="space-y-4">
+              {[
+                {icon:'📅',title:'14-day free trial',desc:'Try every feature with no credit card required until your trial ends.'},
+                {icon:'💸',title:'30-day money-back guarantee',desc:'If you\'re not happy, we refund you that day. No questions, no forms.'},
+                {icon:'🔓',title:'No lock-in contracts',desc:'Month-to-month. Cancel any time, instantly, with no cancellation fees.'},
+                {icon:'📞',title:'Onboarding support included',desc:'Every new coach gets a walkthrough call to get set up the right way.'},
+              ].map(item => (
+                <div key={item.title} className="flex items-start gap-4 bg-gray-50 rounded-2xl p-4">
+                  <span className="text-xl flex-shrink-0">{item.icon}</span>
+                  <div>
+                    <p className="text-sm font-bold text-gray-900">{item.title}</p>
+                    <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{item.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── How it works ─── */}
+      <section id="how-it-works" className="py-24 px-6 bg-gray-50">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">Up and running in under an hour</h2>
+            <p className="mt-4 text-gray-500">No lengthy setup, no tech expertise needed. Just you and your clients, coaching.</p>
+          </div>
+          <div className="grid md:grid-cols-4 gap-8">
+            {[
+              {step:'1',title:'Sign up',desc:'Create your account in 60 seconds. Choose your profession and which features your clients can access.'},
+              {step:'2',title:'Set up your profile',desc:'Add your branding, create your first check-in form, and build a workout program template.'},
+              {step:'3',title:'Invite your clients',desc:'Send clients an invite link. They download the app, complete onboarding, and connect to you instantly.'},
+              {step:'4',title:'Start coaching',desc:'Assign programs, send check-ins, chat in real time, and let your AI assistant handle the rest.'},
             ].map((s, i) => (
-              <div key={i} className="text-center">
-                <div className="w-12 h-12 rounded-2xl bg-[#0F7B8C]/10 flex items-center justify-center mx-auto mb-4">
-                  <span className="text-lg font-bold text-[#0F7B8C]">{s.step}</span>
+              <div key={i} className="text-center relative">
+                {i < 3 && (
+                  <div className="hidden md:block absolute top-6 left-[60%] right-0 h-0.5 bg-[#0F7B8C]/20" />
+                )}
+                <div className="w-12 h-12 rounded-2xl bg-[#0F7B8C] flex items-center justify-center mx-auto mb-4 relative z-10">
+                  <span className="text-base font-bold text-white">{s.step}</span>
                 </div>
                 <h3 className="text-base font-bold text-gray-900 mb-2">{s.title}</h3>
                 <p className="text-sm text-gray-500 leading-relaxed">{s.desc}</p>
@@ -444,101 +712,148 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ─── Testimonials ─── */}
-      <section className="py-24 px-6 bg-gray-50">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight text-center mb-16">Coaches love Propel</h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              {quote:'Propel replaced three separate tools I was using. My clients love the app and I finally feel on top of everything.',name:'Sarah Mitchell',role:'Online PT, Sydney'},
-              {quote:'As a dietitian I only needed the nutrition and check-in features — being able to turn everything else off keeps it clean.',name:'James Khoury',role:'Accredited Dietitian'},
-              {quote:'The AI coach handles all the after-hours messages. I used to spend an hour every night replying — now I don\'t.',name:'Mia Torres',role:'Exercise Physiologist'},
-            ].map((t, i) => (
-              <div key={i} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-                <div className="flex gap-0.5 mb-3">
-                  {[1,2,3,4,5].map(s => <span key={s} className="text-amber-400 text-sm">★</span>)}
-                </div>
-                <p className="text-sm text-gray-600 leading-relaxed mb-4">&ldquo;{t.quote}&rdquo;</p>
-                <div>
-                  <p className="text-sm font-semibold text-gray-900">{t.name}</p>
-                  <p className="text-xs text-gray-400">{t.role}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ─── Pricing ─── */}
-      <section id="pricing" className="py-24 px-6">
+      <section id="pricing" className="py-24 px-6 bg-white">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-16">
+          <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">Simple, transparent pricing</h2>
-            <p className="mt-4 text-gray-500">14-day free trial on all plans. Cancel anytime.</p>
+            <p className="mt-4 text-gray-500">Start free for 14 days. No credit card required during trial. Cancel anytime.</p>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
             {[
-              {name:'Starter',desc:'Perfect for coaches just getting started',price:'0',features:['Up to 5 active clients','Training program builder','Nutrition & macro tracking','Habit tracking','Client messaging'],popular:false,cta:'Start free trial'},
-              {name:'Pro',desc:'For established coaches scaling their business',price:'29',features:['Up to 30 active clients','Everything in Starter','AI Coach Assistant','Custom branding','Stripe payments','Priority support'],popular:true,cta:'Start free trial'},
-              {name:'Team',desc:'For multi-practitioner clinics and teams',price:'79',features:['Unlimited active clients','Up to 5 coaches','Everything in Pro','Team dashboard','Revenue analytics','Phone support'],popular:false,cta:'Start free trial'},
+              {name:'Starter',desc:'Perfect for coaches just getting started',price:'0',clientLimit:'5 active clients',features:['Up to 5 active clients','Training program builder','Nutrition & macro tracking','Habit tracking','Client messaging','Check-in forms'],popular:false,cta:'Start free trial'},
+              {name:'Pro',desc:'For coaches scaling their business',price:'29',clientLimit:'30 active clients',features:['Up to 30 active clients','Everything in Starter','AI Coach Assistant','Custom branding','Stripe payments','Autoflow scheduling','Priority support'],popular:true,cta:'Start free trial'},
+              {name:'Team',desc:'For multi-practitioner clinics and teams',price:'79',clientLimit:'Unlimited clients',features:['Unlimited active clients','Up to 5 coach accounts','Everything in Pro','Team dashboard','Revenue analytics','Marketplace access','Phone support'],popular:false,cta:'Start free trial'},
             ].map((plan, i) => (
-              <div key={i} className={`rounded-2xl p-6 border ${plan.popular ? 'border-[#0F7B8C] bg-[#0F7B8C]/[0.02] ring-1 ring-[#0F7B8C]/20 relative' : 'border-gray-200'}`}>
+              <div key={i} className={`rounded-2xl p-6 border relative flex flex-col ${plan.popular ? 'border-[#0F7B8C] ring-1 ring-[#0F7B8C]/20' : 'border-gray-200'}`}>
                 {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#0F7B8C] text-white text-[10px] font-bold px-3 py-1 rounded-full">Most popular</div>
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#0F7B8C] text-white text-[11px] font-bold px-3 py-1 rounded-full whitespace-nowrap">Most popular</div>
                 )}
-                <h3 className="text-lg font-bold text-gray-900">{plan.name}</h3>
-                <p className="text-sm text-gray-500 mt-1 mb-4">{plan.desc}</p>
-                <div className="mb-6">
-                  <span className="text-4xl font-extrabold text-gray-900">{plan.price === '0' ? 'Free' : `$${plan.price}`}</span>
-                  {plan.price !== '0' && <span className="text-gray-400 text-sm"> AUD/month</span>}
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">{plan.name}</h3>
+                  <p className="text-sm text-gray-500 mt-1 mb-1">{plan.desc}</p>
+                  <p className="text-xs font-semibold text-[#0F7B8C] mb-4">{plan.clientLimit}</p>
+                  <div className="mb-6">
+                    <span className="text-4xl font-extrabold text-gray-900">{plan.price === '0' ? 'Free' : `$${plan.price}`}</span>
+                    {plan.price !== '0' && <span className="text-gray-400 text-sm"> AUD/month</span>}
+                  </div>
+                  <Link href="/register" className={`block text-center font-bold py-3 px-6 rounded-xl text-sm transition-colors mb-6 ${plan.popular ? 'bg-[#0F7B8C] text-white hover:bg-[#0d6b7a]' : 'bg-gray-900 text-white hover:bg-gray-800'}`}>
+                    {plan.cta}
+                  </Link>
+                  <ul className="space-y-2.5 flex-1">
+                    {plan.features.map((f, j) => (
+                      <li key={j} className="flex items-center gap-2 text-sm text-gray-600">
+                        <svg className="w-4 h-4 text-[#0F7B8C] flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <Link href="/register" className={`block text-center font-bold py-3 px-6 rounded-xl text-sm transition-colors mb-6 ${plan.popular ? 'bg-white text-[#0F7B8C] hover:bg-gray-50 border border-[#0F7B8C]/20' : 'bg-[#0F7B8C] text-white hover:bg-[#0d6b7a]'}`}>
-                  {plan.cta}
-                </Link>
-                <ul className="space-y-2.5">
-                  {plan.features.map((f, j) => (
-                    <li key={j} className="flex items-center gap-2 text-sm text-gray-600">
-                      <svg className="w-4 h-4 text-[#0F7B8C] flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      {f}
-                    </li>
-                  ))}
-                </ul>
               </div>
             ))}
           </div>
+          <p className="text-center text-xs text-gray-400 mt-6">All prices in AUD. Annual billing available at 20% off.</p>
         </div>
       </section>
 
       {/* ─── Final CTA ─── */}
-      <section className="py-24 px-6">
+      <section className="py-24 px-6 bg-gradient-to-br from-[#0F7B8C] to-[#0a5a68]">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">Ready to propel your practice?</h2>
-          <p className="mt-4 text-gray-500 max-w-xl mx-auto">
-            Join hundreds of health professionals who&apos;ve replaced their patchwork of tools with one platform that actually works.
+          <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">Ready to propel your practice?</h2>
+          <p className="mt-4 text-white/70 max-w-xl mx-auto text-lg">
+            Join 500+ health professionals who&apos;ve simplified their entire coaching business with one platform.
           </p>
-          <div className="mt-8">
-            <Link href="/register" className="inline-flex items-center gap-2 bg-[#0F7B8C] hover:bg-[#0d6b7a] text-white font-bold px-10 py-4 rounded-2xl text-base transition-colors shadow-lg shadow-[#0F7B8C]/20">
-              Get started free <span aria-hidden="true">→</span>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+            <Link href="/register" className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-[#0F7B8C] font-bold px-10 py-4 rounded-2xl text-base transition-colors shadow-lg">
+              Start free — 14 days <span aria-hidden="true">→</span>
             </Link>
+            <a href="#demo" className="inline-flex items-center gap-2 border border-white/30 text-white hover:bg-white/10 font-semibold px-8 py-4 rounded-2xl text-base transition-colors">
+              Watch the demo
+            </a>
           </div>
-          <p className="mt-4 text-xs text-gray-400">14-day free trial · Cancel anytime · No lock-in contracts</p>
+          <p className="mt-5 text-white/50 text-sm">14-day free trial · 30-day money-back guarantee · Cancel anytime</p>
         </div>
       </section>
 
       {/* ─── Footer ─── */}
-      <footer className="border-t border-gray-100 py-8 px-6">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded bg-[#0F7B8C] flex items-center justify-center text-white text-[10px] font-bold">P</div>
-            <span className="text-sm font-bold text-gray-900">Propel</span>
+      <footer className="bg-gray-900 text-gray-400">
+        <div className="max-w-6xl mx-auto px-6 py-12">
+          <div className="grid md:grid-cols-4 gap-8 mb-10">
+            {/* Brand */}
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-[#0F7B8C] flex items-center justify-center text-white text-sm font-bold">P</div>
+                <span className="text-base font-bold text-white">Propel</span>
+              </div>
+              <p className="text-sm text-gray-500 leading-relaxed mb-4">The coaching platform for health &amp; fitness professionals. Built by coaches, for coaches.</p>
+              <div className="flex gap-3">
+                {/* Instagram */}
+                <a href="#" className="w-8 h-8 rounded-lg bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition-colors" aria-label="Instagram">
+                  <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                </a>
+                {/* Facebook */}
+                <a href="#" className="w-8 h-8 rounded-lg bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition-colors" aria-label="Facebook">
+                  <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                </a>
+                {/* YouTube */}
+                <a href="#" className="w-8 h-8 rounded-lg bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition-colors" aria-label="YouTube">
+                  <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"/></svg>
+                </a>
+              </div>
+            </div>
+
+            {/* Product */}
+            <div>
+              <p className="text-sm font-semibold text-white mb-3">Product</p>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#features" className="hover:text-white transition-colors">Features</a></li>
+                <li><a href="#pricing" className="hover:text-white transition-colors">Pricing</a></li>
+                <li><a href="#demo" className="hover:text-white transition-colors">Watch Demo</a></li>
+                <li><Link href="/register" className="hover:text-white transition-colors">Start free trial</Link></li>
+                <li><Link href="/login" className="hover:text-white transition-colors">Coach login</Link></li>
+              </ul>
+            </div>
+
+            {/* Company */}
+            <div>
+              <p className="text-sm font-semibold text-white mb-3">Company</p>
+              <ul className="space-y-2 text-sm">
+                <li><Link href="/blog" className="hover:text-white transition-colors">Blog</Link></li>
+                <li><Link href="/help" className="hover:text-white transition-colors">Help & Support</Link></li>
+                <li><Link href="/compare" className="hover:text-white transition-colors">Compare</Link></li>
+                <li><Link href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+                <li><Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
+              </ul>
+            </div>
+
+            {/* Download */}
+            <div>
+              <p className="text-sm font-semibold text-white mb-3">Download the app</p>
+              <p className="text-sm text-gray-500 mb-4">Your clients download the Propel Coaches app to log workouts, track nutrition, and stay connected.</p>
+              <div className="space-y-2">
+                <a href="#" className="flex items-center gap-3 bg-gray-800 hover:bg-gray-700 rounded-xl px-3 py-2.5 transition-colors">
+                  <svg width="18" height="18" fill="white" viewBox="0 0 814 1000"><path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-161-39.5c-74 0-89.2 40.7-161.1 40.7s-106.1-58.4-155.8-127.4C46 790.3 2 651.4 2 526.2c0-185.7 120.4-284.1 238.8-284.1 63.1 0 115.6 41.6 155.3 41.6 38.1 0 97.9-43.8 166.1-43.8 27.4 0 109.9 2.6 163.7 73.1zm-209.6-19.4c-28.9-36.3-72-63.7-121.5-63.7-71.3 0-130.5 48-170 94-36.4 42.7-63.9 106.9-63.9 172 0 8.8 1.3 17.6 1.9 20.5 4.5.6 11.7 1.3 19 1.3 64.4 0 135.2-43.1 178.7-91.4 40.4-45.5 74.1-112.5 75.8-172.7z"/></svg>
+                  <div>
+                    <p className="text-[9px] text-gray-400">Download on the</p>
+                    <p className="text-xs font-semibold text-white">App Store</p>
+                  </div>
+                </a>
+                <a href="#" className="flex items-center gap-3 bg-gray-800 hover:bg-gray-700 rounded-xl px-3 py-2.5 transition-colors">
+                  <svg width="18" height="18" fill="white" viewBox="0 0 512 512"><path d="M325.3 234.3L104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l2.7 1.5 247.2-247v-5.8L47 0zm425.2 225L381.7 195l-64.8 64.8L381.7 324l90.6-52.1c25.9-14.8 25.9-38.7.9-46.9zm-138.9 80L232.1 497.3l280.1-161.2-64.8-64.8-113.1 34.8z"/></svg>
+                  <div>
+                    <p className="text-[9px] text-gray-400">Get it on</p>
+                    <p className="text-xs font-semibold text-white">Google Play</p>
+                  </div>
+                </a>
+              </div>
+            </div>
           </div>
-          <p className="text-xs text-gray-400">© 2026 Propel. Built for coaches, by coaches.</p>
-          <div className="flex items-center gap-4 text-xs text-gray-400">
-            <a href="/privacy-policy" className="hover:text-gray-600 transition-colors">Privacy</a>
-            <a href="/terms" className="hover:text-gray-600 transition-colors">Terms</a>
-            <Link href="/login" className="hover:text-gray-600 transition-colors text-[#0F7B8C]">Coach login</Link>
+
+          <div className="border-t border-gray-800 pt-6 flex flex-col md:flex-row items-center justify-between gap-3">
+            <p className="text-xs text-gray-600">© 2026 Propel Coaches. All rights reserved. Built for coaches, by coaches.</p>
+            <p className="text-xs text-gray-600">🇦🇺 Made in Australia</p>
           </div>
         </div>
       </footer>
