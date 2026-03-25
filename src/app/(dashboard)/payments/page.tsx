@@ -1,497 +1,560 @@
-'use client';
+'use client'
 
-import { useState, useEffect, useCallback } from 'react';
-import {
-  CreditCard, FileText, RefreshCw, TrendingUp, TrendingDown,
-  DollarSign, AlertCircle, CheckCircle2, Clock, Users,
-  ExternalLink, Send, Plus, X, ChevronDown, Loader2,
-  ArrowUpRight, Zap, BarChart3
-} from 'lucide-react';
-import { format } from 'date-fns';
+import { useState } from 'react'
+import { useIsDemo } from '@/lib/demo/useDemoMode'
+import { Plus, CreditCard, AlertCircle, CheckCircle2 } from 'lucide-react'
+import clsx from 'clsx'
 
-/* ─── Types ─────────────────────────────────── */
-interface Overview {
-  totalRevenue: number;
-  thisMonthRevenue: number;
-  lastMonthRevenue: number;
-  monthChange: number | null;
-  outstandingAmount: number;
-  outstandingCount: number;
-  activeSubscriptions: number;
-}
+const DEMO_INVOICES = [
+  {
+    id: 'inv-1',
+    clientName: 'Liam Carter',
+    clientId: 'demo-client-1',
+    invoiceNo: 'INV-0042',
+    amount: 299,
+    currency: 'AUD',
+    status: 'paid',
+    dueDate: '2026-03-01',
+    paidDate: '2026-02-28',
+    service: 'Monthly Coaching — March 2026',
+  },
+  {
+    id: 'inv-2',
+    clientName: 'Sophie Nguyen',
+    clientId: 'demo-client-2',
+    invoiceNo: 'INV-0043',
+    amount: 299,
+    currency: 'AUD',
+    status: 'paid',
+    dueDate: '2026-03-01',
+    paidDate: '2026-03-01',
+    service: 'Monthly Coaching — March 2026',
+  },
+  {
+    id: 'inv-3',
+    clientName: 'Jake Wilson',
+    clientId: 'demo-client-3',
+    invoiceNo: 'INV-0044',
+    amount: 399,
+    currency: 'AUD',
+    status: 'pending',
+    dueDate: '2026-03-28',
+    paidDate: null,
+    service: 'Premium Coaching — March 2026',
+  },
+  {
+    id: 'inv-4',
+    clientName: 'Emma Thompson',
+    clientId: 'demo-client-4',
+    invoiceNo: 'INV-0045',
+    amount: 199,
+    currency: 'AUD',
+    status: 'overdue',
+    dueDate: '2026-03-15',
+    paidDate: null,
+    service: 'Starter Coaching — March 2026',
+  },
+  {
+    id: 'inv-5',
+    clientName: 'Liam Carter',
+    clientId: 'demo-client-1',
+    invoiceNo: 'INV-0038',
+    amount: 299,
+    currency: 'AUD',
+    status: 'paid',
+    dueDate: '2026-02-01',
+    paidDate: '2026-01-31',
+    service: 'Monthly Coaching — February 2026',
+  },
+  {
+    id: 'inv-6',
+    clientName: 'Sophie Nguyen',
+    clientId: 'demo-client-2',
+    invoiceNo: 'INV-0039',
+    amount: 299,
+    currency: 'AUD',
+    status: 'paid',
+    dueDate: '2026-02-01',
+    paidDate: '2026-02-01',
+    service: 'Monthly Coaching — February 2026',
+  },
+]
 
-interface Payment {
-  id: string;
-  amount: number;
-  currency: string;
-  status: string;
-  description: string;
-  customerName: string;
-  customerEmail: string;
-  date: number;
-  receiptUrl: string | null;
-}
+const DEMO_SUBSCRIPTIONS = [
+  {
+    clientId: 'demo-client-1',
+    clientName: 'Liam Carter',
+    plan: 'Monthly Coaching',
+    amount: 299,
+    nextBilling: '2026-04-01',
+    status: 'active',
+  },
+  {
+    clientId: 'demo-client-2',
+    clientName: 'Sophie Nguyen',
+    plan: 'Monthly Coaching',
+    amount: 299,
+    nextBilling: '2026-04-01',
+    status: 'active',
+  },
+  {
+    clientId: 'demo-client-3',
+    clientName: 'Jake Wilson',
+    plan: 'Premium Coaching',
+    amount: 399,
+    nextBilling: '2026-04-01',
+    status: 'active',
+  },
+  {
+    clientId: 'demo-client-4',
+    clientName: 'Emma Thompson',
+    plan: 'Starter Coaching',
+    amount: 199,
+    nextBilling: '2026-04-01',
+    status: 'past_due',
+  },
+]
 
-interface Invoice {
-  id: string;
-  number: string | null;
-  amount: number;
-  amountPaid: number;
-  currency: string;
-  status: string | null;
-  customerName: string;
-  customerEmail: string;
-  dueDate: number | null;
-  created: number;
-  hostedUrl: string | null;
-  pdfUrl: string | null;
-  description: string;
-}
+const DEMO_BILLING_EVENTS = [
+  {
+    id: 'event-1',
+    eventType: 'subscription_started',
+    amount: 2900,
+    date: '2026-03-24',
+    status: 'success',
+    description: 'Pro subscription started',
+  },
+  {
+    id: 'event-2',
+    eventType: 'payment_succeeded',
+    amount: 2900,
+    date: '2026-03-20',
+    status: 'success',
+    description: 'Monthly payment processed',
+  },
+  {
+    id: 'event-3',
+    eventType: 'payment_succeeded',
+    amount: 2900,
+    date: '2026-02-20',
+    status: 'success',
+    description: 'Monthly payment processed',
+  },
+  {
+    id: 'event-4',
+    eventType: 'payment_failed',
+    amount: 2900,
+    date: '2026-01-25',
+    status: 'failed',
+    description: 'Payment failed - card declined',
+  },
+  {
+    id: 'event-5',
+    eventType: 'trial_ending_soon',
+    amount: 0,
+    date: '2026-01-08',
+    status: 'warning',
+    description: 'Trial ending in 5 days',
+  },
+]
 
-interface Subscription {
-  id: string;
-  status: string;
-  customerName: string;
-  customerEmail: string;
-  plan: string;
-  amount: number;
-  currency: string;
-  interval: string;
-  currentPeriodEnd: number;
-  cancelAtPeriodEnd: boolean;
-  created: number;
-}
+type InvoiceFilter = 'all' | 'paid' | 'pending' | 'overdue'
+type Tab = 'invoices' | 'subscriptions' | 'settings'
 
-type Tab = 'overview' | 'payments' | 'invoices' | 'subscriptions';
-
-/* ─── Helpers ────────────────────────────────── */
-const fmt = (n: number, currency = 'AUD') =>
-  new Intl.NumberFormat('en-AU', { style: 'currency', currency }).format(n);
-
-const statusColor = (s: string | null) => {
-  switch (s) {
-    case 'succeeded': case 'paid': case 'active': return 'text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-400';
-    case 'open': case 'trialing': return 'text-amber-600 bg-amber-50 dark:bg-amber-500/10 dark:text-amber-400';
-    case 'past_due': case 'failed': return 'text-red-600 bg-red-50 dark:bg-red-500/10 dark:text-red-400';
-    case 'canceled': case 'void': return 'text-gray-500 bg-gray-100 dark:bg-gray-800 dark:text-gray-400';
-    default: return 'text-gray-600 bg-gray-100 dark:bg-gray-800 dark:text-gray-400';
-  }
-};
-
-const statusLabel = (s: string | null) => {
-  const map: Record<string, string> = {
-    succeeded: 'Paid', paid: 'Paid', active: 'Active', open: 'Outstanding',
-    past_due: 'Past Due', failed: 'Failed', canceled: 'Cancelled',
-    void: 'Void', trialing: 'Trial',
-  };
-  return map[s ?? ''] ?? s ?? '—';
-};
-
-/* ─── Connect Stripe CTA ────────────────────── */
-function NoKeyState() {
-  return (
-    <div className="flex flex-col items-center justify-center py-24 px-6 text-center">
-      <div className="w-16 h-16 rounded-2xl bg-[var(--brand)]/10 flex items-center justify-center mb-5">
-        <CreditCard className="w-8 h-8 text-[var(--brand)]" />
-      </div>
-      <h2 className="text-xl font-bold text-cb-text mb-2">Connect Stripe</h2>
-      <p className="text-cb-text-secondary text-sm max-w-sm mb-6">
-        Add your Stripe secret key to Vercel to start seeing payments, invoices, and subscriptions here.
-      </p>
-      <div className="bg-cb-surface border border-cb-border rounded-xl p-5 text-left w-full max-w-md mb-6">
-        <p className="text-xs font-semibold text-cb-text-secondary uppercase tracking-wide mb-3">How to connect</p>
-        <ol className="space-y-2 text-sm text-cb-text">
-          <li className="flex gap-2"><span className="w-5 h-5 rounded-full bg-[var(--brand)]/10 text-[var(--brand)] text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">1</span>Go to your <a href="https://dashboard.stripe.com/apikeys" target="_blank" rel="noreferrer" className="text-[var(--brand)] underline font-medium">Stripe API Keys</a> page</li>
-          <li className="flex gap-2"><span className="w-5 h-5 rounded-full bg-[var(--brand)]/10 text-[var(--brand)] text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">2</span>Copy your <strong>Secret key</strong> (starts with <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded text-xs">sk_live_...</code>)</li>
-          <li className="flex gap-2"><span className="w-5 h-5 rounded-full bg-[var(--brand)]/10 text-[var(--brand)] text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">3</span>Go to <a href="https://vercel.com/dashboard" target="_blank" rel="noreferrer" className="text-[var(--brand)] underline font-medium">Vercel → Your Project → Settings → Environment Variables</a></li>
-          <li className="flex gap-2"><span className="w-5 h-5 rounded-full bg-[var(--brand)]/10 text-[var(--brand)] text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">4</span>Add a variable named <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded text-xs">STRIPE_SECRET_KEY</code> with your key as the value</li>
-          <li className="flex gap-2"><span className="w-5 h-5 rounded-full bg-[var(--brand)]/10 text-[var(--brand)] text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">5</span>Redeploy your site — the payments section will populate automatically</li>
-        </ol>
-      </div>
-      <a href="https://vercel.com/dashboard" target="_blank" rel="noreferrer"
-        className="inline-flex items-center gap-2 bg-[var(--brand)] text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity">
-        Open Vercel Dashboard <ArrowUpRight className="w-4 h-4" />
-      </a>
-    </div>
-  );
-}
-
-/* ─── Create Invoice Modal ────────────────────── */
-function CreateInvoiceModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
-  const [form, setForm] = useState({ name: '', email: '', amount: '', description: '', dueDate: '' });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const submit = async () => {
-    if (!form.name || !form.email || !form.amount) { setError('Please fill in name, email and amount.'); return; }
-    setLoading(true);
-    setError('');
-    try {
-      const res = await fetch('/api/stripe/invoices', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, amount: parseFloat(form.amount) }),
-      });
-      const data = await res.json();
-      if (data.error) { setError(data.error); setLoading(false); return; }
-      onCreated();
-      onClose();
-    } catch {
-      setError('Something went wrong. Please try again.');
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="bg-cb-surface border border-cb-border rounded-2xl shadow-xl w-full max-w-md">
-        <div className="flex items-center justify-between p-5 border-b border-cb-border">
-          <h3 className="font-bold text-cb-text">Create Invoice</h3>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-cb-bg transition-colors">
-            <X className="w-4 h-4 text-cb-text-secondary" />
-          </button>
-        </div>
-        <div className="p-5 space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-semibold text-cb-text-secondary uppercase tracking-wide block mb-1.5">Client Name</label>
-              <input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
-                placeholder="Jane Smith"
-                className="w-full px-3 py-2 text-sm bg-cb-bg border border-cb-border rounded-lg text-cb-text placeholder:text-cb-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30" />
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-cb-text-secondary uppercase tracking-wide block mb-1.5">Email</label>
-              <input value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
-                placeholder="jane@email.com" type="email"
-                className="w-full px-3 py-2 text-sm bg-cb-bg border border-cb-border rounded-lg text-cb-text placeholder:text-cb-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30" />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-semibold text-cb-text-secondary uppercase tracking-wide block mb-1.5">Amount (AUD)</label>
-              <input value={form.amount} onChange={e => setForm(p => ({ ...p, amount: e.target.value }))}
-                placeholder="150.00" type="number" min="0" step="0.01"
-                className="w-full px-3 py-2 text-sm bg-cb-bg border border-cb-border rounded-lg text-cb-text placeholder:text-cb-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30" />
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-cb-text-secondary uppercase tracking-wide block mb-1.5">Due Date</label>
-              <input value={form.dueDate} onChange={e => setForm(p => ({ ...p, dueDate: e.target.value }))}
-                type="date"
-                className="w-full px-3 py-2 text-sm bg-cb-bg border border-cb-border rounded-lg text-cb-text focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30" />
-            </div>
-          </div>
-          <div>
-            <label className="text-xs font-semibold text-cb-text-secondary uppercase tracking-wide block mb-1.5">Description</label>
-            <input value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
-              placeholder="e.g. Monthly coaching package — April"
-              className="w-full px-3 py-2 text-sm bg-cb-bg border border-cb-border rounded-lg text-cb-text placeholder:text-cb-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30" />
-          </div>
-          {error && <p className="text-sm text-red-500">{error}</p>}
-        </div>
-        <div className="flex gap-3 p-5 pt-0">
-          <button onClick={onClose} className="flex-1 px-4 py-2.5 rounded-xl border border-cb-border text-sm font-medium text-cb-text hover:bg-cb-bg transition-colors">Cancel</button>
-          <button onClick={submit} disabled={loading}
-            className="flex-1 px-4 py-2.5 rounded-xl bg-[var(--brand)] text-white text-sm font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-60">
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-            {loading ? 'Creating…' : 'Create & Send'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─── Main Page ──────────────────────────────── */
 export default function PaymentsPage() {
-  const [tab, setTab] = useState<Tab>('overview');
-  const [overview, setOverview] = useState<Overview | null>(null);
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [noKey, setNoKey] = useState(false);
-  const [showCreateInvoice, setShowCreateInvoice] = useState(false);
-  const [sendingInvoice, setSendingInvoice] = useState<string | null>(null);
+  const isDemo = useIsDemo()
+  const [activeTab, setActiveTab] = useState<Tab>('invoices')
+  const [invoiceFilter, setInvoiceFilter] = useState<InvoiceFilter>('all')
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [ovRes, pmRes, invRes, subRes] = await Promise.all([
-        fetch('/api/stripe/overview'),
-        fetch('/api/stripe/payments'),
-        fetch('/api/stripe/invoices'),
-        fetch('/api/stripe/subscriptions'),
-      ]);
-      const [ov, pm, inv, sub] = await Promise.all([ovRes.json(), pmRes.json(), invRes.json(), subRes.json()]);
+  const invoices = isDemo ? DEMO_INVOICES : []
+  const subscriptions = isDemo ? DEMO_SUBSCRIPTIONS : []
+  const billingEvents = isDemo ? DEMO_BILLING_EVENTS : []
 
-      if (ov.error === 'no_key') { setNoKey(true); setLoading(false); return; }
-      setNoKey(false);
-      setOverview(ov);
-      setPayments(pm.payments ?? []);
-      setInvoices(inv.invoices ?? []);
-      setSubscriptions(sub.subscriptions ?? []);
-    } catch {
-      setNoKey(true);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // Filter invoices
+  const filteredInvoices =
+    invoiceFilter === 'all'
+      ? invoices
+      : invoices.filter(inv => inv.status === invoiceFilter)
 
-  useEffect(() => { load(); }, [load]);
+  // Calculate stats
+  const paidThisMonth = invoices
+    .filter(inv => inv.status === 'paid' && inv.paidDate?.startsWith('2026-03'))
+    .reduce((sum, inv) => sum + inv.amount, 0)
 
-  const sendInvoice = async (id: string) => {
-    setSendingInvoice(id);
-    await fetch(`/api/stripe/invoices?action=send&id=${id}`);
-    setSendingInvoice(null);
-    load();
-  };
+  const outstanding = invoices
+    .filter(inv => inv.status === 'pending' || inv.status === 'overdue')
+    .reduce((sum, inv) => sum + inv.amount, 0)
 
-  const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
-    { id: 'overview', label: 'Overview', icon: <BarChart3 className="w-4 h-4" /> },
-    { id: 'payments', label: 'Payments', icon: <CreditCard className="w-4 h-4" /> },
-    { id: 'invoices', label: 'Invoices', icon: <FileText className="w-4 h-4" /> },
-    { id: 'subscriptions', label: 'Subscriptions', icon: <Zap className="w-4 h-4" /> },
-  ];
+  const paidRate =
+    invoices.length > 0
+      ? Math.round((invoices.filter(inv => inv.status === 'paid').length / invoices.length) * 100)
+      : 0
 
-  if (loading) return (
-    <div className="flex-1 flex items-center justify-center">
-      <Loader2 className="w-8 h-8 animate-spin text-[var(--brand)]" />
-    </div>
-  );
-
-  if (noKey) return (
-    <div className="flex-1 overflow-y-auto">
-      <div className="max-w-3xl mx-auto px-6 py-8">
-        <h1 className="text-2xl font-bold text-cb-text mb-1">Payments</h1>
-        <p className="text-cb-text-secondary text-sm mb-8">Stripe-powered billing &amp; invoicing</p>
-        <NoKeyState />
-      </div>
-    </div>
-  );
+  const activeSubscriptions = subscriptions.filter(sub => sub.status === 'active').length
 
   return (
-    <div className="flex-1 overflow-y-auto">
-      <div className="max-w-5xl mx-auto px-6 py-8">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-cb-text mb-1">Payments</h1>
-            <p className="text-cb-text-secondary text-sm">Connected via Stripe</p>
-          </div>
-          <div className="flex gap-2">
-            <button onClick={load} className="p-2 rounded-xl border border-cb-border hover:bg-cb-bg transition-colors text-cb-text-secondary">
-              <RefreshCw className="w-4 h-4" />
-            </button>
-            <button onClick={() => setShowCreateInvoice(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-[var(--brand)] text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity">
-              <Plus className="w-4 h-4" /> New Invoice
-            </button>
-          </div>
+    <div className="p-6 max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-cb-text">Payments</h1>
+          <p className="text-sm text-cb-muted mt-0.5">Revenue & invoices</p>
         </div>
+        <button className="flex items-center gap-2 px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand/90 transition-colors font-medium text-sm">
+          <Plus size={16} />
+          New Invoice
+        </button>
+      </div>
 
-        {/* Tabs */}
-        <div className="flex gap-1 mb-6 bg-cb-surface border border-cb-border rounded-xl p-1 w-fit">
-          {TABS.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === t.id ? 'bg-[var(--brand)] text-white shadow-sm' : 'text-cb-text-secondary hover:text-cb-text hover:bg-cb-bg'}`}>
-              {t.icon} {t.label}
-            </button>
-          ))}
-        </div>
-
-        {/* ── Overview ─────────────────────────── */}
-        {tab === 'overview' && overview && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* This Month */}
-              <div className="bg-cb-surface border border-cb-border rounded-2xl p-5">
-                <p className="text-xs font-semibold text-cb-text-secondary uppercase tracking-wide mb-3">This Month</p>
-                <p className="text-2xl font-bold text-cb-text">{fmt(overview.thisMonthRevenue)}</p>
-                {overview.monthChange !== null && (
-                  <div className={`flex items-center gap-1 mt-2 text-xs font-semibold ${overview.monthChange >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                    {overview.monthChange >= 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
-                    {Math.abs(overview.monthChange).toFixed(1)}% vs last month
-                  </div>
-                )}
-              </div>
-              {/* Total Revenue */}
-              <div className="bg-cb-surface border border-cb-border rounded-2xl p-5">
-                <p className="text-xs font-semibold text-cb-text-secondary uppercase tracking-wide mb-3">Total Revenue</p>
-                <p className="text-2xl font-bold text-cb-text">{fmt(overview.totalRevenue)}</p>
-                <p className="text-xs text-cb-text-secondary mt-2">Last 12 months</p>
-              </div>
-              {/* Outstanding */}
-              <div className="bg-cb-surface border border-cb-border rounded-2xl p-5">
-                <p className="text-xs font-semibold text-cb-text-secondary uppercase tracking-wide mb-3">Outstanding</p>
-                <p className="text-2xl font-bold text-cb-text">{fmt(overview.outstandingAmount)}</p>
-                <p className="text-xs text-amber-500 mt-2 font-medium">{overview.outstandingCount} unpaid invoice{overview.outstandingCount !== 1 ? 's' : ''}</p>
-              </div>
-              {/* Active Subscriptions */}
-              <div className="bg-cb-surface border border-cb-border rounded-2xl p-5">
-                <p className="text-xs font-semibold text-cb-text-secondary uppercase tracking-wide mb-3">Active Plans</p>
-                <p className="text-2xl font-bold text-cb-text">{overview.activeSubscriptions}</p>
-                <p className="text-xs text-cb-text-secondary mt-2">Recurring clients</p>
-              </div>
-            </div>
-
-            {/* Recent payments preview */}
-            <div className="bg-cb-surface border border-cb-border rounded-2xl overflow-hidden">
-              <div className="px-5 py-4 border-b border-cb-border flex items-center justify-between">
-                <h3 className="font-semibold text-cb-text text-sm">Recent Payments</h3>
-                <button onClick={() => setTab('payments')} className="text-xs text-[var(--brand)] font-medium hover:underline">View all</button>
-              </div>
-              <div className="divide-y divide-cb-border">
-                {payments.slice(0, 5).map(p => (
-                  <div key={p.id} className="flex items-center justify-between px-5 py-3.5">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-[var(--brand)]/10 flex items-center justify-center text-[var(--brand)] text-xs font-bold">
-                        {p.customerName.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-cb-text">{p.customerName}</p>
-                        <p className="text-xs text-cb-text-secondary">{format(new Date(p.date * 1000), 'd MMM yyyy')}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${statusColor(p.status)}`}>{statusLabel(p.status)}</span>
-                      <p className="text-sm font-bold text-cb-text">{fmt(p.amount, p.currency)}</p>
-                    </div>
-                  </div>
-                ))}
-                {payments.length === 0 && <p className="px-5 py-8 text-center text-sm text-cb-text-secondary">No payments yet</p>}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ── Payments ──────────────────────────── */}
-        {tab === 'payments' && (
-          <div className="bg-cb-surface border border-cb-border rounded-2xl overflow-hidden">
-            <div className="px-5 py-4 border-b border-cb-border">
-              <h3 className="font-semibold text-cb-text text-sm">{payments.length} payments</h3>
-            </div>
-            <div className="divide-y divide-cb-border">
-              {payments.map(p => (
-                <div key={p.id} className="flex items-center justify-between px-5 py-4 hover:bg-cb-bg/50 transition-colors">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-full bg-[var(--brand)]/10 flex items-center justify-center text-[var(--brand)] text-sm font-bold flex-shrink-0">
-                      {p.customerName.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-cb-text truncate">{p.customerName}</p>
-                      <p className="text-xs text-cb-text-secondary truncate">{p.description || p.customerEmail}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4 flex-shrink-0 ml-4">
-                    <p className="text-xs text-cb-text-secondary hidden sm:block">{format(new Date(p.date * 1000), 'd MMM yyyy')}</p>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${statusColor(p.status)}`}>{statusLabel(p.status)}</span>
-                    <p className="text-sm font-bold text-cb-text w-24 text-right">{fmt(p.amount, p.currency)}</p>
-                    {p.receiptUrl && (
-                      <a href={p.receiptUrl} target="_blank" rel="noreferrer"
-                        className="p-1.5 rounded-lg hover:bg-cb-bg transition-colors text-cb-text-secondary">
-                        <ExternalLink className="w-3.5 h-3.5" />
-                      </a>
-                    )}
-                  </div>
+      {/* Stats row */}
+      <div className="grid grid-cols-5 gap-4 mb-6">
+        {[
+          { label: 'Monthly Revenue', value: `$${paidThisMonth}`, unit: 'AUD (paid)' },
+          { label: 'Outstanding', value: `$${outstanding}`, unit: 'AUD' },
+          { label: 'Paid Rate', value: `${paidRate}%`, unit: '' },
+          { label: 'Active Subscriptions', value: activeSubscriptions.toString(), unit: '' },
+          { label: 'Webhook Status', value: 'Active', unit: 'Connected', badge: true },
+        ].map(({ label, value, unit, badge }) => (
+          <div key={label} className="bg-surface border border-cb-border rounded-lg p-4">
+            <p className="text-xs text-cb-muted mb-1">{label}</p>
+            <div className="flex items-baseline gap-1">
+              {badge ? (
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 bg-cb-success rounded-full" />
+                  <p className="text-xl font-bold text-cb-text">{value}</p>
                 </div>
-              ))}
-              {payments.length === 0 && <p className="px-5 py-12 text-center text-sm text-cb-text-secondary">No payments found</p>}
+              ) : (
+                <>
+                  <p className="text-xl font-bold text-cb-text">{value}</p>
+                  {unit && <p className="text-xs text-cb-muted">{unit}</p>}
+                </>
+              )}
             </div>
+            {badge && unit && <p className="text-xs text-cb-success mt-1">{unit}</p>}
           </div>
-        )}
+        ))}
+      </div>
 
-        {/* ── Invoices ─────────────────────────── */}
-        {tab === 'invoices' && (
-          <div className="bg-cb-surface border border-cb-border rounded-2xl overflow-hidden">
-            <div className="px-5 py-4 border-b border-cb-border flex items-center justify-between">
-              <h3 className="font-semibold text-cb-text text-sm">{invoices.length} invoices</h3>
-              <button onClick={() => setShowCreateInvoice(true)}
-                className="flex items-center gap-1.5 text-xs font-semibold text-[var(--brand)] hover:underline">
-                <Plus className="w-3.5 h-3.5" /> New Invoice
+      {/* Monthly revenue chart */}
+      <div className="bg-surface border border-cb-border rounded-lg p-5 mb-6">
+        <h2 className="text-sm font-semibold text-cb-text mb-4">Monthly Revenue (last 6 months)</h2>
+        <div className="flex items-end gap-3 h-40">
+          {[
+            { month: 'Jan', amount: 950, isFuture: false },
+            { month: 'Feb', amount: 798, isFuture: false },
+            { month: 'Mar', amount: 1196, isFuture: false },
+            { month: 'Apr', amount: 0, isFuture: true },
+            { month: 'May', amount: 0, isFuture: true },
+            { month: 'Jun', amount: 0, isFuture: true },
+          ].map(({ month, amount, isFuture }) => {
+            const maxAmount = 1196
+            const height = amount > 0 ? (amount / maxAmount) * 100 : 5
+            return (
+              <div key={month} className="flex flex-col items-center flex-1">
+                <div
+                  className={clsx('w-full rounded-t-md transition-colors', isFuture ? 'bg-cb-border' : 'bg-brand')}
+                  style={{ height: height + '%', minHeight: 8 }}
+                  title={`${month}: $${amount}`}
+                />
+                <span className="text-xs text-cb-muted mt-2">{month}</span>
+                <span className="text-xs font-medium text-cb-text mt-1">${amount}</span>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-2 mb-6 border-b border-cb-border">
+        {(['invoices', 'subscriptions', 'settings'] as const).map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={clsx(
+              'px-4 py-3 text-sm font-medium transition-colors border-b-2',
+              activeTab === tab
+                ? 'border-brand text-cb-text'
+                : 'border-transparent text-cb-muted hover:text-cb-secondary'
+            )}
+          >
+            {tab === 'invoices' ? 'Invoices' : tab === 'subscriptions' ? 'Subscriptions' : 'Settings'}
+          </button>
+        ))}
+      </div>
+
+      {/* Invoices Tab */}
+      {activeTab === 'invoices' && (
+        <div>
+          <div className="mb-4 flex gap-2">
+            {(['all', 'paid', 'pending', 'overdue'] as const).map(filter => (
+              <button
+                key={filter}
+                onClick={() => setInvoiceFilter(filter)}
+                className={clsx(
+                  'px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                  invoiceFilter === filter
+                    ? 'bg-brand text-white'
+                    : 'bg-surface border border-cb-border text-cb-secondary hover:bg-surface-light'
+                )}
+              >
+                {filter.charAt(0).toUpperCase() + filter.slice(1)}
               </button>
-            </div>
-            <div className="divide-y divide-cb-border">
-              {invoices.map(inv => (
-                <div key={inv.id} className="flex items-center justify-between px-5 py-4 hover:bg-cb-bg/50 transition-colors">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-full bg-[var(--brand)]/10 flex items-center justify-center text-[var(--brand)] text-sm font-bold flex-shrink-0">
-                      {inv.customerName.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-cb-text truncate">{inv.customerName}</p>
-                      <p className="text-xs text-cb-text-secondary truncate">{inv.description || inv.number || '—'}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 flex-shrink-0 ml-4">
-                    {inv.dueDate && (
-                      <p className="text-xs text-cb-text-secondary hidden sm:block">
-                        Due {format(new Date(inv.dueDate * 1000), 'd MMM')}
-                      </p>
-                    )}
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${statusColor(inv.status)}`}>{statusLabel(inv.status)}</span>
-                    <p className="text-sm font-bold text-cb-text w-24 text-right">{fmt(inv.amount, inv.currency)}</p>
-                    <div className="flex items-center gap-1">
-                      {inv.status === 'draft' && (
-                        <button onClick={() => sendInvoice(inv.id)} disabled={sendingInvoice === inv.id}
-                          className="p-1.5 rounded-lg hover:bg-cb-bg transition-colors text-[var(--brand)] disabled:opacity-40"
-                          title="Send invoice">
-                          {sendingInvoice === inv.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+            ))}
+          </div>
+
+          <div className="bg-surface border border-cb-border rounded-lg overflow-hidden">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-cb-border bg-surface-light">
+                  <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-5 py-3">
+                    Invoice No
+                  </th>
+                  <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-5 py-3">
+                    Client
+                  </th>
+                  <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-5 py-3">
+                    Service
+                  </th>
+                  <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-5 py-3">
+                    Amount
+                  </th>
+                  <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-5 py-3">
+                    Due Date
+                  </th>
+                  <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-5 py-3">
+                    Status
+                  </th>
+                  <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-5 py-3">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-cb-border">
+                {filteredInvoices.map(invoice => (
+                  <tr key={invoice.id} className="hover:bg-surface-light">
+                    <td className="px-5 py-3 text-sm font-medium text-cb-text">{invoice.invoiceNo}</td>
+                    <td className="px-5 py-3 text-sm text-cb-secondary">{invoice.clientName}</td>
+                    <td className="px-5 py-3 text-sm text-cb-secondary">{invoice.service}</td>
+                    <td className="px-5 py-3 text-sm font-medium text-cb-text">
+                      ${invoice.amount} {invoice.currency}
+                    </td>
+                    <td className="px-5 py-3 text-sm text-cb-secondary">{invoice.dueDate}</td>
+                    <td className="px-5 py-3 text-sm">
+                      <span
+                        className={clsx(
+                          'inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold',
+                          invoice.status === 'paid'
+                            ? 'bg-cb-success/15 text-cb-success'
+                            : invoice.status === 'pending'
+                              ? 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400'
+                              : 'bg-cb-danger/15 text-cb-danger'
+                        )}
+                      >
+                        {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3 text-sm flex gap-2">
+                      {(invoice.status === 'pending' || invoice.status === 'overdue') && (
+                        <button className="px-2 py-1 text-xs font-medium rounded-lg bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">
+                          Remind
                         </button>
                       )}
-                      {inv.hostedUrl && (
-                        <a href={inv.hostedUrl} target="_blank" rel="noreferrer"
-                          className="p-1.5 rounded-lg hover:bg-cb-bg transition-colors text-cb-text-secondary" title="View invoice">
-                          <ExternalLink className="w-3.5 h-3.5" />
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {invoices.length === 0 && <p className="px-5 py-12 text-center text-sm text-cb-text-secondary">No invoices yet — create your first one above</p>}
-            </div>
+                      <button className="px-2 py-1 text-xs font-medium rounded-lg bg-surface-light border border-cb-border text-cb-secondary hover:text-cb-text transition-colors">
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        )}
-
-        {/* ── Subscriptions ────────────────────── */}
-        {tab === 'subscriptions' && (
-          <div className="bg-cb-surface border border-cb-border rounded-2xl overflow-hidden">
-            <div className="px-5 py-4 border-b border-cb-border">
-              <h3 className="font-semibold text-cb-text text-sm">{subscriptions.length} subscription{subscriptions.length !== 1 ? 's' : ''}</h3>
-            </div>
-            <div className="divide-y divide-cb-border">
-              {subscriptions.map(sub => (
-                <div key={sub.id} className="flex items-center justify-between px-5 py-4 hover:bg-cb-bg/50 transition-colors">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-full bg-[var(--brand)]/10 flex items-center justify-center text-[var(--brand)] text-sm font-bold flex-shrink-0">
-                      {sub.customerName.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-cb-text truncate">{sub.customerName}</p>
-                      <p className="text-xs text-cb-text-secondary truncate">{sub.plan} · {fmt(sub.amount, sub.currency)}/{sub.interval}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 flex-shrink-0 ml-4">
-                    <p className="text-xs text-cb-text-secondary hidden sm:block">
-                      Renews {format(new Date(sub.currentPeriodEnd * 1000), 'd MMM yyyy')}
-                    </p>
-                    {sub.cancelAtPeriodEnd && (
-                      <span className="text-xs px-2 py-0.5 rounded-full font-semibold text-amber-600 bg-amber-50 dark:bg-amber-500/10 dark:text-amber-400">Cancelling</span>
-                    )}
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${statusColor(sub.status)}`}>{statusLabel(sub.status)}</span>
-                    <p className="text-sm font-bold text-cb-text w-24 text-right">{fmt(sub.amount, sub.currency)}</p>
-                  </div>
-                </div>
-              ))}
-              {subscriptions.length === 0 && <p className="px-5 py-12 text-center text-sm text-cb-text-secondary">No active subscriptions</p>}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {showCreateInvoice && (
-        <CreateInvoiceModal onClose={() => setShowCreateInvoice(false)} onCreated={load} />
+        </div>
       )}
+
+      {/* Subscriptions Tab */}
+      {activeTab === 'subscriptions' && (
+        <div className="bg-surface border border-cb-border rounded-lg overflow-hidden">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-cb-border bg-surface-light">
+                <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-5 py-3">
+                  Client
+                </th>
+                <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-5 py-3">
+                  Plan
+                </th>
+                <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-5 py-3">
+                  Amount/month
+                </th>
+                <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-5 py-3">
+                  Next Billing
+                </th>
+                <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-5 py-3">
+                  Status
+                </th>
+                <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-5 py-3">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-cb-border">
+              {subscriptions.map(sub => (
+                <tr key={sub.clientId} className="hover:bg-surface-light">
+                  <td className="px-5 py-3 text-sm font-medium text-cb-text">{sub.clientName}</td>
+                  <td className="px-5 py-3 text-sm text-cb-secondary">{sub.plan}</td>
+                  <td className="px-5 py-3 text-sm font-medium text-cb-text">${sub.amount} AUD</td>
+                  <td className="px-5 py-3 text-sm text-cb-secondary">{sub.nextBilling}</td>
+                  <td className="px-5 py-3 text-sm">
+                    <span
+                      className={clsx(
+                        'inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold',
+                        sub.status === 'active'
+                          ? 'bg-cb-success/15 text-cb-success'
+                          : 'bg-cb-danger/15 text-cb-danger'
+                      )}
+                    >
+                      {sub.status === 'active' ? 'Active' : 'Past Due'}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3 text-sm">
+                    {sub.status === 'past_due' && (
+                      <button className="px-2 py-1 text-xs font-medium rounded-lg bg-cb-danger/10 text-cb-danger border border-cb-danger/30 hover:bg-cb-danger/20 transition-colors">
+                        Retry Payment
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Settings Tab */}
+      {activeTab === 'settings' && (
+        <div className="space-y-6">
+          {/* Stripe banner */}
+          <div className="bg-gradient-to-r from-purple-600 to-purple-700 rounded-lg p-6 text-white overflow-hidden relative">
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.5)_1px,transparent_1px)] bg-[size:40px_40px]" />
+            </div>
+            <div className="relative z-10">
+              <div className="flex items-start gap-4 mb-4">
+                <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <CreditCard size={20} />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold mb-1">Connect Stripe</h3>
+                  <p className="text-sm opacity-90">
+                    Connect your Stripe account to start accepting card payments. Clients pay online — you get paid automatically.
+                  </p>
+                </div>
+              </div>
+              <button className="px-4 py-2 bg-white text-purple-700 rounded-lg hover:bg-purple-50 transition-colors font-medium text-sm">
+                Connect Stripe Account
+              </button>
+            </div>
+          </div>
+
+          {/* Payment methods section */}
+          <div className="bg-surface border border-cb-border rounded-lg p-6">
+            <h3 className="text-sm font-semibold text-cb-text mb-4">Payment Methods</h3>
+            <div className="bg-surface-light rounded-lg p-4 text-center">
+              <p className="text-sm text-cb-muted">No payment methods connected yet.</p>
+              <button className="mt-3 px-3 py-1.5 text-xs font-medium rounded-lg bg-brand text-white hover:bg-brand/90 transition-colors">
+                Add Payment Method
+              </button>
+            </div>
+          </div>
+
+          {/* Invoice settings */}
+          <div className="bg-surface border border-cb-border rounded-lg p-6">
+            <h3 className="text-sm font-semibold text-cb-text mb-4">Invoice Settings</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-cb-muted block mb-2 uppercase tracking-wide">
+                  Currency
+                </label>
+                <select className="w-full px-3 py-2 border border-cb-border rounded-lg text-sm text-cb-text bg-surface-light focus:outline-none focus:ring-2 focus:ring-brand">
+                  <option>AUD - Australian Dollar</option>
+                  <option>USD - US Dollar</option>
+                  <option>EUR - Euro</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-cb-muted block mb-2 uppercase tracking-wide">
+                  Tax Rate (%)
+                </label>
+                <input
+                  type="number"
+                  placeholder="10"
+                  className="w-full px-3 py-2 border border-cb-border rounded-lg text-sm text-cb-text placeholder-cb-muted bg-surface-light focus:outline-none focus:ring-2 focus:ring-brand"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-cb-muted block mb-2 uppercase tracking-wide">
+                  Payment Terms (days)
+                </label>
+                <input
+                  type="number"
+                  placeholder="30"
+                  className="w-full px-3 py-2 border border-cb-border rounded-lg text-sm text-cb-text placeholder-cb-muted bg-surface-light focus:outline-none focus:ring-2 focus:ring-brand"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Billing Events Section */}
+      <div className="mt-8">
+        <h2 className="text-lg font-semibold text-cb-text mb-4">Billing Events</h2>
+        <div className="bg-surface border border-cb-border rounded-lg overflow-hidden">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-cb-border bg-surface-light">
+                <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-5 py-3">
+                  Date
+                </th>
+                <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-5 py-3">
+                  Event
+                </th>
+                <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-5 py-3">
+                  Amount
+                </th>
+                <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-5 py-3">
+                  Status
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-cb-border">
+              {billingEvents.map(event => (
+                <tr key={event.id} className="hover:bg-surface-light">
+                  <td className="px-5 py-3 text-sm text-cb-secondary">{event.date}</td>
+                  <td className="px-5 py-3 text-sm text-cb-text">{event.description}</td>
+                  <td className="px-5 py-3 text-sm font-medium text-cb-text">
+                    {event.amount > 0 ? `$${(event.amount / 100).toFixed(2)}` : '—'}
+                  </td>
+                  <td className="px-5 py-3 text-sm">
+                    <span
+                      className={clsx(
+                        'inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold',
+                        event.status === 'success'
+                          ? 'bg-cb-success/15 text-cb-success'
+                          : event.status === 'failed'
+                            ? 'bg-cb-danger/15 text-cb-danger'
+                            : 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400'
+                      )}
+                    >
+                      {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
-  );
+  )
 }

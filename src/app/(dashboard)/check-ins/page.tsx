@@ -4,12 +4,18 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { CheckIn, Profile } from '@/lib/types'
 import { format, startOfWeek, isSameWeek } from 'date-fns'
-import { CheckSquare, ChevronDown, ChevronUp, Check } from 'lucide-react'
+import { CheckSquare, ChevronDown, ChevronUp, Check, Camera, Maximize2, Play } from 'lucide-react'
 import clsx from 'clsx'
+import Image from 'next/image'
 import { useIsDemo } from '@/lib/demo/useDemoMode'
 import { DEMO_CLIENTS, DEMO_CHECK_INS } from '@/lib/demo/mockData'
 
 type CheckInWithClient = CheckIn & { client?: Profile }
+
+function extractLoomId(url: string): string | null {
+  const match = url.match(/loom\.com\/share\/([a-zA-Z0-9]+)/)
+  return match ? match[1] : null
+}
 
 function ScoreBadge({ value, label }: { value: number | null; label: string }) {
   if (value === null) return <span className="text-cb-muted text-xs">—</span>
@@ -33,7 +39,10 @@ export default function CheckInsPage() {
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState<string | null>(null)
   const [commentDraft, setCommentDraft] = useState<Record<string, string>>({})
+  const [loomDraft, setLoomDraft] = useState<Record<string, string>>({})
   const [savingComment, setSavingComment] = useState<string | null>(null)
+  const [savingLoom, setSavingLoom] = useState<string | null>(null)
+  const [lightboxPhoto, setLightboxPhoto] = useState<{ url: string; label: string } | null>(null)
 
   useEffect(() => {
     loadData()
@@ -52,8 +61,13 @@ export default function CheckInsPage() {
       }))
       setCheckIns(enriched)
       const drafts: Record<string, string> = {}
-      enriched.forEach((ci) => { drafts[ci.id] = ci.coach_comment ?? '' })
+      const loomDrafts: Record<string, string> = {}
+      enriched.forEach((ci) => {
+        drafts[ci.id] = ci.coach_comment ?? ''
+        loomDrafts[ci.id] = ci.loom_url ?? ''
+      })
       setCommentDraft(drafts)
+      setLoomDraft(loomDrafts)
       setLoading(false)
       return
     }
@@ -90,8 +104,13 @@ export default function CheckInsPage() {
 
     setCheckIns(enriched)
     const drafts: Record<string, string> = {}
-    enriched.forEach((ci) => { drafts[ci.id] = ci.coach_comment ?? '' })
+    const loomDrafts: Record<string, string> = {}
+    enriched.forEach((ci) => {
+      drafts[ci.id] = ci.coach_comment ?? ''
+      loomDrafts[ci.id] = ci.loom_url ?? ''
+    })
     setCommentDraft(drafts)
+    setLoomDraft(loomDrafts)
     setLoading(false)
   }
 
@@ -101,6 +120,20 @@ export default function CheckInsPage() {
     const supabase = createClient()
     await supabase.from('check_ins').update({ coach_comment: commentDraft[checkInId] }).eq('id', checkInId)
     setSavingComment(null)
+    loadData()
+  }
+
+  async function saveLoomUrl(checkInId: string) {
+    if (isDemo) return
+    const url = loomDraft[checkInId]?.trim() ?? ''
+    if (!url || !url.startsWith('https://www.loom.com/share/')) {
+      alert('Please enter a valid Loom URL starting with https://www.loom.com/share/')
+      return
+    }
+    setSavingLoom(checkInId)
+    const supabase = createClient()
+    await supabase.from('check_ins').update({ loom_url: url }).eq('id', checkInId)
+    setSavingLoom(null)
     loadData()
   }
 
@@ -286,6 +319,43 @@ export default function CheckInsPage() {
                           </div>
                         )}
 
+                        {/* Progress photos */}
+                        {(ci.photo_front_url || ci.photo_side_url || ci.photo_back_url) && (
+                          <div>
+                            <div className="flex items-center gap-2 mb-2">
+                              <Camera size={13} className="text-cb-muted" />
+                              <p className="text-xs font-semibold text-cb-muted uppercase tracking-wide">Progress Photos</p>
+                            </div>
+                            <div className="grid grid-cols-3 gap-3">
+                              {[
+                                { url: ci.photo_front_url, label: 'Front' },
+                                { url: ci.photo_side_url, label: 'Side' },
+                                { url: ci.photo_back_url, label: 'Back' },
+                              ].map(({ url, label }) => (
+                                <div key={label} className="relative aspect-[3/4] rounded-lg overflow-hidden bg-surface-light border border-cb-border group">
+                                  {url ? (
+                                    <>
+                                      <Image src={url} alt={label} fill className="object-cover" unoptimized />
+                                      <button
+                                        onClick={() => setLightboxPhoto({ url, label })}
+                                        className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-colors"
+                                      >
+                                        <Maximize2 size={18} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
+                                      <Camera size={18} className="text-cb-muted opacity-40" />
+                                      <span className="text-[10px] text-cb-muted opacity-50">{label}</span>
+                                    </div>
+                                  )}
+                                  <span className="absolute bottom-1 left-0 right-0 text-center text-[10px] font-semibold text-white drop-shadow-sm">{url ? label : ''}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
                         {/* Coach comment */}
                         <div>
                           <p className="text-xs font-semibold text-cb-muted mb-2 uppercase tracking-wide">Coach Comment</p>
@@ -310,6 +380,60 @@ export default function CheckInsPage() {
                             </button>
                           </div>
                         </div>
+
+                        {/* Loom Video Feedback */}
+                        <div className="space-y-2 mt-4 pt-4 border-t border-cb-border">
+                          <p className="text-xs font-semibold text-cb-muted uppercase tracking-wide">Loom Video Feedback</p>
+                          {ci.loom_url ? (
+                            <div className="space-y-2">
+                              <div className="relative w-full rounded-lg overflow-hidden bg-surface-light border border-cb-border">
+                                <iframe
+                                  src={`https://www.loom.com/embed/${extractLoomId(ci.loom_url)}`}
+                                  frameBorder="0"
+                                  allowFullScreen
+                                  className="w-full h-64"
+                                />
+                              </div>
+                              <button
+                                onClick={() => setLoomDraft({ ...loomDraft, [ci.id]: ci.loom_url || '' })}
+                                className="text-sm text-cb-teal hover:text-cb-teal/80 font-medium"
+                              >
+                                Change
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              <input
+                                type="text"
+                                value={loomDraft[ci.id] ?? ''}
+                                onChange={(e) => setLoomDraft({ ...loomDraft, [ci.id]: e.target.value })}
+                                placeholder="Paste Loom video URL…"
+                                className="w-full px-3 py-2 border border-cb-border rounded-md text-sm text-cb-text placeholder-cb-muted bg-surface-light focus:outline-none focus:ring-2 focus:ring-cb-teal"
+                              />
+                              {loomDraft[ci.id] && loomDraft[ci.id].startsWith('https://www.loom.com/share/') && (
+                                <div className="relative w-full rounded-lg overflow-hidden bg-surface-light border border-cb-border">
+                                  <iframe
+                                    src={`https://www.loom.com/embed/${extractLoomId(loomDraft[ci.id])}`}
+                                    frameBorder="0"
+                                    allowFullScreen
+                                    className="w-full h-64"
+                                  />
+                                </div>
+                              )}
+                              <button
+                                onClick={() => saveLoomUrl(ci.id)}
+                                disabled={savingLoom === ci.id || !loomDraft[ci.id]}
+                                className="px-3 py-2 bg-cb-teal hover:bg-cb-teal/90 disabled:bg-cb-teal/50 text-white rounded-md flex items-center gap-1 text-sm"
+                              >
+                                {savingLoom === ci.id ? (
+                                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                  <><Check size={14} /> Save Loom URL</>
+                                )}
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -317,6 +441,25 @@ export default function CheckInsPage() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Photo lightbox */}
+      {lightboxPhoto && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-6"
+          onClick={() => setLightboxPhoto(null)}
+        >
+          <div className="relative max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="relative aspect-[3/4] w-full rounded-xl overflow-hidden">
+              <Image src={lightboxPhoto.url} alt={lightboxPhoto.label} fill className="object-contain" unoptimized />
+            </div>
+            <p className="text-center text-white text-sm font-semibold mt-3 opacity-80">{lightboxPhoto.label}</p>
+            <button
+              onClick={() => setLightboxPhoto(null)}
+              className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white text-lg font-bold"
+            >×</button>
+          </div>
         </div>
       )}
     </div>

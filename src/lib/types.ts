@@ -39,8 +39,12 @@ export type CheckIn = {
   wins: string | null
   struggles: string | null
   coach_comment: string | null
+  loom_url: string | null
   submitted: boolean
   created_at: string
+  photo_front_url: string | null
+  photo_side_url: string | null
+  photo_back_url: string | null
 }
 
 export type Message = {

@@ -22,6 +22,21 @@ import {
   BookOpen,
   ListTodo,
   CreditCard,
+  Mail,
+  Gift,
+  Shield,
+  Megaphone,
+  Video,
+  MessageSquareText,
+  Tag,
+  Film,
+  Star,
+  ShoppingBag,
+  Palette,
+  Package,
+  UsersRound,
+  CalendarClock,
+  Watch,
 } from 'lucide-react'
 
 type NavSection = {
@@ -44,21 +59,52 @@ const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
+    label: 'AI & AUTOMATION',
+    items: [
+      { href: '/meal-plans', label: 'Meal Plans', icon: UtensilsCrossed },
+      { href: '/workout-programs', label: 'Workout Programs', icon: Dumbbell },
+      { href: '/form-check', label: 'Form Check', icon: Video },
+    ],
+  },
+  {
     label: 'COACHING',
     items: [
-      { href: '/training', label: 'Programs', icon: Dumbbell },
-      { href: '/nutrition', label: 'Nutrition', icon: UtensilsCrossed },
-      { href: '/habits', label: 'Habits', icon: HeartPulse },
+      { href: '/programs', label: 'Programs', icon: BookOpen },
+      { href: '/nutrition', label: 'Nutrition', icon: HeartPulse },
+      { href: '/templates', label: 'Templates', icon: MessageSquareText },
+      { href: '/tags', label: 'Tags & Segments', icon: Tag },
+      { href: '/video-library', label: 'Video Library', icon: Film },
+      { href: '/habits', label: 'Habits', icon: ListTodo },
       { href: '/resources', label: 'Resources', icon: BookOpen },
       { href: '/tasks', label: 'Tasks', icon: ListTodo },
+    ],
+  },
+  {
+    label: 'GROWTH',
+    items: [
+      { href: '/reviews', label: 'Reviews', icon: Star },
+      { href: '/marketplace', label: 'Marketplace', icon: ShoppingBag },
+      { href: '/packages', label: 'Packages', icon: Package },
+      { href: '/referrals', label: 'Referrals', icon: Gift },
     ],
   },
   {
     label: 'BUSINESS',
     items: [
       { href: '/payments', label: 'Payments', icon: CreditCard },
+      { href: '/groups', label: 'Group Chats', icon: UsersRound },
+      { href: '/email-sequences', label: 'Email Sequences', icon: Mail },
       { href: '/notifications', label: 'Notifications', icon: Bell },
+      { href: '/notifications-broadcast', label: 'Broadcasts', icon: Megaphone },
+      { href: '/team', label: 'Team', icon: Users },
+    ],
+  },
+  {
+    label: 'SETTINGS',
+    items: [
+      { href: '/branding', label: 'Branding', icon: Palette },
       { href: '/settings', label: 'Settings', icon: Settings },
+      { href: '/privacy', label: 'Privacy & Data', icon: Shield },
     ],
   },
 ]

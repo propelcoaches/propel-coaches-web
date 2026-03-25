@@ -132,8 +132,12 @@ export const DEMO_CHECK_INS = [
     wins: 'Hit a new squat PB — 120kg for 5 reps. Meal prep was on point all week.',
     struggles: 'Work stress made it hard to sleep on Wednesday and Thursday.',
     coach_comment: 'Brilliant week Liam — that squat PB is huge progress. Keep managing the stress as best you can.',
+    loom_url: 'https://www.loom.com/share/abc123def456',
     submitted: true,
     created_at: '2026-03-03T07:00:00Z',
+    photo_front_url: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=300&h=400&fit=crop&q=80',
+    photo_side_url: 'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=300&h=400&fit=crop&q=80',
+    photo_back_url: null,
   },
   {
     id: 'demo-ci-2',
@@ -148,8 +152,12 @@ export const DEMO_CHECK_INS = [
     wins: 'Stuck to nutrition targets 6 out of 7 days.',
     struggles: 'Missed one training session due to work commitments.',
     coach_comment: 'Solid week overall. One missed session is nothing to stress about — consistency over perfection.',
+    loom_url: null,
     submitted: true,
     created_at: '2026-02-24T07:00:00Z',
+    photo_front_url: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=300&h=400&fit=crop&q=80',
+    photo_side_url: null,
+    photo_back_url: null,
   },
   {
     id: 'demo-ci-3',
@@ -164,8 +172,12 @@ export const DEMO_CHECK_INS = [
     wins: 'Energy was high all week. Great session on Thursday.',
     struggles: 'Craving sweets at night — managed to stay disciplined though.',
     coach_comment: 'Love seeing the high energy scores. Your sleep and recovery are clearly paying dividends.',
+    loom_url: null,
     submitted: true,
     created_at: '2026-02-17T07:00:00Z',
+    photo_front_url: null,
+    photo_side_url: null,
+    photo_back_url: null,
   },
   // Sophie Nguyen
   {
@@ -181,8 +193,12 @@ export const DEMO_CHECK_INS = [
     wins: 'Completed a 15km long run — new distance PB. Strength sessions felt easier than ever.',
     struggles: 'Gluten-free eating on the go is still challenging when travelling.',
     coach_comment: 'Amazing run Sophie! That distance milestone is a huge deal. We\'ll keep building on this.',
+    loom_url: null,
     submitted: true,
     created_at: '2026-03-04T08:00:00Z',
+    photo_front_url: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=300&h=400&fit=crop&q=80',
+    photo_side_url: null,
+    photo_back_url: null,
   },
   {
     id: 'demo-ci-5',
@@ -197,8 +213,12 @@ export const DEMO_CHECK_INS = [
     wins: 'Ran 3x this week plus 2 strength sessions — all completed.',
     struggles: 'Legs were sore heading into Thursday\'s run.',
     coach_comment: 'Brilliant consistency! The soreness is normal — make sure you\'re hitting the protein targets to support recovery.',
+    loom_url: null,
     submitted: true,
     created_at: '2026-02-25T08:00:00Z',
+    photo_front_url: null,
+    photo_side_url: null,
+    photo_back_url: null,
   },
   {
     id: 'demo-ci-6',
@@ -213,8 +233,12 @@ export const DEMO_CHECK_INS = [
     wins: 'First time doing Bulgarian split squats — got through them!',
     struggles: 'Missed one run due to weather.',
     coach_comment: 'Great effort pushing through the new exercises. Missing one run due to rain is completely fine.',
+    loom_url: null,
     submitted: true,
     created_at: '2026-02-18T08:00:00Z',
+    photo_front_url: null,
+    photo_side_url: null,
+    photo_back_url: null,
   },
   // Jake Wilson
   {
@@ -230,8 +254,12 @@ export const DEMO_CHECK_INS = [
     wins: 'Bench press up to 110kg — strongest ever. Eating well and sleeping great.',
     struggles: 'Calorie intake was slightly under on rest days.',
     coach_comment: 'That bench is elite mate! On rest days it\'s still important to eat enough — your muscles grow outside the gym.',
+    loom_url: null,
     submitted: true,
     created_at: '2026-03-02T07:30:00Z',
+    photo_front_url: null,
+    photo_side_url: null,
+    photo_back_url: null,
   },
   {
     id: 'demo-ci-8',
@@ -246,8 +274,12 @@ export const DEMO_CHECK_INS = [
     wins: 'Scale weight going up steadily. All 4 sessions completed.',
     struggles: 'Getting enough carbs post-workout is tricky with my schedule.',
     coach_comment: 'The steady weight gain is exactly what we want. Try prepping a rice and chicken portion the night before for post-workout.',
+    loom_url: null,
     submitted: true,
     created_at: '2026-02-23T07:30:00Z',
+    photo_front_url: null,
+    photo_side_url: null,
+    photo_back_url: null,
   },
   // Emma Thompson
   {
@@ -263,8 +295,12 @@ export const DEMO_CHECK_INS = [
     wins: 'Did all 3 sessions for the first time ever! Feeling proud.',
     struggles: 'Still nervous about using the free weights area in the gym.',
     coach_comment: 'Emma this is a massive win — all 3 sessions is incredible for week 1. The gym nerves are 100% normal and will fade fast.',
+    loom_url: null,
     submitted: true,
     created_at: '2026-03-05T09:00:00Z',
+    photo_front_url: null,
+    photo_side_url: null,
+    photo_back_url: null,
   },
   {
     id: 'demo-ci-10',
@@ -279,54 +315,58 @@ export const DEMO_CHECK_INS = [
     wins: 'Tracked meals 5 out of 7 days — best week yet.',
     struggles: 'Weekend social eating made nutrition hard to manage.',
     coach_comment: 'Tracking 5 days is really solid progress Emma. For weekends, just try to make the best choice available — perfectionism is the enemy!',
+    loom_url: null,
     submitted: true,
     created_at: '2026-02-26T09:00:00Z',
+    photo_front_url: null,
+    photo_side_url: null,
+    photo_back_url: null,
   },
 ]
 
 export const DEMO_WEIGHT_LOGS = [
-  // Liam Carter — gradual loss
-  { id: 'demo-wl-1', client_id: 'demo-client-1', weight_kg: 95.5, date: '2025-09-16', body_fat_pct: null, notes: 'Starting weight', created_at: '2025-09-16T07:00:00Z' },
-  { id: 'demo-wl-2', client_id: 'demo-client-1', weight_kg: 94.8, date: '2025-10-01', body_fat_pct: null, notes: null, created_at: '2025-10-01T07:00:00Z' },
-  { id: 'demo-wl-3', client_id: 'demo-client-1', weight_kg: 93.9, date: '2025-10-15', body_fat_pct: null, notes: null, created_at: '2025-10-15T07:00:00Z' },
-  { id: 'demo-wl-4', client_id: 'demo-client-1', weight_kg: 93.0, date: '2025-11-01', body_fat_pct: null, notes: null, created_at: '2025-11-01T07:00:00Z' },
-  { id: 'demo-wl-5', client_id: 'demo-client-1', weight_kg: 92.1, date: '2025-11-15', body_fat_pct: null, notes: null, created_at: '2025-11-15T07:00:00Z' },
-  { id: 'demo-wl-6', client_id: 'demo-client-1', weight_kg: 91.5, date: '2025-12-01', body_fat_pct: null, notes: null, created_at: '2025-12-01T07:00:00Z' },
-  { id: 'demo-wl-7', client_id: 'demo-client-1', weight_kg: 90.8, date: '2025-12-15', body_fat_pct: null, notes: null, created_at: '2025-12-15T07:00:00Z' },
-  { id: 'demo-wl-8', client_id: 'demo-client-1', weight_kg: 90.2, date: '2026-01-07', body_fat_pct: null, notes: null, created_at: '2026-01-07T07:00:00Z' },
-  { id: 'demo-wl-9', client_id: 'demo-client-1', weight_kg: 89.8, date: '2026-01-21', body_fat_pct: null, notes: null, created_at: '2026-01-21T07:00:00Z' },
-  { id: 'demo-wl-10', client_id: 'demo-client-1', weight_kg: 89.1, date: '2026-02-04', body_fat_pct: null, notes: null, created_at: '2026-02-04T07:00:00Z' },
+  // Liam Carter — gradual fat loss with BF% tracked every ~6 weeks
+  { id: 'demo-wl-1',  client_id: 'demo-client-1', weight_kg: 95.5, date: '2025-09-16', body_fat_pct: 28.4, notes: 'Starting weight', created_at: '2025-09-16T07:00:00Z' },
+  { id: 'demo-wl-2',  client_id: 'demo-client-1', weight_kg: 94.8, date: '2025-10-01', body_fat_pct: null, notes: null, created_at: '2025-10-01T07:00:00Z' },
+  { id: 'demo-wl-3',  client_id: 'demo-client-1', weight_kg: 93.9, date: '2025-10-15', body_fat_pct: null, notes: null, created_at: '2025-10-15T07:00:00Z' },
+  { id: 'demo-wl-4',  client_id: 'demo-client-1', weight_kg: 93.0, date: '2025-11-01', body_fat_pct: 26.8, notes: null, created_at: '2025-11-01T07:00:00Z' },
+  { id: 'demo-wl-5',  client_id: 'demo-client-1', weight_kg: 92.1, date: '2025-11-15', body_fat_pct: null, notes: null, created_at: '2025-11-15T07:00:00Z' },
+  { id: 'demo-wl-6',  client_id: 'demo-client-1', weight_kg: 91.5, date: '2025-12-01', body_fat_pct: null, notes: null, created_at: '2025-12-01T07:00:00Z' },
+  { id: 'demo-wl-7',  client_id: 'demo-client-1', weight_kg: 90.8, date: '2025-12-15', body_fat_pct: 25.1, notes: null, created_at: '2025-12-15T07:00:00Z' },
+  { id: 'demo-wl-8',  client_id: 'demo-client-1', weight_kg: 90.2, date: '2026-01-07', body_fat_pct: null, notes: null, created_at: '2026-01-07T07:00:00Z' },
+  { id: 'demo-wl-9',  client_id: 'demo-client-1', weight_kg: 89.8, date: '2026-01-21', body_fat_pct: null, notes: null, created_at: '2026-01-21T07:00:00Z' },
+  { id: 'demo-wl-10', client_id: 'demo-client-1', weight_kg: 89.1, date: '2026-02-04', body_fat_pct: 23.6, notes: null, created_at: '2026-02-04T07:00:00Z' },
   { id: 'demo-wl-11', client_id: 'demo-client-1', weight_kg: 88.5, date: '2026-02-18', body_fat_pct: null, notes: null, created_at: '2026-02-18T07:00:00Z' },
-  { id: 'demo-wl-12', client_id: 'demo-client-1', weight_kg: 88.2, date: '2026-03-03', body_fat_pct: null, notes: null, created_at: '2026-03-03T07:00:00Z' },
-  // Sophie Nguyen — gradual loss
-  { id: 'demo-wl-13', client_id: 'demo-client-2', weight_kg: 68.0, date: '2025-10-04', body_fat_pct: null, notes: 'Starting weight', created_at: '2025-10-04T08:00:00Z' },
+  { id: 'demo-wl-12', client_id: 'demo-client-1', weight_kg: 88.2, date: '2026-03-03', body_fat_pct: 22.9, notes: null, created_at: '2026-03-03T07:00:00Z' },
+  // Sophie Nguyen — gradual loss with BF% tracked
+  { id: 'demo-wl-13', client_id: 'demo-client-2', weight_kg: 68.0, date: '2025-10-04', body_fat_pct: 30.2, notes: 'Starting weight', created_at: '2025-10-04T08:00:00Z' },
   { id: 'demo-wl-14', client_id: 'demo-client-2', weight_kg: 67.5, date: '2025-10-18', body_fat_pct: null, notes: null, created_at: '2025-10-18T08:00:00Z' },
   { id: 'demo-wl-15', client_id: 'demo-client-2', weight_kg: 67.0, date: '2025-11-01', body_fat_pct: null, notes: null, created_at: '2025-11-01T08:00:00Z' },
-  { id: 'demo-wl-16', client_id: 'demo-client-2', weight_kg: 66.6, date: '2025-11-15', body_fat_pct: null, notes: null, created_at: '2025-11-15T08:00:00Z' },
+  { id: 'demo-wl-16', client_id: 'demo-client-2', weight_kg: 66.6, date: '2025-11-15', body_fat_pct: 28.8, notes: null, created_at: '2025-11-15T08:00:00Z' },
   { id: 'demo-wl-17', client_id: 'demo-client-2', weight_kg: 66.2, date: '2025-12-01', body_fat_pct: null, notes: null, created_at: '2025-12-01T08:00:00Z' },
   { id: 'demo-wl-18', client_id: 'demo-client-2', weight_kg: 65.8, date: '2025-12-15', body_fat_pct: null, notes: null, created_at: '2025-12-15T08:00:00Z' },
-  { id: 'demo-wl-19', client_id: 'demo-client-2', weight_kg: 65.5, date: '2026-01-07', body_fat_pct: null, notes: null, created_at: '2026-01-07T08:00:00Z' },
+  { id: 'demo-wl-19', client_id: 'demo-client-2', weight_kg: 65.5, date: '2026-01-07', body_fat_pct: 27.4, notes: null, created_at: '2026-01-07T08:00:00Z' },
   { id: 'demo-wl-20', client_id: 'demo-client-2', weight_kg: 65.2, date: '2026-01-21', body_fat_pct: null, notes: null, created_at: '2026-01-21T08:00:00Z' },
   { id: 'demo-wl-21', client_id: 'demo-client-2', weight_kg: 65.0, date: '2026-02-04', body_fat_pct: null, notes: null, created_at: '2026-02-04T08:00:00Z' },
-  { id: 'demo-wl-22', client_id: 'demo-client-2', weight_kg: 64.7, date: '2026-02-18', body_fat_pct: null, notes: null, created_at: '2026-02-18T08:00:00Z' },
-  { id: 'demo-wl-23', client_id: 'demo-client-2', weight_kg: 64.5, date: '2026-03-04', body_fat_pct: null, notes: null, created_at: '2026-03-04T08:00:00Z' },
-  // Jake Wilson — gradual gain
-  { id: 'demo-wl-24', client_id: 'demo-client-3', weight_kg: 78.0, date: '2025-11-19', body_fat_pct: null, notes: 'Starting weight', created_at: '2025-11-19T07:30:00Z' },
+  { id: 'demo-wl-22', client_id: 'demo-client-2', weight_kg: 64.7, date: '2026-02-18', body_fat_pct: 26.1, notes: null, created_at: '2026-02-18T08:00:00Z' },
+  { id: 'demo-wl-23', client_id: 'demo-client-2', weight_kg: 64.5, date: '2026-03-04', body_fat_pct: 25.6, notes: null, created_at: '2026-03-04T08:00:00Z' },
+  // Jake Wilson — muscle gain, BF% stable then slight rise
+  { id: 'demo-wl-24', client_id: 'demo-client-3', weight_kg: 78.0, date: '2025-11-19', body_fat_pct: 14.2, notes: 'Starting weight', created_at: '2025-11-19T07:30:00Z' },
   { id: 'demo-wl-25', client_id: 'demo-client-3', weight_kg: 78.5, date: '2025-12-03', body_fat_pct: null, notes: null, created_at: '2025-12-03T07:30:00Z' },
-  { id: 'demo-wl-26', client_id: 'demo-client-3', weight_kg: 79.0, date: '2025-12-17', body_fat_pct: null, notes: null, created_at: '2025-12-17T07:30:00Z' },
+  { id: 'demo-wl-26', client_id: 'demo-client-3', weight_kg: 79.0, date: '2025-12-17', body_fat_pct: 14.5, notes: null, created_at: '2025-12-17T07:30:00Z' },
   { id: 'demo-wl-27', client_id: 'demo-client-3', weight_kg: 79.5, date: '2026-01-07', body_fat_pct: null, notes: null, created_at: '2026-01-07T07:30:00Z' },
-  { id: 'demo-wl-28', client_id: 'demo-client-3', weight_kg: 80.0, date: '2026-01-21', body_fat_pct: null, notes: null, created_at: '2026-01-21T07:30:00Z' },
+  { id: 'demo-wl-28', client_id: 'demo-client-3', weight_kg: 80.0, date: '2026-01-21', body_fat_pct: 14.9, notes: null, created_at: '2026-01-21T07:30:00Z' },
   { id: 'demo-wl-29', client_id: 'demo-client-3', weight_kg: 80.5, date: '2026-02-04', body_fat_pct: null, notes: null, created_at: '2026-02-04T07:30:00Z' },
-  { id: 'demo-wl-30', client_id: 'demo-client-3', weight_kg: 81.0, date: '2026-02-18', body_fat_pct: null, notes: null, created_at: '2026-02-18T07:30:00Z' },
-  { id: 'demo-wl-31', client_id: 'demo-client-3', weight_kg: 81.5, date: '2026-03-02', body_fat_pct: null, notes: null, created_at: '2026-03-02T07:30:00Z' },
-  // Emma Thompson — gradual loss
-  { id: 'demo-wl-32', client_id: 'demo-client-4', weight_kg: 72.5, date: '2025-12-02', body_fat_pct: null, notes: 'Starting weight', created_at: '2025-12-02T09:00:00Z' },
+  { id: 'demo-wl-30', client_id: 'demo-client-3', weight_kg: 81.0, date: '2026-02-18', body_fat_pct: 15.1, notes: null, created_at: '2026-02-18T07:30:00Z' },
+  { id: 'demo-wl-31', client_id: 'demo-client-3', weight_kg: 81.5, date: '2026-03-02', body_fat_pct: 15.2, notes: null, created_at: '2026-03-02T07:30:00Z' },
+  // Emma Thompson — gradual loss with BF% tracked
+  { id: 'demo-wl-32', client_id: 'demo-client-4', weight_kg: 72.5, date: '2025-12-02', body_fat_pct: 34.1, notes: 'Starting weight', created_at: '2025-12-02T09:00:00Z' },
   { id: 'demo-wl-33', client_id: 'demo-client-4', weight_kg: 71.8, date: '2025-12-16', body_fat_pct: null, notes: null, created_at: '2025-12-16T09:00:00Z' },
-  { id: 'demo-wl-34', client_id: 'demo-client-4', weight_kg: 71.2, date: '2026-01-07', body_fat_pct: null, notes: null, created_at: '2026-01-07T09:00:00Z' },
+  { id: 'demo-wl-34', client_id: 'demo-client-4', weight_kg: 71.2, date: '2026-01-07', body_fat_pct: 32.8, notes: null, created_at: '2026-01-07T09:00:00Z' },
   { id: 'demo-wl-35', client_id: 'demo-client-4', weight_kg: 70.6, date: '2026-01-21', body_fat_pct: null, notes: null, created_at: '2026-01-21T09:00:00Z' },
-  { id: 'demo-wl-36', client_id: 'demo-client-4', weight_kg: 70.1, date: '2026-02-04', body_fat_pct: null, notes: null, created_at: '2026-02-04T09:00:00Z' },
+  { id: 'demo-wl-36', client_id: 'demo-client-4', weight_kg: 70.1, date: '2026-02-04', body_fat_pct: 31.5, notes: null, created_at: '2026-02-04T09:00:00Z' },
   { id: 'demo-wl-37', client_id: 'demo-client-4', weight_kg: 69.5, date: '2026-02-18', body_fat_pct: null, notes: null, created_at: '2026-02-18T09:00:00Z' },
-  { id: 'demo-wl-38', client_id: 'demo-client-4', weight_kg: 69.0, date: '2026-03-05', body_fat_pct: null, notes: null, created_at: '2026-03-05T09:00:00Z' },
+  { id: 'demo-wl-38', client_id: 'demo-client-4', weight_kg: 69.0, date: '2026-03-05', body_fat_pct: 30.2, notes: null, created_at: '2026-03-05T09:00:00Z' },
 ]
 
 export const DEMO_NOTES = [
@@ -801,3 +841,23 @@ export const DEMO_AUTOFLOWS: Autoflow[] = [
     created_at: '2025-11-01T08:00:00Z',
   },
 ]
+
+export const DEMO_PRS: Record<string, { exercise: string; weight: number; reps: number; e1rm: number; date: string }[]> = {
+  'demo-client-1': [
+    { exercise: 'Squat', weight: 120, reps: 5, e1rm: 139, date: '2026-03-03' },
+    { exercise: 'Bench Press', weight: 100, reps: 5, e1rm: 116, date: '2026-02-10' },
+    { exercise: 'Romanian Deadlift', weight: 110, reps: 6, e1rm: 131, date: '2026-01-28' },
+  ],
+  'demo-client-2': [
+    { exercise: 'Bulgarian Split Squat', weight: 40, reps: 8, e1rm: 51, date: '2026-02-18' },
+    { exercise: 'Hip Thrust', weight: 90, reps: 10, e1rm: 120, date: '2026-03-04' },
+  ],
+  'demo-client-3': [
+    { exercise: 'Bench Press', weight: 110, reps: 3, e1rm: 123, date: '2026-03-02' },
+    { exercise: 'Deadlift', weight: 175, reps: 3, e1rm: 195, date: '2026-02-16' },
+    { exercise: 'Squat', weight: 140, reps: 5, e1rm: 163, date: '2026-01-20' },
+  ],
+  'demo-client-4': [
+    { exercise: 'Goblet Squat', weight: 24, reps: 10, e1rm: 32, date: '2026-03-05' },
+  ],
+}

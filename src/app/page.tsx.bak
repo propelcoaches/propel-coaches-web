@@ -1,0 +1,607 @@
+import Link from 'next/link'
+import {
+  Dumbbell, UtensilsCrossed, MessageSquare, TrendingUp,
+  ClipboardCheck, HeartPulse, CreditCard, Bot, Check,
+  ArrowRight, Star, Users, Zap, Shield, Smartphone,
+} from 'lucide-react'
+
+/* ─── Data ─────────────────────────────────── */
+const FEATURES = [
+  { icon: Dumbbell,        title: 'Training Programs',        desc: 'Build reusable program templates and assign them to clients in one tap. Clients log workouts live with PB detection and rest timers.' },
+  { icon: UtensilsCrossed, title: 'Nutrition Planning',       desc: 'Create personalised meal plans and macro targets. Clients log food and track progress against their goals.' },
+  { icon: MessageSquare,   title: 'Client Messaging',         desc: 'Chat directly with clients in real time. Your AI coach handles messages when you\'re offline.' },
+  { icon: ClipboardCheck,  title: 'Weekly Check-ins',         desc: 'Energy, sleep, stress, and progress — clients submit weekly check-ins with photos. Coach comments appear instantly in the app.' },
+  { icon: HeartPulse,      title: 'Habit Tracking',           desc: 'Set daily habits and let clients track them in the app. A contribution calendar shows streaks and keeps motivation high.' },
+  { icon: TrendingUp,      title: 'Body Metrics Dashboard',   desc: 'Weight, body fat %, and circumference measurements with trend arrows. Compare progress photos side-by-side across check-ins.' },
+  { icon: Bot,             title: 'AI Coach Assistant',       desc: 'Your AI coach responds to clients 24/7 in your tone and style — motivational, supportive, or professional.' },
+  { icon: CreditCard,      title: 'Payments & Invoicing',     desc: 'Send invoices, manage subscriptions, and track revenue — all powered by Stripe.' },
+]
+
+const PROFESSIONS = [
+  { emoji: '🏋️', title: 'Personal Trainers' },
+  { emoji: '🥗', title: 'Nutritionists' },
+  { emoji: '🍎', title: 'Dietitians' },
+  { emoji: '🫀', title: 'Exercise Physiologists' },
+  { emoji: '💪', title: 'Strength Coaches' },
+  { emoji: '📱', title: 'Online Fitness Coaches' },
+  { emoji: '🩺', title: 'Physiotherapists' },
+]
+
+const HOW_IT_WORKS = [
+  { step: '01', title: 'Sign up in 60 seconds',  desc: 'Create your account, tell us your profession, and choose which features your clients can access.' },
+  { step: '02', title: 'Invite your clients',    desc: 'Send clients an invite link. They download the app, create a profile, and connect to you instantly.' },
+  { step: '03', title: 'Start coaching',         desc: 'Build programs, send check-ins, chat in real time, and let your AI assistant handle the in-between.' },
+]
+
+const PRICING = [
+  {
+    name: 'Starter',
+    price: '$29',
+    period: '/month',
+    desc: 'Perfect for coaches just getting started',
+    cta: 'Start free trial',
+    highlight: false,
+    features: ['Up to 10 clients', 'All core features', 'AI coach assistant', 'Stripe payments', 'Email support'],
+  },
+  {
+    name: 'Pro',
+    price: '$59',
+    period: '/month',
+    desc: 'For established coaches scaling their business',
+    cta: 'Start free trial',
+    highlight: true,
+    features: ['Unlimited clients', 'All core features', 'AI coach assistant', 'Custom brand colours & logo', 'Priority support', 'Early access to new features'],
+  },
+  {
+    name: 'Clinic',
+    price: '$119',
+    period: '/month',
+    desc: 'For multi-practitioner clinics and teams',
+    cta: 'Contact us',
+    highlight: false,
+    features: ['Unlimited clients', 'Up to 5 practitioners', 'All Pro features', 'Team dashboard', 'Dedicated onboarding', 'Custom contract'],
+  },
+]
+
+const TESTIMONIALS = [
+  { name: 'Sarah Mitchell',  role: 'Online PT, Sydney',            stars: 5, quote: 'Propel replaced three separate tools I was using. My clients love the app and I finally feel on top of everything.' },
+  { name: 'James Khoury',    role: 'Accredited Dietitian',         stars: 5, quote: 'As a dietitian I only needed the nutrition and check-in features — being able to turn everything else off was a game changer.' },
+  { name: 'Mia Torres',      role: 'Exercise Physiologist',        stars: 5, quote: 'The AI coach handles all the after-hours messages. I used to spend an hour every night replying — now I don\'t.' },
+]
+
+/* ─── Page ──────────────────────────────────── */
+export default function LandingPage() {
+  return (
+    <div className="min-h-screen bg-white" style={{ fontFamily: 'var(--font-inter, system-ui, sans-serif)' }}>
+
+      {/* ── Nav ─────────────────────────────── */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-[#0F7B8C] flex items-center justify-center">
+              <Zap size={16} className="text-white" />
+            </div>
+            <span className="font-bold text-gray-900 text-lg tracking-tight">Propel</span>
+          </div>
+          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
+            <a href="#features"    className="hover:text-gray-900 transition-colors">Features</a>
+            <a href="#how-it-works" className="hover:text-gray-900 transition-colors">How it works</a>
+            <Link href="/blog"      className="hover:text-gray-900 transition-colors">Blog</Link>
+            <Link href="/pricing"   className="hover:text-gray-900 transition-colors">Pricing</Link>
+          </nav>
+          <div className="flex items-center gap-3">
+            <Link href="/client"   className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Client login</Link>
+            <Link href="/login"    className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Sign in</Link>
+            <Link href="/pricing" className="bg-[#0F7B8C] hover:bg-[#0d6b7a] text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors">Get started free</Link>
+          </div>
+        </div>
+      </header>
+
+      {/* ── Hero ────────────────────────────── */}
+      <section className="pt-28 pb-16 px-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            {/* Left: copy */}
+            <div>
+              <div className="inline-flex items-center gap-2 bg-[#0F7B8C]/10 text-[#0F7B8C] text-xs font-semibold px-4 py-2 rounded-full mb-8">
+                <Zap size={12} /> Built for health &amp; fitness professionals
+              </div>
+              <h1 className="text-5xl md:text-6xl font-black text-gray-900 leading-tight tracking-tight mb-6">
+                The platform that<br />
+                <span className="text-[#0F7B8C]">propels your practice</span>
+              </h1>
+              <p className="text-xl text-gray-500 mb-10 leading-relaxed">
+                One platform for personal trainers, dietitians, and exercise physiologists. Programs, nutrition, check-ins, AI coaching and payments — all in one place.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 mb-10">
+                <Link href="/pricing" className="inline-flex items-center justify-center gap-2 bg-[#0F7B8C] hover:bg-[#0d6b7a] text-white font-bold px-8 py-4 rounded-2xl text-base transition-colors shadow-lg shadow-[#0F7B8C]/20">
+                  Start for free <ArrowRight size={18} />
+                </Link>
+                <a href="#how-it-works" className="inline-flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-8 py-4 rounded-2xl text-base transition-colors">
+                  See how it works
+                </a>
+              </div>
+              <div className="flex flex-wrap items-center gap-6 text-sm text-gray-400">
+                <div className="flex items-center gap-2"><Users size={16} className="text-[#0F7B8C]" /><span><strong className="text-gray-600">500+</strong> coaches</span></div>
+                <div className="flex items-center gap-2"><Shield size={16} className="text-[#0F7B8C]" /><span><strong className="text-gray-600">No lock-in</strong></span></div>
+                <div className="flex items-center gap-2"><Smartphone size={16} className="text-[#0F7B8C]" /><span><strong className="text-gray-600">iOS &amp; Android</strong></span></div>
+              </div>
+            </div>
+
+            {/* Right: phone mockups */}
+            <div className="relative flex justify-center items-end gap-4 h-[540px]">
+              {/* Back phone (nutrition screen) */}
+              <div className="absolute left-0 bottom-0 w-[200px] translate-y-4 opacity-80" style={{ zIndex: 1 }}>
+                <div className="bg-gray-900 rounded-[32px] p-1.5 shadow-2xl">
+                  <div className="bg-white rounded-[26px] overflow-hidden flex flex-col">
+                    <div className="bg-white px-4 pt-4 pb-2 border-b border-gray-100">
+                      <div className="text-xs font-black text-gray-900">Nutrition</div>
+                    </div>
+                    <div className="bg-gray-50 px-4 py-3 border-b border-gray-100">
+                      <div className="text-2xl font-black text-gray-900 mb-0.5">1,220</div>
+                      <div className="text-[9px] text-gray-400 mb-2.5">kcal · 980 remaining</div>
+                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden mb-3">
+                        <div className="h-full bg-[#0F7B8C] rounded-full" style={{ width: '55%' }} />
+                      </div>
+                      {[
+                        { label: 'Protein', val: '133/180g', color: '#0F7B8C', pct: '74%' },
+                        { label: 'Carbs',   val: '118/220g', color: '#F59E0B', pct: '54%' },
+                        { label: 'Fat',     val: '24/70g',   color: '#EF4444', pct: '34%' },
+                      ].map(m => (
+                        <div key={m.label} className="flex items-center gap-2 mb-1.5">
+                          <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: m.color }} />
+                          <div className="text-[8px] text-gray-500 w-10 flex-shrink-0 font-semibold">{m.label}</div>
+                          <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                            <div className="h-full rounded-full" style={{ width: m.pct, background: m.color }} />
+                          </div>
+                          <div className="text-[8px] text-gray-600 w-12 text-right font-semibold">{m.val}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="bg-white px-4 py-3 space-y-2">
+                      {['🥣 Breakfast', '🍛 Lunch', '🍽️ Dinner'].map(m => (
+                        <div key={m} className="flex items-center justify-between">
+                          <span className="text-[9px] font-semibold text-gray-700">{m}</span>
+                          <div className="w-12 h-1.5 bg-gray-100 rounded-full" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Center phone (Weekly Check-in) */}
+              <div className="relative w-[220px]" style={{ zIndex: 3 }}>
+                <div className="bg-gray-900 rounded-[36px] p-1.5 shadow-2xl shadow-black/30">
+                  <div className="rounded-[30px] overflow-hidden bg-white flex flex-col" style={{ height: '480px' }}>
+                    {/* Header */}
+                    <div className="px-4 pt-4 pb-3 border-b border-gray-100">
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="text-xs font-black text-gray-900">Weekly Check-in</div>
+                        <div className="text-[9px] font-bold text-[#0F7B8C] bg-[#0F7B8C]/10 px-2 py-0.5 rounded">Week 12</div>
+                      </div>
+                    </div>
+
+                    {/* Question */}
+                    <div className="px-4 py-3 border-b border-gray-100">
+                      <div className="text-[11px] font-bold text-gray-900 mb-2">How was your energy this week?</div>
+                      {/* Energy scale */}
+                      <div className="flex items-center gap-0.5 mb-2">
+                        {Array.from({ length: 10 }).map((_, i) => (
+                          <div
+                            key={i}
+                            className={`w-3 h-3 rounded-full flex-shrink-0 ${
+                              i < 7 ? 'bg-[#0F7B8C]' : 'border border-gray-300'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <div className="text-[9px] text-gray-400 font-semibold">7/10</div>
+                    </div>
+
+                    {/* Progress metrics */}
+                    <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
+                      <div className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-2">Progress This Week</div>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1">
+                            <span className="text-[9px] font-semibold text-gray-700">Weight</span>
+                            <span className="text-[8px] text-emerald-600 font-bold">↓ 0.8kg</span>
+                          </div>
+                          <span className="text-[9px] font-bold text-gray-900">88.2 kg</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1">
+                            <span className="text-[9px] font-semibold text-gray-700">Body Fat</span>
+                            <span className="text-[8px] text-emerald-600 font-bold">↓ 0.4%</span>
+                          </div>
+                          <span className="text-[9px] font-bold text-gray-900">22.9%</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1">
+                            <span className="text-[9px] font-semibold text-gray-700">Workouts</span>
+                            <span className="text-[8px] text-emerald-600 font-bold">✓</span>
+                          </div>
+                          <span className="text-[9px] font-bold text-gray-900">4/4</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Wins section */}
+                    <div className="px-4 py-3 border-b border-gray-100">
+                      <div className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-2">Wins this week...</div>
+                      <div className="bg-gray-50 rounded-lg p-2.5">
+                        <div className="text-[8px] text-gray-400 h-6 line-clamp-3">Share what went well this week</div>
+                      </div>
+                    </div>
+
+                    {/* Submit button */}
+                    <div className="px-4 py-3 flex-1 flex items-end">
+                      <button className="w-full bg-[#0F7B8C] hover:bg-[#0d6b7a] text-white text-[9px] font-bold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-1">
+                        Submit Check-in <span>→</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                {/* Notch */}
+                <div className="absolute top-3 left-1/2 -translate-x-1/2 w-16 h-3 bg-gray-900 rounded-full" style={{ zIndex: 4 }} />
+              </div>
+
+              {/* Right phone (training screen) */}
+              <div className="absolute right-0 bottom-0 w-[200px] translate-y-4 opacity-80" style={{ zIndex: 2 }}>
+                <div className="bg-gray-900 rounded-[32px] p-1.5 shadow-2xl">
+                  <div className="bg-white rounded-[26px] overflow-hidden flex flex-col">
+                    <div className="bg-white px-4 pt-4 pb-2 border-b border-gray-100">
+                      <div className="text-xs font-black text-gray-900">Training</div>
+                    </div>
+                    <div className="bg-white px-4 py-3 border-b border-gray-100">
+                      <div className="text-[10px] font-bold text-gray-900 mb-0.5">My Program</div>
+                      <div className="text-[8px] text-gray-400 mb-2">1/4 sessions this week</div>
+                      <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-[#0F7B8C] rounded-full" style={{ width: '25%' }} />
+                      </div>
+                    </div>
+                    <div className="bg-white px-4 py-2 border-b border-gray-100">
+                      <div className="flex gap-1">
+                        {['M','T','W','T','F','S','S'].map((d, i) => (
+                          <div key={i} className={`flex-1 flex flex-col items-center gap-0.5`}>
+                            <div className="text-[7px] text-gray-400 font-semibold">{d}</div>
+                            <div className={`w-4 h-4 rounded-full flex items-center justify-center text-[7px] font-bold ${i === 1 ? 'bg-[#0F7B8C] text-white' : 'text-gray-600'}`}>{20+i}</div>
+                            <div className={`w-1 h-1 rounded-full ${[0,1,3,4].includes(i) ? 'bg-[#0F7B8C]/40' : 'bg-transparent'}`} />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="bg-gray-50 mx-3 my-3 rounded-xl p-3 border-l-4 border-[#0F7B8C]">
+                      <div className="text-[7px] font-bold text-[#0F7B8C] uppercase tracking-widest mb-1">Today</div>
+                      <div className="text-[10px] font-bold text-gray-900 mb-0.5">Upper Body Push</div>
+                      <div className="text-[8px] text-gray-400 mb-2.5">~55 min · 5 exercises</div>
+                      <button className="w-full bg-[#0F7B8C] hover:bg-[#0d6b7a] text-white text-[8px] font-bold py-2 rounded-lg transition-colors flex items-center justify-center gap-1">
+                        <span>▶</span> Start Workout
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Professions ─────────────────────── */}
+      <section className="py-12 bg-gray-50 border-y border-gray-100">
+        <div className="max-w-5xl mx-auto px-6">
+          <p className="text-center text-xs font-semibold text-gray-400 uppercase tracking-widest mb-8">Built for every health profession</p>
+          <div className="flex flex-wrap justify-center gap-4">
+            {PROFESSIONS.map(p => (
+              <div key={p.title} className="flex items-center gap-2.5 bg-white border border-gray-200 rounded-xl px-4 py-2.5 shadow-sm">
+                <span className="text-xl">{p.emoji}</span>
+                <span className="text-sm font-semibold text-gray-700">{p.title}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Coach Portal Showcase ───────────── */}
+      <section className="py-24 px-6 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-black text-gray-900 mb-4">Your coaching HQ, in the browser</h2>
+            <p className="text-lg text-gray-500 max-w-xl mx-auto">Build programs, create meal plans with AI, track check-ins and message clients — all from your coach portal.</p>
+          </div>
+
+          {/* Browser mockup */}
+          <div className="rounded-2xl overflow-hidden border border-gray-200 shadow-2xl shadow-gray-200/60">
+            {/* Browser chrome */}
+            <div className="bg-gray-100 border-b border-gray-200 px-4 py-3 flex items-center gap-3">
+              <div className="flex gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-red-400" />
+                <div className="w-3 h-3 rounded-full bg-yellow-400" />
+                <div className="w-3 h-3 rounded-full bg-green-400" />
+              </div>
+              <div className="flex-1 bg-white rounded-md px-3 py-1.5 text-xs text-gray-400 font-mono">app.propelcoaches.com</div>
+            </div>
+
+            {/* Portal UI */}
+            <div className="bg-white flex" style={{ height: '480px' }}>
+              {/* Sidebar */}
+              <div className="w-56 bg-gray-50 border-r border-gray-100 flex flex-col">
+                <div className="px-4 py-5 border-b border-gray-100">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-[#0F7B8C] flex items-center justify-center">
+                      <Zap size={14} className="text-white" />
+                    </div>
+                    <span className="font-bold text-gray-900 text-sm">CB Coaching</span>
+                  </div>
+                </div>
+                <nav className="flex-1 px-3 py-4 space-y-1">
+                  {[
+                    { icon: TrendingUp, label: 'Dashboard' },
+                    { icon: Users,      label: 'Clients', active: true },
+                    { icon: MessageSquare, label: 'Messages' },
+                    { icon: ClipboardCheck, label: 'Check-ins' },
+                  ].map(({ icon: Icon, label, active }) => (
+                    <div key={label} className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium ${active ? 'bg-[#0F7B8C] text-white' : 'text-gray-500 hover:bg-gray-100'}`}>
+                      <Icon size={15} />
+                      {label}
+                    </div>
+                  ))}
+                  <div className="pt-3 pb-1 px-3">
+                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Coaching</p>
+                  </div>
+                  {[
+                    { icon: Dumbbell,        label: 'Programs' },
+                    { icon: UtensilsCrossed, label: 'Nutrition' },
+                    { icon: HeartPulse,      label: 'Habits' },
+                    { icon: CreditCard,      label: 'Payments' },
+                  ].map(({ icon: Icon, label }) => (
+                    <div key={label} className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-100">
+                      <Icon size={15} />
+                      {label}
+                    </div>
+                  ))}
+                </nav>
+              </div>
+
+              {/* Main content */}
+              <div className="flex-1 overflow-hidden">
+                {/* Top bar */}
+                <div className="border-b border-gray-100 px-6 py-4 flex items-center justify-between">
+                  <div>
+                    <h3 className="font-bold text-gray-900">Clients</h3>
+                    <p className="text-xs text-gray-400">Manage your coaching clients</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-2 text-sm text-gray-400">
+                      <span>🔍</span> Search clients...
+                    </div>
+                    <div className="bg-[#0F7B8C] text-white text-sm font-semibold px-4 py-2 rounded-lg flex items-center gap-2">
+                      <Users size={14} /> Add Client
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stats row */}
+                <div className="grid grid-cols-3 gap-4 px-6 py-4">
+                  {[
+                    { label: 'Total Clients', val: '12' },
+                    { label: 'Active (Onboarded)', val: '9' },
+                    { label: 'Pending Invitations', val: '3' },
+                  ].map(s => (
+                    <div key={s.label} className="bg-gray-50 rounded-xl p-4">
+                      <div className="text-2xl font-black text-gray-900 mb-0.5">{s.val}</div>
+                      <div className="text-xs text-gray-400">{s.label}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Client list */}
+                <div className="px-6 space-y-2">
+                  {[
+                    { name: 'Emma Wilson',    goal: 'Fat Loss',     status: 'Active',   avatar: 'EW', days: '3 days ago' },
+                    { name: 'James Khoury',   goal: 'Muscle Gain',  status: 'Active',   avatar: 'JK', days: 'Today' },
+                    { name: 'Mia Torres',     goal: 'Performance',  status: 'Active',   avatar: 'MT', days: 'Yesterday' },
+                    { name: 'Liam Chen',      goal: 'Recomp',       status: 'Pending',  avatar: 'LC', days: 'Invite sent' },
+                  ].map(c => (
+                    <div key={c.name} className="flex items-center gap-4 bg-white border border-gray-100 rounded-xl px-4 py-3 hover:border-[#0F7B8C]/30 transition-colors">
+                      <div className="w-9 h-9 rounded-full bg-[#0F7B8C]/10 flex items-center justify-center text-xs font-bold text-[#0F7B8C] flex-shrink-0">{c.avatar}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-gray-900 text-sm">{c.name}</div>
+                        <div className="text-xs text-gray-400">{c.goal}</div>
+                      </div>
+                      <div className={`text-xs font-semibold px-2.5 py-1 rounded-full ${c.status === 'Active' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>{c.status}</div>
+                      <div className="text-xs text-gray-400 hidden lg:block">{c.days}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Features ────────────────────────── */}
+      <section id="features" className="py-24 px-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-black text-gray-900 mb-4">Everything you need.<br />Nothing you don't.</h2>
+            <p className="text-lg text-gray-500 max-w-xl mx-auto">Choose which features your clients can access. A dietitian doesn't need the workout section, and a PT might not need nutrition logging. Propel adapts to your practice.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {FEATURES.map(({ icon: Icon, title, desc }) => (
+              <div key={title} className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
+                <div className="w-11 h-11 rounded-xl bg-[#0F7B8C]/10 flex items-center justify-center mb-4">
+                  <Icon size={20} className="text-[#0F7B8C]" />
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">{title}</h3>
+                <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── AI Section ──────────────────────── */}
+      <section className="py-24 px-6 bg-gradient-to-br from-[#0F7B8C] to-[#0a5a68] text-white">
+        <div className="max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-16 items-center">
+            <div>
+              <div className="inline-flex items-center gap-2 bg-white/15 text-white text-xs font-semibold px-3 py-1.5 rounded-full mb-6">
+                <Bot size={12} /> AI-powered
+              </div>
+              <h2 className="text-4xl font-black mb-6 leading-tight">Your AI coach works while you sleep</h2>
+              <p className="text-white/80 text-lg mb-8 leading-relaxed">
+                Clients don't stop needing support at 5pm. Your AI coaching assistant responds to messages around the clock — in your tone, with your knowledge.
+              </p>
+              <ul className="space-y-3">
+                {[
+                  'Responds instantly to client questions and check-ins',
+                  'Matches your communication style perfectly',
+                  'Hands off to you seamlessly when needed',
+                  'Toggle on or off for any client at any time',
+                ].map(item => (
+                  <li key={item} className="flex items-start gap-3 text-sm text-white/90">
+                    <Check size={16} className="text-white mt-0.5 flex-shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="bg-white/10 border border-white/20 rounded-2xl p-6 space-y-4">
+              <p className="text-xs font-semibold text-white/60 uppercase tracking-wide">Example conversation</p>
+              {[
+                { from: 'client', text: 'Hey, I missed my session today. Feeling really guilty 😔' },
+                { from: 'ai',     text: 'Don\'t be too hard on yourself — one missed session doesn\'t undo your progress. How are you feeling? Any reason you couldn\'t get there today?' },
+                { from: 'client', text: 'Just been flat out at work. I\'ll make it up tomorrow' },
+                { from: 'ai',     text: 'That\'s the spirit. Tomorrow is upper body — get a good sleep and stay hydrated tonight. You\'ve got this 💪' },
+              ].map((msg, i) => (
+                <div key={i} className={`flex ${msg.from === 'client' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${msg.from === 'client' ? 'bg-white/20 text-white' : 'bg-white text-gray-800'}`}>
+                    {msg.from === 'ai' && <p className="text-[10px] font-bold text-[#0F7B8C] mb-1">AI Coach</p>}
+                    {msg.text}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── How It Works ────────────────────── */}
+      <section id="how-it-works" className="py-24 px-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-black text-gray-900 mb-4">Up and running in minutes</h2>
+            <p className="text-lg text-gray-500">No setup call required. No lengthy onboarding. Just you and your clients, coaching.</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            {HOW_IT_WORKS.map(({ step, title, desc }) => (
+              <div key={step} className="text-center">
+                <div className="w-14 h-14 rounded-2xl bg-[#0F7B8C]/10 flex items-center justify-center mx-auto mb-5">
+                  <span className="text-[#0F7B8C] font-black text-lg">{step}</span>
+                </div>
+                <h3 className="font-bold text-gray-900 text-lg mb-3">{title}</h3>
+                <p className="text-gray-500 text-sm leading-relaxed">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Testimonials ────────────────────── */}
+      <section className="py-24 px-6 bg-gray-50">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-black text-gray-900 mb-4">Coaches love Propel</h2>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6">
+            {TESTIMONIALS.map(({ name, role, quote, stars }) => (
+              <div key={name} className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+                <div className="flex gap-1 mb-4">
+                  {Array.from({ length: stars }).map((_, i) => (
+                    <Star key={i} size={14} className="text-amber-400 fill-amber-400" />
+                  ))}
+                </div>
+                <p className="text-gray-700 text-sm leading-relaxed mb-5">"{quote}"</p>
+                <div>
+                  <p className="font-bold text-gray-900 text-sm">{name}</p>
+                  <p className="text-gray-400 text-xs mt-0.5">{role}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Pricing ─────────────────────────── */}
+      <section id="pricing" className="py-24 px-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-black text-gray-900 mb-4">Simple, transparent pricing</h2>
+            <p className="text-lg text-gray-500">14-day free trial on all plans. No credit card required.</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6 items-start">
+            {PRICING.map(({ name, price, period, desc, cta, highlight, features }) => (
+              <div key={name} className={`rounded-2xl p-8 border ${highlight ? 'bg-[#0F7B8C] text-white border-[#0F7B8C] shadow-2xl shadow-[#0F7B8C]/25 md:scale-105' : 'bg-white border-gray-100 shadow-sm'}`}>
+                {highlight && (
+                  <div className="inline-flex items-center gap-1.5 bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full mb-4">
+                    <Star size={10} className="fill-white" /> Most popular
+                  </div>
+                )}
+                <h3 className={`font-black text-xl mb-1 ${highlight ? 'text-white' : 'text-gray-900'}`}>{name}</h3>
+                <p className={`text-sm mb-5 ${highlight ? 'text-white/70' : 'text-gray-400'}`}>{desc}</p>
+                <div className="flex items-end gap-1 mb-6">
+                  <span className={`text-4xl font-black ${highlight ? 'text-white' : 'text-gray-900'}`}>{price}</span>
+                  <span className={`text-sm mb-1 ${highlight ? 'text-white/70' : 'text-gray-400'}`}>{period}</span>
+                </div>
+                <Link href="/pricing" className={`block text-center font-bold py-3 px-6 rounded-xl text-sm transition-colors mb-6 ${highlight ? 'bg-white text-[#0F7B8C] hover:bg-gray-50' : 'bg-[#0F7B8C] text-white hover:bg-[#0d6b7a]'}`}>
+                  {cta}
+                </Link>
+                <ul className="space-y-3">
+                  {features.map(f => (
+                    <li key={f} className={`flex items-start gap-2.5 text-sm ${highlight ? 'text-white/90' : 'text-gray-600'}`}>
+                      <Check size={15} className={`flex-shrink-0 mt-0.5 ${highlight ? 'text-white' : 'text-[#0F7B8C]'}`} />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA ─────────────────────────────── */}
+      <section className="py-24 px-6">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="text-4xl font-black text-gray-900 mb-4">Ready to propel your practice?</h2>
+          <p className="text-lg text-gray-500 mb-10">Join hundreds of health professionals who've replaced their patchwork of tools with one platform that just works.</p>
+          <Link href="/pricing" className="inline-flex items-center gap-2 bg-[#0F7B8C] hover:bg-[#0d6b7a] text-white font-bold px-10 py-4 rounded-2xl text-base transition-colors shadow-lg shadow-[#0F7B8C]/20">
+            Get started free <ArrowRight size={18} />
+          </Link>
+          <p className="text-sm text-gray-400 mt-4">14-day free trial · No credit card required · Cancel anytime</p>
+        </div>
+      </section>
+
+      {/* ── Footer ──────────────────────────── */}
+      <footer className="border-t border-gray-100 py-10 px-6">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-[#0F7B8C] flex items-center justify-center">
+              <Zap size={14} className="text-white" />
+            </div>
+            <span className="font-bold text-gray-900">Propel</span>
+          </div>
+          <p className="text-sm text-gray-400">© {new Date().getFullYear()} Propel. Built for coaches, by coaches.</p>
+          <div className="flex gap-6 text-sm text-gray-400">
+            <a href="#" className="hover:text-gray-600 transition-colors">Privacy</a>
+            <a href="#" className="hover:text-gray-600 transition-colors">Terms</a>
+            <Link href="/login" className="hover:text-gray-600 transition-colors">Sign in</Link>
+          </div>
+        </div>
+      </footer>
+
+    </div>
+  )
+}

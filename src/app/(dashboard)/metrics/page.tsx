@@ -65,6 +65,12 @@ export default function MetricsPage() {
   const prevWeight = clientWeightLogs[clientWeightLogs.length - 2]?.weight_kg
   const weightDiff = latestWeight && prevWeight ? +(latestWeight - prevWeight).toFixed(1) : null
 
+  // Body fat %
+  const bfLogs = clientWeightLogs.filter(w => w.body_fat_pct != null)
+  const latestBf = bfLogs[bfLogs.length - 1]?.body_fat_pct ?? null
+  const prevBf = bfLogs[bfLogs.length - 2]?.body_fat_pct ?? null
+  const bfDiff = latestBf != null && prevBf != null ? +(latestBf - prevBf).toFixed(1) : null
+
   const avgCheckinScore = clientCheckIns.length > 0
     ? Math.round(clientCheckIns.reduce((s, c) => s + c.energy, 0) / clientCheckIns.length)
     : null
@@ -95,6 +101,36 @@ export default function MetricsPage() {
         </div>
       ) : (
         <div className="space-y-6">
+          {/* Macro Targets Panel */}
+          <div className="bg-surface border border-cb-border rounded-xl p-6">
+            <div className="mb-4">
+              <h2 className="text-sm font-semibold text-cb-text">Macro Targets</h2>
+              <p className="text-xs text-cb-muted mt-0.5">Daily nutrition goals for {clientProfile?.name}</p>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-cb-muted">Calories</label>
+                <input type="number" placeholder="2000" defaultValue="2000" className="w-full px-3 py-2 bg-surface-light border border-cb-border rounded-lg text-sm text-cb-text focus:outline-none focus:ring-2 focus:ring-brand" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-cb-muted">Protein (g)</label>
+                <input type="number" placeholder="150" defaultValue="150" className="w-full px-3 py-2 bg-surface-light border border-cb-border rounded-lg text-sm text-cb-text focus:outline-none focus:ring-2 focus:ring-brand" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-cb-muted">Carbs (g)</label>
+                <input type="number" placeholder="200" defaultValue="200" className="w-full px-3 py-2 bg-surface-light border border-cb-border rounded-lg text-sm text-cb-text focus:outline-none focus:ring-2 focus:ring-brand" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-cb-muted">Fat (g)</label>
+                <input type="number" placeholder="70" defaultValue="70" className="w-full px-3 py-2 bg-surface-light border border-cb-border rounded-lg text-sm text-cb-text focus:outline-none focus:ring-2 focus:ring-brand" />
+              </div>
+            </div>
+            <button className="mt-4 w-full px-4 py-2 bg-brand text-white text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity">
+              Save Targets
+            </button>
+            <p className="text-xs text-cb-muted mt-3">These targets will be visible to the client in their nutrition tracking.</p>
+          </div>
+
           {/* Metric cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-surface border border-cb-border rounded-xl p-4">
@@ -108,9 +144,18 @@ export default function MetricsPage() {
               )}
             </div>
             <div className="bg-surface border border-cb-border rounded-xl p-4">
-              <p className="text-xs text-cb-muted mb-1">Starting Weight</p>
-              <p className="text-2xl font-bold text-cb-text">{clientProfile?.starting_weight_kg ?? '—'}<span className="text-sm font-normal text-cb-muted ml-1">kg</span></p>
-              <p className="text-xs text-cb-muted mt-1">at program start</p>
+              <p className="text-xs text-cb-muted mb-1">Body Fat %</p>
+              <p className="text-2xl font-bold text-cb-text">
+                {latestBf != null ? latestBf : '—'}
+                {latestBf != null && <span className="text-sm font-normal text-cb-muted ml-1">%</span>}
+              </p>
+              {bfDiff !== null && (
+                <p className={clsx('text-xs mt-1 flex items-center gap-1', bfDiff < 0 ? 'text-cb-success' : bfDiff > 0 ? 'text-cb-danger' : 'text-cb-muted')}>
+                  {bfDiff < 0 ? <TrendingDown size={12} /> : bfDiff > 0 ? <TrendingUp size={12} /> : <Minus size={12} />}
+                  {bfDiff > 0 ? '+' : ''}{bfDiff}% vs last
+                </p>
+              )}
+              {latestBf == null && <p className="text-xs text-cb-muted mt-1">no data yet</p>}
             </div>
             <div className="bg-surface border border-cb-border rounded-xl p-4">
               <p className="text-xs text-cb-muted mb-1">Check-ins</p>
@@ -124,21 +169,35 @@ export default function MetricsPage() {
             </div>
           </div>
 
-          {/* Weight chart */}
+          {/* Weight + BF% chart */}
           {clientWeightLogs.length > 1 && (
             <div className="bg-surface border border-cb-border rounded-xl p-5">
-              <h2 className="text-sm font-semibold text-cb-text mb-4">Weight History</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-sm font-semibold text-cb-text">Weight History</h2>
+                <div className="flex items-center gap-4">
+                  <span className="flex items-center gap-1.5 text-xs text-cb-muted"><span className="inline-block w-3 h-2 rounded-sm bg-brand opacity-80" /> Weight</span>
+                  {bfLogs.length > 0 && <span className="flex items-center gap-1.5 text-xs text-cb-muted"><span className="inline-block w-3 h-2 rounded-sm bg-amber-400 opacity-80" /> Body Fat %</span>}
+                </div>
+              </div>
               <div className="flex items-end gap-2 h-36">
                 {clientWeightLogs.map((log, i) => {
                   const heightPct = ((log.weight_kg - minWeight) / weightRange) * 80 + 10
+                  const hasBf = log.body_fat_pct != null
                   return (
-                    <div key={log.id} className="flex flex-col items-center flex-1 min-w-0 group">
-                      <div className="relative w-full flex justify-center">
+                    <div key={log.id} className="flex flex-col items-end gap-0.5 flex-1 min-w-0 group">
+                      <div className="relative w-full flex justify-center items-end gap-[2px]">
                         <div
-                          className="w-full max-w-[20px] bg-brand rounded-t-sm opacity-80 hover:opacity-100 transition-opacity cursor-pointer"
+                          className="flex-1 max-w-[14px] bg-brand rounded-t-sm opacity-80 hover:opacity-100 transition-opacity cursor-pointer"
                           style={{ height: heightPct + '%', minHeight: 4 }}
                           title={log.weight_kg + ' kg — ' + log.date}
                         />
+                        {hasBf && (
+                          <div
+                            className="flex-1 max-w-[14px] bg-amber-400 rounded-t-sm opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
+                            style={{ height: (log.body_fat_pct! / 40) * 100 + '%', minHeight: 4 }}
+                            title={log.body_fat_pct + '% body fat — ' + log.date}
+                          />
+                        )}
                       </div>
                     </div>
                   )
@@ -152,6 +211,52 @@ export default function MetricsPage() {
                 <span className="text-xs text-cb-secondary font-medium">{clientWeightLogs[0]?.weight_kg} kg</span>
                 <span className="text-xs text-cb-secondary font-medium">{latestWeight} kg</span>
               </div>
+            </div>
+          )}
+
+          {/* Weight log table */}
+          {clientWeightLogs.length > 0 && (
+            <div className="bg-surface border border-cb-border rounded-xl overflow-hidden">
+              <div className="px-5 py-3 border-b border-cb-border">
+                <h2 className="text-sm font-semibold text-cb-text">Weight Log</h2>
+              </div>
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-cb-border bg-surface-light">
+                    <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-4 py-2">Date</th>
+                    <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-4 py-2">Weight</th>
+                    <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-4 py-2">Body Fat %</th>
+                    <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-4 py-2">Change</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-cb-border">
+                  {[...clientWeightLogs].reverse().map((log, i, arr) => {
+                    const prev = arr[i + 1]
+                    const diff = prev ? +(log.weight_kg - prev.weight_kg).toFixed(1) : null
+                    return (
+                      <tr key={log.id} className="hover:bg-surface-light">
+                        <td className="px-4 py-2 text-sm text-cb-secondary">
+                          {new Date(log.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </td>
+                        <td className="px-4 py-2 text-sm font-medium text-cb-text">{log.weight_kg} kg</td>
+                        <td className="px-4 py-2 text-sm text-cb-secondary">
+                          {log.body_fat_pct != null
+                            ? <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-400/10 text-amber-600">{log.body_fat_pct}%</span>
+                            : <span className="text-cb-muted">—</span>}
+                        </td>
+                        <td className="px-4 py-2 text-sm">
+                          {diff !== null ? (
+                            <span className={clsx('flex items-center gap-1', diff < 0 ? 'text-cb-success' : diff > 0 ? 'text-cb-danger' : 'text-cb-muted')}>
+                              {diff < 0 ? <TrendingDown size={11} /> : diff > 0 ? <TrendingUp size={11} /> : <Minus size={11} />}
+                              {diff > 0 ? '+' : ''}{diff} kg
+                            </span>
+                          ) : <span className="text-cb-muted">—</span>}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
             </div>
           )}
 

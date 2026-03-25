@@ -1,0 +1,146 @@
+/*
+  Supabase Migration: Create support_tickets table
+
+  Run this SQL in your Supabase dashboard:
+
+  CREATE TABLE IF NOT EXISTS support_tickets (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    subject VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    status VARCHAR(50) DEFAULT 'open' CHECK (status IN ('open', 'in_progress', 'resolved', 'closed')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE INDEX idx_support_tickets_email ON support_tickets(email);
+  CREATE INDEX idx_support_tickets_status ON support_tickets(status);
+  CREATE INDEX idx_support_tickets_created_at ON support_tickets(created_at);
+*/
+
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+
+interface ContactFormData {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}
+
+// Initialize Supabase client
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Initialize Resend client (optional)
+const resendApiKey = process.env.RESEND_API_KEY;
+
+async function sendEmailNotification(data: ContactFormData): Promise<boolean> {
+  if (!resendApiKey) {
+    console.log('Resend API key not configured. Skipping email notification.');
+    return false;
+  }
+
+  try {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${resendApiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: 'support@propelcoaches.com',
+        to: 'charlesbettiolbusiness@gmail.com',
+        subject: `New Support Ticket: ${data.subject}`,
+        html: `
+          <h2>New Support Ticket</h2>
+          <p><strong>From:</strong> ${data.name} (${data.email})</p>
+          <p><strong>Subject:</strong> ${data.subject}</p>
+          <hr />
+          <p><strong>Message:</strong></p>
+          <p>${data.message.replace(/\n/g, '<br />')}</p>
+          <hr />
+          <p><small>This ticket was submitted via the Propel support form.</small></p>
+        `
+      })
+    });
+
+    if (!response.ok) {
+      console.error('Failed to send email:', await response.text());
+      return false;
+    }
+
+    console.log('Email notification sent successfully');
+    return true;
+  } catch (error) {
+    console.error('Error sending email notification:', error);
+    return false;
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    // Parse request body
+    const body = await request.json() as ContactFormData;
+
+    // Validate required fields
+    if (!body.name || !body.email || !body.subject || !body.message) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(body.email)) {
+      return NextResponse.json(
+        { error: 'Invalid email address' },
+        { status: 400 }
+      );
+    }
+
+    // Store in Supabase
+    const { data, error } = await supabase
+      .from('support_tickets')
+      .insert([
+        {
+          name: body.name,
+          email: body.email,
+          subject: body.subject,
+          message: body.message,
+          status: 'open'
+        }
+      ])
+      .select();
+
+    if (error) {
+      console.error('Supabase error:', error);
+      return NextResponse.json(
+        { error: 'Failed to save support ticket' },
+        { status: 500 }
+      );
+    }
+
+    // Send email notification (non-blocking)
+    await sendEmailNotification(body);
+
+    // Return success response
+    return NextResponse.json(
+      {
+        success: true,
+        message: 'Support ticket created successfully',
+        ticketId: data?.[0]?.id
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error('API error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
