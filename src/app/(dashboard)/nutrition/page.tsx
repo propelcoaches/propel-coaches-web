@@ -850,6 +850,7 @@ function MealCard({ meal, onUpdate, onDelete, onDuplicate }: { meal: Meal; onUpd
   const [notesOpen, setNotesOpen] = useState(!!meal.notes)
   const [addFoodOpen, setAddFoodOpen] = useState(false)
   const [tagDropOpen, setTagDropOpen] = useState(false)
+  const [imgUrl, setImgUrl] = useState<string | null>(null)
   const macros = sumMealMacros(meal)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -860,6 +861,14 @@ function MealCard({ meal, onUpdate, onDelete, onDuplicate }: { meal: Meal; onUpd
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [])
+
+  useEffect(() => {
+    const q = encodeURIComponent(`${meal.name} food meal`)
+    fetch(`/api/images/meal-photo?q=${q}`)
+      .then(r => r.json())
+      .then(d => { if (d.url) setImgUrl(d.url) })
+      .catch(() => {})
+  }, [meal.name])
 
   function updateFood(idx: number, updates: Partial<FoodItem>) {
     const foods = meal.foods.map((f, i) => i === idx ? { ...f, ...updates } : f)
@@ -881,6 +890,12 @@ function MealCard({ meal, onUpdate, onDelete, onDuplicate }: { meal: Meal; onUpd
 
   return (
     <div className="bg-surface border border-cb-border rounded-xl overflow-hidden">
+      {/* Meal image */}
+      {imgUrl && (
+        <div className="w-full h-36 overflow-hidden bg-surface-light">
+          <img src={imgUrl} alt={meal.name} className="w-full h-full object-cover" />
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-center gap-2 px-3 py-2.5 bg-surface-light border-b border-cb-border">
         {editingName ? (
