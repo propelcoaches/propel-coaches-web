@@ -14,7 +14,7 @@
     },
     {
       "path": "/api/cron/ai-coach-expiry",
-      "schedule": "*/15 * * * *"
+      "schedule": "0 12 * * *"
     }
   ]
 }
