@@ -157,32 +157,32 @@ function ClientAppPreview({ config, darkMode }: { config: BrandingConfig; darkMo
 
         {/* App content */}
         <div style={{ background: bg, minHeight: 480 }}>
-          {/* Gradient hero header */}
-          <div
-            className="px-4 pt-3 pb-4"
-            style={{ background: `linear-gradient(135deg, ${accent_color} 0%, ${sec} 100%)` }}
-          >
-            {/* App bar */}
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                {logoToUse ? (
-                  <img src={logoToUse} alt="" className="h-5 object-contain max-w-[70px]" style={{ filter: 'brightness(0) invert(1)' }} />
-                ) : (
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-5 h-5 rounded-md bg-white/20 flex items-center justify-center text-white text-[9px] font-bold">
-                      {(brand_name || 'P')[0].toUpperCase()}
-                    </div>
-                    <span className="text-[11px] font-semibold text-white">{brand_name || 'Propel'}</span>
+          {/* App header */}
+          <div className="flex items-center justify-between px-4 py-3">
+            <div className="flex items-center gap-2">
+              {logoToUse ? (
+                <img src={logoToUse} alt="" className="h-6 object-contain max-w-[80px]" />
+              ) : (
+                <div className="flex items-center gap-1.5">
+                  <div
+                    className="w-6 h-6 rounded-lg flex items-center justify-center text-white text-xs font-bold"
+                    style={{ backgroundColor: accent_color }}
+                  >
+                    {(brand_name || 'P')[0].toUpperCase()}
                   </div>
-                )}
-              </div>
-              <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
-                <span className="text-[8px] font-medium text-white">JC</span>
-              </div>
+                  <span className="text-xs font-semibold" style={{ color: text }}>{brand_name || 'Propel'}</span>
+                </div>
+              )}
             </div>
-            {/* Greeting */}
-            <p className="text-[9px] text-white/70">Good morning 👋</p>
-            <p className="text-sm font-bold text-white">Jamie Carter</p>
+            <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: avatar }}>
+              <span className="text-[9px] font-medium" style={{ color: avatarTxt }}>JC</span>
+            </div>
+          </div>
+
+          {/* Greeting */}
+          <div className="px-4 pb-3">
+            <p className="text-[10px]" style={{ color: subText }}>Good morning 👋</p>
+            <p className="text-sm font-bold" style={{ color: text }}>Jamie Carter</p>
           </div>
 
           {/* Stats row */}
@@ -215,7 +215,7 @@ function ClientAppPreview({ config, darkMode }: { config: BrandingConfig; darkMo
             </div>
             <button
               className="w-full py-1.5 rounded-lg text-[9px] font-semibold text-white"
-              style={{ background: `linear-gradient(90deg, ${accent_color} 0%, ${sec} 100%)` }}
+              style={{ backgroundColor: accent_color }}
             >
               Start Workout
             </button>
