@@ -3,16 +3,23 @@ import { createClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-if (!supabaseUrl || !serviceRoleKey) {
-  throw new Error('Missing Supabase environment variables')
+// Lazy env access — only evaluated at request time, not during build.
+function getEnvVars() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error('Missing Supabase environment variables')
+  }
+  const anthropicApiKey = process.env.ANTHROPIC_API_KEY
+  const webhookSecret = process.env.AI_WEBHOOK_SECRET
+  if (!anthropicApiKey || !webhookSecret) {
+    throw new Error('Missing API keys')
+  }
+  return { supabaseUrl, serviceRoleKey, anthropicApiKey, webhookSecret }
 }
-const anthropicApiKey = process.env.ANTHROPIC_API_KEY!
-const webhookSecret = process.env.AI_WEBHOOK_SECRET!
 
 function adminClient() {
+  const { supabaseUrl, serviceRoleKey } = getEnvVars()
   return createClient(supabaseUrl, serviceRoleKey)
 }
 
@@ -61,6 +68,7 @@ CRITICAL RULES:
 }
 
 export async function POST(request: NextRequest) {
+  const { anthropicApiKey, webhookSecret } = getEnvVars()
   // 1. Verify webhook secret
   const incomingSecret = request.headers.get('x-webhook-secret')
   if (!incomingSecret || incomingSecret !== webhookSecret) {
