@@ -12,7 +12,6 @@ interface BrandingConfig {
   logo_dark_url: string;
   favicon_url: string;
   accent_color: string;
-  secondary_color: string;
   custom_domain: string;
   domain_verified: boolean;
   email_from_name: string;
@@ -26,7 +25,6 @@ const DEFAULTS: BrandingConfig = {
   logo_dark_url: '',
   favicon_url: '',
   accent_color: '#0F7B8C',
-  secondary_color: '#1A95A8',
   custom_domain: '',
   domain_verified: false,
   email_from_name: '',
@@ -106,8 +104,7 @@ function ColorPicker({ label, value, onChange }: { label: string; value: string;
 
 // Live preview: phone mockup of the client mobile app
 function ClientAppPreview({ config, darkMode }: { config: BrandingConfig; darkMode: boolean }) {
-  const { accent_color, secondary_color, brand_name, logo_url, logo_dark_url } = config;
-  const sec = secondary_color || accent_color;
+  const { accent_color, brand_name, logo_url, logo_dark_url } = config;
 
   const bg       = darkMode ? '#0f172a' : '#f8fafc';
   const card     = darkMode ? '#1e293b' : '#ffffff';
@@ -225,9 +222,9 @@ function ClientAppPreview({ config, darkMode }: { config: BrandingConfig; darkMo
           <div className="mx-4 rounded-xl p-3" style={{ background: card }}>
             <p className="text-[10px] font-semibold mb-2" style={{ color: text }}>Today's Nutrition</p>
             {[
-              { label: 'Calories', current: 1450, target: 2200, color: accent_color },
-              { label: 'Protein', current: 142, target: 180, color: sec },
-            ].map(({ label, current, target, color }) => (
+              { label: 'Calories', current: 1450, target: 2200 },
+              { label: 'Protein', current: 142, target: 180 },
+            ].map(({ label, current, target }) => (
               <div key={label} className="mb-1.5">
                 <div className="flex justify-between text-[8px] mb-0.5" style={{ color: subText }}>
                   <span>{label}</span>
@@ -236,7 +233,7 @@ function ClientAppPreview({ config, darkMode }: { config: BrandingConfig; darkMo
                 <div className="w-full rounded-full h-1" style={{ background: track }}>
                   <div
                     className="h-1 rounded-full"
-                    style={{ width: `${Math.min(100, (current / target) * 100)}%`, backgroundColor: color }}
+                    style={{ width: `${Math.min(100, (current / target) * 100)}%`, backgroundColor: accent_color }}
                   />
                 </div>
               </div>
@@ -347,7 +344,6 @@ export default function BrandingPage() {
       logo_dark_url: config.logo_dark_url || null,
       favicon_url: config.favicon_url || null,
       accent_color: config.accent_color,
-      secondary_color: config.secondary_color || null,
       custom_domain: config.custom_domain || null,
       email_from_name: config.email_from_name || null,
       email_footer_text: config.email_footer_text || null,
@@ -449,10 +445,7 @@ export default function BrandingPage() {
 
           {/* Colors */}
           <SectionCard title="Colors">
-            <div className="grid grid-cols-2 gap-6">
-              <ColorPicker label="Primary Color" value={config.accent_color} onChange={(v) => set({ accent_color: v })} />
-              <ColorPicker label="Secondary Color" value={config.secondary_color} onChange={(v) => set({ secondary_color: v })} />
-            </div>
+            <ColorPicker label="Primary Color" value={config.accent_color} onChange={(v) => set({ accent_color: v })} />
           </SectionCard>
 
           {/* Custom Domain */}
