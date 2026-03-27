@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { toast } from '@/lib/toast'
 import Link from 'next/link'
 import { format, formatDistanceToNowStrict } from 'date-fns'
 import {
@@ -644,7 +645,8 @@ export default function ClientsPage() {
         {/* Count filter */}
         <button className="flex items-center gap-1.5 px-3 py-2 border border-cb-border rounded-lg text-sm text-cb-secondary hover:bg-surface-light transition-colors">
           <SlidersHorizontal size={14} />
-          {filtered.length} Client{filtered.length !== 1 ? 's' : ''}
+          {filtered.length + invitations.length} Client{(filtered.length + invitations.length) !== 1 ? 's' : ''}
+          {invitations.length > 0 && <span className="ml-1 text-cb-warning">({invitations.length} invited)</span>}
         </button>
 
         {/* Tag filter */}
@@ -818,7 +820,7 @@ export default function ClientsPage() {
 
               {/* Pending invitations */}
               {invitations.map(inv => (
-                <tr key={inv.id} className="hover:bg-surface-light transition-colors opacity-60">
+                <tr key={inv.id} className="hover:bg-surface-light transition-colors opacity-70 cursor-pointer" onClick={() => toast.info(`${inv.client_name} has been invited but hasn't activated their account yet.`)}>
                   <td className="px-4 py-3.5" />
                   <td className="px-3 py-3.5">
                     <div className="flex items-center gap-3">
