@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from '@/lib/toast';
-import { Upload, Globe, Mail, Play, LayoutGrid, CheckCircle2, Dumbbell, UtensilsCrossed, ClipboardCheck, Activity, Droplets, TrendingUp, Home, MessageSquare } from 'lucide-react';
+import { Upload, Globe, Mail, Play, LayoutGrid, CheckCircle2, Dumbbell, UtensilsCrossed, ClipboardCheck, Activity, Droplets, TrendingUp, Home, MessageSquare, Moon, Sun } from 'lucide-react';
 
 interface BrandingConfig {
   id?: string;
@@ -121,8 +121,23 @@ function ColorPicker({ label, value, onChange }: { label: string; value: string;
 }
 
 // Live preview: phone mockup of the client mobile app
-function ClientAppPreview({ config }: { config: BrandingConfig }) {
-  const { accent_color, brand_name, logo_url } = config;
+function ClientAppPreview({ config, darkMode }: { config: BrandingConfig; darkMode: boolean }) {
+  const { accent_color, brand_name, logo_url, logo_dark_url } = config;
+
+  const bg       = darkMode ? '#0f172a' : '#f8fafc';
+  const card     = darkMode ? '#1e293b' : '#ffffff';
+  const border   = darkMode ? '#334155' : '#e2e8f0';
+  const text     = darkMode ? '#ffffff' : '#0f172a';
+  const subText  = darkMode ? '#94a3b8' : '#64748b';
+  const badge    = darkMode ? '#334155' : '#f1f5f9';
+  const badgeTxt = darkMode ? '#cbd5e1' : '#475569';
+  const track    = darkMode ? '#334155' : '#e2e8f0';
+  const notch    = darkMode ? '#111827' : '#e2e8f0';
+  const avatar   = darkMode ? '#334155' : '#e2e8f0';
+  const avatarTxt = darkMode ? '#94a3b8' : '#64748b';
+  const inactive = darkMode ? '#64748b' : '#94a3b8';
+  const indicator = darkMode ? '#475569' : '#cbd5e1';
+  const logoToUse = darkMode ? (logo_dark_url || logo_url) : (logo_url || logo_dark_url);
 
   const tabItems = [
     { icon: Home, label: 'Home', active: true },
@@ -137,31 +152,31 @@ function ClientAppPreview({ config }: { config: BrandingConfig }) {
     <div className="mx-auto" style={{ width: 260 }}>
       <div
         className="relative rounded-[40px] overflow-hidden shadow-2xl border-[6px] border-gray-800"
-        style={{ background: '#0f172a' }}
+        style={{ background: bg }}
       >
-        {/* Status bar notch */}
-        <div className="flex items-center justify-between px-5 pt-3 pb-1" style={{ background: '#0f172a' }}>
-          <span className="text-white text-[9px] font-semibold">9:41</span>
-          <div className="w-16 h-4 bg-gray-900 rounded-full" />
+        {/* Status bar */}
+        <div className="flex items-center justify-between px-5 pt-3 pb-1" style={{ background: bg }}>
+          <span className="text-[9px] font-semibold" style={{ color: text }}>9:41</span>
+          <div className="w-16 h-4 rounded-full" style={{ background: notch }} />
           <div className="flex gap-1 items-center">
             <div className="flex gap-0.5">
               {[3, 4, 5].map((h) => (
-                <div key={h} className="w-0.5 rounded-sm bg-white" style={{ height: h }} />
+                <div key={h} className="w-0.5 rounded-sm" style={{ height: h, background: text }} />
               ))}
             </div>
-            <div className="w-3 h-1.5 border border-white rounded-sm ml-0.5">
-              <div className="h-full w-2/3 bg-white rounded-sm" />
+            <div className="w-3 h-1.5 rounded-sm ml-0.5" style={{ border: `1px solid ${text}` }}>
+              <div className="h-full w-2/3 rounded-sm" style={{ background: text }} />
             </div>
           </div>
         </div>
 
         {/* App content */}
-        <div style={{ background: '#0f172a', minHeight: 480 }}>
+        <div style={{ background: bg, minHeight: 480 }}>
           {/* App header */}
           <div className="flex items-center justify-between px-4 py-3">
             <div className="flex items-center gap-2">
-              {logo_url ? (
-                <img src={logo_url} alt="" className="h-6 object-contain max-w-[80px]" />
+              {logoToUse ? (
+                <img src={logoToUse} alt="" className="h-6 object-contain max-w-[80px]" />
               ) : (
                 <div className="flex items-center gap-1.5">
                   <div
@@ -170,19 +185,19 @@ function ClientAppPreview({ config }: { config: BrandingConfig }) {
                   >
                     {(brand_name || 'P')[0].toUpperCase()}
                   </div>
-                  <span className="text-white text-xs font-semibold">{brand_name || 'Propel'}</span>
+                  <span className="text-xs font-semibold" style={{ color: text }}>{brand_name || 'Propel'}</span>
                 </div>
               )}
             </div>
-            <div className="w-7 h-7 rounded-full bg-gray-700 flex items-center justify-center">
-              <span className="text-[9px] font-medium text-gray-300">JC</span>
+            <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: avatar }}>
+              <span className="text-[9px] font-medium" style={{ color: avatarTxt }}>JC</span>
             </div>
           </div>
 
           {/* Greeting */}
           <div className="px-4 pb-3">
-            <p className="text-gray-400 text-[10px]">Good morning 👋</p>
-            <p className="text-white text-sm font-bold">Jamie Carter</p>
+            <p className="text-[10px]" style={{ color: subText }}>Good morning 👋</p>
+            <p className="text-sm font-bold" style={{ color: text }}>Jamie Carter</p>
           </div>
 
           {/* Stats row */}
@@ -192,26 +207,26 @@ function ClientAppPreview({ config }: { config: BrandingConfig }) {
               { label: 'Streak', value: '12', sub: 'days' },
               { label: 'Check-in', value: '✓', sub: 'done' },
             ].map(({ label, value, sub }) => (
-              <div key={label} className="rounded-xl p-2.5 text-center" style={{ background: '#1e293b' }}>
+              <div key={label} className="rounded-xl p-2.5 text-center" style={{ background: card }}>
                 <div className="text-base font-bold" style={{ color: accent_color }}>{value}</div>
-                <div className="text-[8px] font-medium text-gray-300 leading-tight">{label}</div>
-                <div className="text-[7px] text-gray-500">{sub}</div>
+                <div className="text-[8px] font-medium leading-tight" style={{ color: subText }}>{label}</div>
+                <div className="text-[7px]" style={{ color: inactive }}>{sub}</div>
               </div>
             ))}
           </div>
 
           {/* Today's workout card */}
-          <div className="mx-4 rounded-xl p-3 mb-3" style={{ background: '#1e293b' }}>
+          <div className="mx-4 rounded-xl p-3 mb-3" style={{ background: card }}>
             <div className="flex items-center justify-between mb-2">
               <div>
-                <p className="text-[8px] text-gray-400 uppercase tracking-wide font-medium">Today</p>
-                <p className="text-white text-xs font-semibold">Upper Body Strength</p>
+                <p className="text-[8px] uppercase tracking-wide font-medium" style={{ color: subText }}>Today</p>
+                <p className="text-xs font-semibold" style={{ color: text }}>Upper Body Strength</p>
               </div>
               <Dumbbell size={13} style={{ color: accent_color }} />
             </div>
             <div className="flex gap-1.5 mb-2">
-              <span className="text-[8px] bg-gray-700 rounded px-2 py-1 text-gray-300">6 exercises</span>
-              <span className="text-[8px] bg-gray-700 rounded px-2 py-1 text-gray-300">~45 min</span>
+              <span className="text-[8px] rounded px-2 py-1" style={{ background: badge, color: badgeTxt }}>6 exercises</span>
+              <span className="text-[8px] rounded px-2 py-1" style={{ background: badge, color: badgeTxt }}>~45 min</span>
             </div>
             <button
               className="w-full py-1.5 rounded-lg text-[9px] font-semibold text-white"
@@ -222,18 +237,18 @@ function ClientAppPreview({ config }: { config: BrandingConfig }) {
           </div>
 
           {/* Nutrition bar */}
-          <div className="mx-4 rounded-xl p-3" style={{ background: '#1e293b' }}>
-            <p className="text-white text-[10px] font-semibold mb-2">Today's Nutrition</p>
+          <div className="mx-4 rounded-xl p-3" style={{ background: card }}>
+            <p className="text-[10px] font-semibold mb-2" style={{ color: text }}>Today's Nutrition</p>
             {[
               { label: 'Calories', current: 1450, target: 2200 },
               { label: 'Protein', current: 142, target: 180 },
             ].map(({ label, current, target }) => (
               <div key={label} className="mb-1.5">
-                <div className="flex justify-between text-[8px] text-gray-400 mb-0.5">
+                <div className="flex justify-between text-[8px] mb-0.5" style={{ color: subText }}>
                   <span>{label}</span>
                   <span>{current}/{target}</span>
                 </div>
-                <div className="w-full bg-gray-700 rounded-full h-1">
+                <div className="w-full rounded-full h-1" style={{ background: track }}>
                   <div
                     className="h-1 rounded-full"
                     style={{ width: `${Math.min(100, (current / target) * 100)}%`, backgroundColor: accent_color }}
@@ -247,18 +262,12 @@ function ClientAppPreview({ config }: { config: BrandingConfig }) {
         {/* Bottom tab bar */}
         <div
           className="flex items-center justify-around px-2 py-2 border-t"
-          style={{ background: '#1e293b', borderColor: '#334155' }}
+          style={{ background: card, borderColor: border }}
         >
           {tabItems.map(({ icon: Icon, label, active }) => (
             <div key={label} className="flex flex-col items-center gap-0.5 px-1">
-              <Icon
-                size={14}
-                style={{ color: active ? accent_color : '#64748b' }}
-              />
-              <span
-                className="text-[7px] font-medium"
-                style={{ color: active ? accent_color : '#64748b' }}
-              >
+              <Icon size={14} style={{ color: active ? accent_color : inactive }} />
+              <span className="text-[7px] font-medium" style={{ color: active ? accent_color : inactive }}>
                 {label}
               </span>
             </div>
@@ -266,8 +275,8 @@ function ClientAppPreview({ config }: { config: BrandingConfig }) {
         </div>
 
         {/* Home indicator bar */}
-        <div className="flex justify-center pb-2 pt-1" style={{ background: '#1e293b' }}>
-          <div className="w-20 h-1 bg-gray-600 rounded-full" />
+        <div className="flex justify-center pb-2 pt-1" style={{ background: card }}>
+          <div className="w-20 h-1 rounded-full" style={{ background: indicator }} />
         </div>
       </div>
     </div>
@@ -328,6 +337,7 @@ export default function BrandingPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [previewDark, setPreviewDark] = useState(true);
 
   const fetchBranding = useCallback(async () => {
     setLoading(true);
@@ -589,11 +599,20 @@ export default function BrandingPage() {
         {/* Live Preview column */}
         <div className="w-[480px] flex-shrink-0">
           <div className="sticky top-6">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              <p className="text-xs font-medium text-cb-secondary uppercase tracking-wide">Live Preview — Client View</p>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                <p className="text-xs font-medium text-cb-secondary uppercase tracking-wide">Live Preview — Client View</p>
+              </div>
+              <button
+                onClick={() => setPreviewDark((d) => !d)}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-cb-border bg-surface-light hover:bg-cb-border transition-colors text-xs font-medium text-cb-secondary"
+              >
+                {previewDark ? <Sun size={12} /> : <Moon size={12} />}
+                {previewDark ? 'Light' : 'Dark'}
+              </button>
             </div>
-            <ClientAppPreview config={config} />
+            <ClientAppPreview config={config} darkMode={previewDark} />
             <p className="text-xs text-cb-muted text-center mt-3">This is how your clients will see the app after you save</p>
           </div>
         </div>
