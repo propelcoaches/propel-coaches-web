@@ -3,24 +3,32 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
-const stripeKey = process.env.STRIPE_SECRET_KEY
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-if (!stripeKey || !supabaseUrl || !supabaseServiceRoleKey) {
-  throw new Error('Missing required environment variables')
+// Lazy initialization — only evaluated at request time, not during build.
+function getStripeClient() {
+  const key = process.env.STRIPE_SECRET_KEY
+  if (!key) throw new Error('Missing STRIPE_SECRET_KEY')
+  return new Stripe(key)
 }
 
-const stripe = new Stripe(stripeKey);
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
+function getSupabaseAdmin() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url || !key) throw new Error('Missing Supabase environment variables')
+  return createClient(url, key)
+}
 
-const planToPriceId: Record<string, string> = {
-  starter: process.env.STRIPE_PRICE_STARTER!,
-  pro: process.env.STRIPE_PRICE_PRO!,
-  clinic: process.env.STRIPE_PRICE_CLINIC!,
-};
-
+function getPlanToPriceId(): Record<string, string> {
+  return {
+    starter: process.env.STRIPE_PRICE_STARTER!,
+    pro: process.env.STRIPE_PRICE_PRO!,
+    clinic: process.env.STRIPE_PRICE_CLINIC!,
+  }
+}
 export async function POST(request: NextRequest) {
+  const stripe = getStripeClient()
+  const supabaseAdmin = getSupabaseAdmin()
+  const planToPriceId = getPlanToPriceId()
   try {
     const { email, name, plan, profession } = await request.json();
 
