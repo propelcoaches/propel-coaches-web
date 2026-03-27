@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Plus, Dumbbell, Loader2 } from 'lucide-react'
+import { toast } from '@/lib/toast'
 import clsx from 'clsx'
 import { createClient } from '@/lib/supabase/client'
 
@@ -41,7 +42,7 @@ export default function ProgramsPage() {
       const json = await res.json()
       setRealPrograms(json.templates || [])
     } catch (e) {
-      console.error('Failed to fetch programs', e)
+      toast.error('Failed to load programs')
     } finally {
       setLoading(false)
     }
@@ -80,7 +81,7 @@ export default function ProgramsPage() {
         fetchPrograms()
       }
     } catch (e) {
-      console.error('Failed to create program', e)
+      toast.error('Failed to create program')
     } finally {
       setSaving(false)
     }

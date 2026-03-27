@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { toast } from '@/lib/toast';
 import { RealtimeChannel } from '@supabase/realtime-js';
 
 interface GroupChat {
@@ -117,7 +118,7 @@ export default function GroupsPage() {
         if (clientsError) throw clientsError;
         setClients(clientsData || []);
       } catch (error) {
-        console.error('Error loading initial data:', error);
+        toast.error('Failed to load groups');
       } finally {
         setLoading(false);
       }
@@ -179,7 +180,7 @@ export default function GroupsPage() {
         if (membersError) throw membersError;
         setMembers(membersData || []);
       } catch (error) {
-        console.error('Error fetching group data:', error);
+        toast.error('Failed to load group messages');
       }
     };
 
@@ -263,7 +264,7 @@ export default function GroupsPage() {
       if (error) throw error;
       setMessageInput('');
     } catch (error) {
-      console.error('Error sending message:', error);
+      toast.error('Failed to send message');
     }
   };
 
@@ -311,7 +312,7 @@ export default function GroupsPage() {
       setGroups((prev) => [groupData, ...prev]);
       setSelectedGroupId(groupData.id);
     } catch (error) {
-      console.error('Error creating group:', error);
+      toast.error('Failed to create group');
     }
   };
 

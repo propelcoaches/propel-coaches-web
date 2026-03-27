@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { toast } from '@/lib/toast'
 import {
   Profile, CheckIn, CoachNote, WeightLog, WorkoutProgram,
   WorkoutDay, MacroTargets, FoodLog, ProgressPhoto, PersonalRecord, MealPlan,
@@ -317,7 +318,7 @@ export default function ClientDetailPage() {
       loadData()
     } catch {
       // Surface error non-intrusively — could be wired to a toast system
-      console.error('Failed to save note')
+      toast.error('Failed to save note')
     } finally {
       setSavingNote(false)
     }
@@ -345,7 +346,7 @@ export default function ClientDetailPage() {
       setEditingMacros(false)
       loadData()
     } catch {
-      console.error('Failed to save macros')
+      toast.error('Failed to save macros')
     } finally {
       setSavingMacros(false)
     }
@@ -363,7 +364,7 @@ export default function ClientDetailPage() {
       if (error) throw error
       loadData()
     } catch {
-      console.error('Failed to save comment')
+      toast.error('Failed to save comment')
     } finally {
       setSavingComment(null)
     }
@@ -380,7 +381,7 @@ export default function ClientDetailPage() {
       if (error) throw error
       loadData()
     } catch {
-      console.error('Failed to toggle pin')
+      toast.error('Failed to pin note')
     }
   }
 
