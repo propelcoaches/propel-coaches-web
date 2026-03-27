@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
+import { sendWelcomeEmail } from '@/lib/email'
 
 // Lazy initialization — only evaluated at request time, not during build.
 function getStripeClient() {
@@ -45,13 +46,27 @@ export async function POST(req: NextRequest) {
           const subscription = await stripe.subscriptions.retrieve(subscriptionId)
           const priceId = subscription.items.data[0]?.price.id || ''
           const tier = getPlanTier(priceId)
+          const coachId = session.metadata?.coachId
+          if (!coachId) break
+
           await supabase.from('profiles').update({
             stripe_customer_id: customerId,
             stripe_subscription_id: subscriptionId,
-            subscription_status: 'active',
+            subscription_status: subscription.status === 'trialing' ? 'trialing' : 'active',
             subscription_tier: tier,
             subscription_end_date: new Date((subscription as any).current_period_end * 1000).toISOString(),
-          }).eq('stripe_customer_id', customerId)
+          }).eq('id', coachId)
+
+          // Send welcome email
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('email, full_name')
+            .eq('id', coachId)
+            .single()
+          if (profile?.email) {
+            await sendWelcomeEmail(profile.email, profile.full_name || 'Coach')
+          }
+
           await logBillingEvent(customerId, 'subscription_started', session.amount_total || 0)
         }
         break

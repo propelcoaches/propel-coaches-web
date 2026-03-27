@@ -124,6 +124,16 @@ Please analyze the exercise form and return JSON with this EXACT structure:
       return NextResponse.json({ error: 'Failed to save analysis' }, { status: 500 });
     }
 
+    // Notify the coach that form check analysis is ready
+    await supabase.from('coach_notifications').insert({
+      coach_id: user.id,
+      type: 'form_check_completed',
+      title: `Form check ready: ${formCheck.exercise_name}`,
+      body: `AI analysis complete. Overall score: ${analysis.overall_score ?? '?'}/10. ${analysis.summary ?? ''}`,
+      client_id: formCheck.client_id ?? null,
+      read: false,
+    });
+
     return NextResponse.json({ analysis, form_check_id });
   } catch (error) {
     console.error('Form check analysis error:', error);

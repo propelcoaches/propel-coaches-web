@@ -173,22 +173,23 @@ export async function POST(req: NextRequest) {
         continue;
       }
 
-      for (let i = 0; i < day.exercises.length; i++) {
-        const ex = day.exercises[i];
-        await supabase.from('workout_exercises').insert({
-          day_id: dayRow.id,
-          order_index: i,
-          name: ex.exercise_name,
-          muscle_group: ex.muscle_group,
-          sets: ex.sets,
-          reps: ex.reps,               // e.g. "8-12" or "5"
-          rpe: ex.rpe || null,          // e.g. 7, 8, 9
-          rest_seconds: ex.rest_seconds,
-          tempo: ex.tempo || null,      // e.g. "3-1-1-0"
-          notes: ex.notes || '',
-          superset_group: ex.superset_group || null,
-          is_warmup: ex.is_warmup || false,
-        });
+      if (day.exercises && day.exercises.length > 0) {
+        await supabase.from('workout_exercises').insert(
+          day.exercises.map((ex: any, i: number) => ({
+            workout_day_id: dayRow.id,
+            sort_order: i,
+            exercise_name: ex.exercise_name,
+            muscle_group: ex.muscle_group,
+            sets: ex.sets,
+            reps: ex.reps,
+            rpe: ex.rpe || null,
+            rest_seconds: ex.rest_seconds,
+            tempo: ex.tempo || null,
+            notes: ex.notes || '',
+            superset_group: ex.superset_group || null,
+            is_warmup: ex.is_warmup || false,
+          }))
+        );
       }
     }
 
@@ -197,6 +198,7 @@ export async function POST(req: NextRequest) {
       .from('workout_programs')
       .select(`
         *,
+        client:profiles!workout_programs_client_id_fkey(full_name),
         workout_days(*, workout_exercises(*))
       `)
       .eq('id', program.id)

@@ -123,7 +123,7 @@ export async function sendWelcomeEmail(to: string, coachName: string): Promise<b
         <strong style="color:#7c3aed;">Step 3:</strong> <span style="color:#374151;">Set macro targets for your client</span>
       </td></tr>
     </table>
-    <a href="${process.env.NEXT_PUBLIC_APP_URL }/dashboard" style="display:inline-block;margin:24px 0 0;background:#7c3aed;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:16px;">Go to Dashboard →</a>
+    <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" style="display:inline-block;margin:24px 0 0;background:#7c3aed;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:16px;">Go to Dashboard →</a>
     <p style="margin:24px 0 0;color:#9ca3af;font-size:14px;">Questions? Just reply to this email — we're here to help.</p>
   `, `Welcome to Propel, ${coachName}! Here's how to get started.`)
 
@@ -138,7 +138,7 @@ export async function sendDay3Email(to: string, coachName: string): Promise<bool
       <h2 style="margin:0 0 12px;color:#7c3aed;font-size:18px;">💡 Pro Tip: Use Check-in Templates</h2>
       <p style="margin:0;color:#374151;line-height:1.6;">Coaches who set up weekly check-in questions see 3x higher client engagement. Head to your dashboard and set up your first check-in template — it takes 2 minutes.</p>
     </div>
-    <a href="${process.env.NEXT_PUBLIC_APP_URL }/dashboard/check-ins" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:16px;">Set Up Check-ins →</a>
+    <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/check-ins" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:16px;">Set Up Check-ins →</a>
   `, `Day 3 tip: Check-in templates drive 3x engagement`)
 
   return sendEmail({ to, subject: `Quick tip for your coaching practice, ${coachName} 💡`, html, recipientName: coachName, emailType: 'day3', sequence: 'Onboarding' })
@@ -152,7 +152,7 @@ export async function sendDay7Email(to: string, coachName: string, clientCount =
       <h2 style="margin:0 0 8px;color:#16a34a;font-size:18px;">Your trial ends in 7 days</h2>
       <p style="margin:0;color:#374151;">Upgrade now to keep all your client data, programs, and check-in history. No interruption to your coaching.</p>
     </div>
-    <a href="${process.env.NEXT_PUBLIC_APP_URL }/pricing" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:16px;">View Pricing Plans →</a>
+    <a href="${process.env.NEXT_PUBLIC_APP_URL}/pricing" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:16px;">View Pricing Plans →</a>
   `, '7 days left in your trial — upgrade to keep everything')
 
   return sendEmail({ to, subject: `Your Propel trial: 7 days left ⏰`, html, recipientName: coachName, emailType: 'day7', sequence: 'Onboarding' })
@@ -170,7 +170,7 @@ export async function sendTrialExpiring3DayEmail(to: string, coachName: string):
         <li>Your programs will be saved but uneditable</li>
       </ul>
     </div>
-    <a href="${process.env.NEXT_PUBLIC_APP_URL }/pricing" style="display:inline-block;background:#ea580c;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:16px;">Upgrade Before It Expires →</a>
+    <a href="${process.env.NEXT_PUBLIC_APP_URL}/pricing" style="display:inline-block;background:#ea580c;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:16px;">Upgrade Before It Expires →</a>
     <p style="margin:24px 0 0;color:#9ca3af;font-size:14px;">Starter plan is just $29/mo. Cancel anytime.</p>
   `, 'Trial expires in 3 days — upgrade to keep your data')
 
@@ -181,7 +181,7 @@ export async function sendTrialExpiring1DayEmail(to: string, coachName: string):
   const html = baseTemplate(`
     <h1 style="margin:0 0 8px;color:#111827;font-size:24px;font-weight:700;">Last chance — trial ends tomorrow 🚨</h1>
     <p style="color:#6b7280;font-size:16px;line-height:1.6;">Hey ${coachName}, this is your final reminder. Your trial ends tomorrow.</p>
-    <a href="${process.env.NEXT_PUBLIC_APP_URL }/pricing" style="display:inline-block;background:#dc2626;color:#ffffff;text-decoration:none;padding:16px 32px;border-radius:8px;font-weight:700;font-size:18px;">Upgrade Now — Keep Everything →</a>
+    <a href="${process.env.NEXT_PUBLIC_APP_URL}/pricing" style="display:inline-block;background:#dc2626;color:#ffffff;text-decoration:none;padding:16px 32px;border-radius:8px;font-weight:700;font-size:18px;">Upgrade Now — Keep Everything →</a>
     <p style="margin:24px 0 0;color:#9ca3af;font-size:14px;">Still unsure? Reply to this email and we'll help you pick the right plan.</p>
   `, 'Trial ends tomorrow — upgrade now')
 
@@ -197,7 +197,7 @@ export async function sendTrialExpiredEmail(to: string, coachName: string): Prom
       <p style="margin:8px 0 0;color:#374151;font-weight:600;">✅ Programs and check-ins are saved</p>
       <p style="margin:8px 0 0;color:#374151;font-weight:600;">✅ Upgrade and pick up right where you left off</p>
     </div>
-    <a href="${process.env.NEXT_PUBLIC_APP_URL }/trial/expired" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:16px;">Reactivate My Account →</a>
+    <a href="${process.env.NEXT_PUBLIC_APP_URL}/trial/expired" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:16px;">Reactivate My Account →</a>
   `, 'Your data is safe — reactivate anytime')
 
   return sendEmail({ to, subject: `Your Propel trial has ended — reactivate anytime`, html, recipientName: coachName, emailType: 'trial_expired', sequence: 'Trial Expiry' })
@@ -207,7 +207,7 @@ export async function sendPaymentFailedEmail(to: string, coachName: string): Pro
   const html = baseTemplate(`
     <h1 style="margin:0 0 8px;color:#111827;font-size:24px;font-weight:700;">Payment issue — action needed</h1>
     <p style="color:#6b7280;font-size:16px;line-height:1.6;">Hey ${coachName}, we couldn't process your last payment. Please update your payment method to avoid service interruption.</p>
-    <a href="${process.env.NEXT_PUBLIC_APP_URL }/dashboard/payments" style="display:inline-block;background:#dc2626;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:16px;">Update Payment Method →</a>
+    <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/payments" style="display:inline-block;background:#dc2626;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:16px;">Update Payment Method →</a>
   `, 'Update your payment method')
 
   return sendEmail({ to, subject: `⚠️ Payment failed for your Propel subscription`, html, recipientName: coachName, emailType: 'payment_failed', sequence: 'Billing' })
@@ -259,7 +259,7 @@ export async function sendWinBackEmail(to: string, coachName: string): Promise<b
       <li>📋 Printable PDF progress reports</li>
       <li>🏆 Client gamification and habit streaks</li>
     </ul>
-    <a href="${process.env.NEXT_PUBLIC_APP_URL }/pricing" style="display:inline-block;margin-top:16px;background:#7c3aed;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:16px;">Come Back — First Month 20% Off →</a>
+    <a href="${process.env.NEXT_PUBLIC_APP_URL}/pricing" style="display:inline-block;margin-top:16px;background:#7c3aed;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:16px;">Come Back — First Month 20% Off →</a>
   `, 'New features + 20% off to welcome you back')
 
   return sendEmail({ to, subject: `We've added a lot since you left, ${coachName} 🚀`, html, recipientName: coachName, emailType: 'win_back', sequence: 'Win-Back' })

@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
 
 type FormData = {
   energy: number
@@ -69,23 +68,22 @@ export default function CheckInPage() {
     setSubmitting(true)
     setError(null)
     try {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Not authenticated')
-
-      const { error: insertError } = await supabase.from('check_ins').insert({
-        client_id: user.id,
-        energy: formData.energy,
-        stress: formData.stress,
-        sleep_quality: formData.sleepQuality,
-        training_difficulty: formData.trainingDifficulty,
-        wins: formData.wins || null,
-        struggles: formData.struggles || null,
-        bodyweight_kg: formData.bodyweight ? parseFloat(formData.bodyweight) : null,
-        date: new Date().toISOString().slice(0, 10),
+      const res = await fetch('/api/check-ins', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          energy: formData.energy,
+          stress: formData.stress,
+          sleep_quality: formData.sleepQuality,
+          training_difficulty: formData.trainingDifficulty,
+          wins: formData.wins || null,
+          struggles: formData.struggles || null,
+          bodyweight_kg: formData.bodyweight ? parseFloat(formData.bodyweight) : null,
+          date: new Date().toISOString().slice(0, 10),
+        }),
       })
-
-      if (insertError) throw insertError
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to submit check-in')
       setSubmitted(true)
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to submit check-in')
