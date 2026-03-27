@@ -36,6 +36,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Form check not found' }, { status: 404 });
     }
 
+    // Verify this form check belongs to the authenticated coach
+    if (formCheck.coach_id !== user.id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     // Update status to processing
     await supabase
       .from('form_checks')
