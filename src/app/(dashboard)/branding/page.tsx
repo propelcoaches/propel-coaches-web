@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from '@/lib/toast';
-import { Upload, Globe, Mail, Play, LayoutGrid, CheckCircle2, Dumbbell, UtensilsCrossed, ClipboardCheck, Activity, Droplets, TrendingUp, Home, MessageSquare, Moon, Sun } from 'lucide-react';
+import { Upload, Globe, Mail, Dumbbell, UtensilsCrossed, ClipboardCheck, TrendingUp, Home, CheckCircle2, Moon, Sun } from 'lucide-react';
 
 interface BrandingConfig {
   id?: string;
@@ -17,14 +17,6 @@ interface BrandingConfig {
   domain_verified: boolean;
   email_from_name: string;
   email_footer_text: string;
-  welcome_message: string;
-  onboarding_video_url: string;
-  show_meal_plans: boolean;
-  show_habit_tracker: boolean;
-  show_water_tracker: boolean;
-  show_body_measurements: boolean;
-  show_progress_photos: boolean;
-  show_leaderboard: boolean;
   plan: string;
 }
 
@@ -39,14 +31,6 @@ const DEFAULTS: BrandingConfig = {
   domain_verified: false,
   email_from_name: '',
   email_footer_text: '',
-  welcome_message: '',
-  onboarding_video_url: '',
-  show_meal_plans: true,
-  show_habit_tracker: true,
-  show_water_tracker: true,
-  show_body_measurements: true,
-  show_progress_photos: true,
-  show_leaderboard: true,
   plan: 'free',
 };
 
@@ -366,14 +350,6 @@ export default function BrandingPage() {
       custom_domain: config.custom_domain || null,
       email_from_name: config.email_from_name || null,
       email_footer_text: config.email_footer_text || null,
-      welcome_message: config.welcome_message || null,
-      onboarding_video_url: config.onboarding_video_url || null,
-      show_meal_plans: config.show_meal_plans,
-      show_habit_tracker: config.show_habit_tracker,
-      show_water_tracker: config.show_water_tracker,
-      show_body_measurements: config.show_body_measurements,
-      show_progress_photos: config.show_progress_photos,
-      show_leaderboard: config.show_leaderboard,
       updated_at: new Date().toISOString(),
     };
 
@@ -538,62 +514,13 @@ export default function BrandingPage() {
             </div>
           </SectionCard>
 
-          {/* Client Onboarding */}
-          <SectionCard title="Client Onboarding">
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-medium text-cb-secondary mb-1.5">Welcome Message</label>
-                <textarea
-                  value={config.welcome_message}
-                  onChange={(e) => set({ welcome_message: e.target.value })}
-                  rows={3}
-                  placeholder="Shown to new clients after they first log in…"
-                  className="w-full px-3 py-2.5 bg-surface-light border border-cb-border rounded-lg text-sm text-cb-text placeholder-cb-muted focus:outline-none focus:ring-2 focus:ring-brand/40 resize-none"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-cb-secondary mb-1.5">
-                  <span className="flex items-center gap-1.5"><Play size={12} />Onboarding Video URL</span>
-                </label>
-                <input
-                  type="text"
-                  value={config.onboarding_video_url}
-                  onChange={(e) => set({ onboarding_video_url: e.target.value })}
-                  placeholder="https://www.loom.com/share/..."
-                  className="w-full px-3 py-2.5 bg-surface-light border border-cb-border rounded-lg text-sm text-cb-text placeholder-cb-muted focus:outline-none focus:ring-2 focus:ring-brand/40"
-                />
-              </div>
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+            <span className="text-amber-500 mt-0.5">💡</span>
+            <div>
+              <p className="text-sm font-medium text-amber-800">Client Onboarding & Feature Visibility</p>
+              <p className="text-xs text-amber-700 mt-1">These settings are now managed per-client. Open a client's profile and go to the <strong>Settings</strong> tab to customise their welcome message, onboarding video, and which app sections they can see.</p>
             </div>
-          </SectionCard>
-
-          {/* Feature Visibility */}
-          <SectionCard title="Feature Visibility">
-            <p className="text-xs text-cb-muted mb-4">Hide sections your clients don't need.</p>
-            <div className="grid grid-cols-2 gap-2">
-              {([
-                { key: 'show_meal_plans', label: 'Meal Plans', icon: UtensilsCrossed },
-                { key: 'show_habit_tracker', label: 'Habit Tracker', icon: Activity },
-                { key: 'show_water_tracker', label: 'Water Tracker', icon: Droplets },
-                { key: 'show_body_measurements', label: 'Body Measurements', icon: TrendingUp },
-                { key: 'show_progress_photos', label: 'Progress Photos', icon: LayoutGrid },
-                { key: 'show_leaderboard', label: 'Leaderboard', icon: CheckCircle2 },
-              ] as { key: keyof BrandingConfig; label: string; icon: React.ElementType }[]).map(({ key, label, icon: Icon }) => (
-                <label
-                  key={key}
-                  className="flex items-center gap-3 p-3 rounded-lg border border-cb-border hover:bg-surface-light cursor-pointer transition-colors"
-                >
-                  <input
-                    type="checkbox"
-                    checked={config[key] as boolean}
-                    onChange={(e) => set({ [key]: e.target.checked })}
-                    className="rounded border-cb-border accent-brand w-4 h-4 flex-shrink-0"
-                  />
-                  <Icon size={14} className="text-cb-muted flex-shrink-0" />
-                  <span className="text-sm text-cb-text">{label}</span>
-                </label>
-              ))}
-            </div>
-          </SectionCard>
+          </div>
         </div>
 
         {/* Live Preview column */}

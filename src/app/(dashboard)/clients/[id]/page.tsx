@@ -146,6 +146,21 @@ export default function ClientDetailPage() {
   const [showAutoflowEventModal, setShowAutoflowEventModal] = useState(false)
   const [weightUnit, setWeightUnit] = useState<'kg' | 'lbs'>('kg')
 
+  // Client settings (onboarding + feature visibility)
+  const [clientSettingsId, setClientSettingsId] = useState<string | null>(null)
+  const [onboardingWelcome, setOnboardingWelcome] = useState('')
+  const [onboardingVideo, setOnboardingVideo] = useState('')
+  const [appSections, setAppSections] = useState({
+    show_meal_plans: true,
+    show_habit_tracker: true,
+    show_water_tracker: true,
+    show_body_measurements: true,
+    show_progress_photos: true,
+    show_leaderboard: true,
+  })
+  const [settingsSaving, setSettingsSaving] = useState(false)
+  const [settingsSaved, setSettingsSaved] = useState(false)
+
   // AI Mode state
   const [aiModeActive, setAiModeActive] = useState(false)
   const [aiSession, setAiSession] = useState<{ id: string; ends_at: string; started_at: string } | null>(null)
@@ -253,6 +268,26 @@ export default function ClientDetailPage() {
       .order('created_at', { ascending: false })
       .limit(4)
     setInvoices(invoiceData ?? [])
+
+    // Load per-client settings
+    const { data: csData } = await supabase
+      .from('client_settings')
+      .select('*')
+      .eq('client_id', clientId)
+      .maybeSingle()
+    if (csData) {
+      setClientSettingsId(csData.id)
+      setOnboardingWelcome(csData.welcome_message ?? '')
+      setOnboardingVideo(csData.onboarding_video_url ?? '')
+      setAppSections({
+        show_meal_plans: csData.show_meal_plans ?? true,
+        show_habit_tracker: csData.show_habit_tracker ?? true,
+        show_water_tracker: csData.show_water_tracker ?? true,
+        show_body_measurements: csData.show_body_measurements ?? true,
+        show_progress_photos: csData.show_progress_photos ?? true,
+        show_leaderboard: csData.show_leaderboard ?? true,
+      })
+    }
 
     if (macroData) {
       setMacroForm({
@@ -403,6 +438,32 @@ export default function ClientDetailPage() {
     setAiSession(session)
     setAiModeActive(true)
     setAiLoading(false)
+  }
+
+  async function saveClientSettings() {
+    setSettingsSaving(true)
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setSettingsSaving(false); return }
+
+    const payload = {
+      client_id: clientId,
+      coach_id: user.id,
+      welcome_message: onboardingWelcome || null,
+      onboarding_video_url: onboardingVideo || null,
+      ...appSections,
+      updated_at: new Date().toISOString(),
+    }
+
+    if (clientSettingsId) {
+      await supabase.from('client_settings').update(payload).eq('id', clientSettingsId)
+    } else {
+      const { data } = await supabase.from('client_settings').insert(payload).select().single()
+      if (data) setClientSettingsId(data.id)
+    }
+    setSettingsSaving(false)
+    setSettingsSaved(true)
+    setTimeout(() => setSettingsSaved(false), 2000)
   }
 
   async function handleEndAISession() {
@@ -1876,6 +1937,77 @@ export default function ClientDetailPage() {
                       ))}
                     </div>
                   </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Client Onboarding */}
+          <div className="bg-surface border border-cb-border rounded-xl overflow-hidden">
+            <div className="px-5 py-4 border-b border-cb-border flex items-center justify-between">
+              <div>
+                <h2 className="font-semibold text-cb-text">Client Onboarding</h2>
+                <p className="text-xs text-cb-secondary mt-0.5">Shown to this client when they first log in</p>
+              </div>
+              <div className="flex items-center gap-2">
+                {settingsSaved && <span className="text-xs text-green-600 font-medium flex items-center gap-1"><Check size={12} />Saved</span>}
+                <button
+                  onClick={saveClientSettings}
+                  disabled={settingsSaving}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-cb-teal hover:bg-cb-teal/90 disabled:opacity-60 text-white text-xs font-medium rounded-lg transition-colors"
+                >
+                  {settingsSaving ? <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Save size={12} />}
+                  Save
+                </button>
+              </div>
+            </div>
+            <div className="p-5 space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-cb-secondary mb-1.5">Welcome Message</label>
+                <textarea
+                  value={onboardingWelcome}
+                  onChange={(e) => setOnboardingWelcome(e.target.value)}
+                  rows={3}
+                  placeholder="Shown to this client after they first log in…"
+                  className="w-full px-3 py-2.5 bg-surface-light border border-cb-border rounded-lg text-sm text-cb-text placeholder-cb-muted focus:outline-none focus:ring-2 focus:ring-cb-teal resize-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-cb-secondary mb-1.5">Onboarding Video URL</label>
+                <input
+                  type="text"
+                  value={onboardingVideo}
+                  onChange={(e) => setOnboardingVideo(e.target.value)}
+                  placeholder="https://www.loom.com/share/..."
+                  className="w-full px-3 py-2.5 bg-surface-light border border-cb-border rounded-lg text-sm text-cb-text placeholder-cb-muted focus:outline-none focus:ring-2 focus:ring-cb-teal"
+                />
+              </div>
+            </div>
+
+            {/* App Section Visibility */}
+            <div className="px-5 pb-5">
+              <p className="text-xs font-semibold text-cb-muted uppercase tracking-wide mb-3">App Section Visibility</p>
+              <div className="grid grid-cols-2 gap-2">
+                {([
+                  { key: 'show_meal_plans',        label: 'Meal Plans' },
+                  { key: 'show_habit_tracker',     label: 'Habit Tracker' },
+                  { key: 'show_water_tracker',     label: 'Water Tracker' },
+                  { key: 'show_body_measurements', label: 'Body Measurements' },
+                  { key: 'show_progress_photos',   label: 'Progress Photos' },
+                  { key: 'show_leaderboard',       label: 'Leaderboard' },
+                ] as { key: keyof typeof appSections; label: string }[]).map(({ key, label }) => (
+                  <label
+                    key={key}
+                    className="flex items-center gap-3 p-3 rounded-lg border border-cb-border hover:bg-surface-light cursor-pointer transition-colors"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={appSections[key]}
+                      onChange={(e) => setAppSections(prev => ({ ...prev, [key]: e.target.checked }))}
+                      className="rounded border-cb-border accent-cb-teal w-4 h-4 flex-shrink-0"
+                    />
+                    <span className="text-sm text-cb-text">{label}</span>
+                  </label>
                 ))}
               </div>
             </div>
