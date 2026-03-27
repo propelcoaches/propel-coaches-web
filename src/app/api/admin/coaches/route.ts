@@ -2,14 +2,18 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+// Lazy Supabase client — only created at request time, not at module import time.
+// This prevents build failures when env vars aren't available during static analysis.
+function getSupabaseAdmin() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!supabaseUrl || !supabaseServiceRoleKey) {
-  throw new Error('Missing Supabase environment variables')
+  if (!supabaseUrl || !supabaseServiceRoleKey) {
+    throw new Error('Missing Supabase environment variables');
+  }
+
+  return createClient(supabaseUrl, supabaseServiceRoleKey);
 }
-
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
 
 // Plan pricing map (in cents)
 const planPricing: Record<string, number> = {
@@ -47,6 +51,9 @@ export async function GET(request: NextRequest) {
         { status: 401 }
       );
     }
+
+    // Create Supabase client at request time (not module load time)
+    const supabaseAdmin = getSupabaseAdmin();
 
     // Fetch all coaches with their profile and subscription data
     const { data: coaches, error: coachError } = await supabaseAdmin
