@@ -3,9 +3,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import OpenAI from 'openai'
 
-const openaiKey = process.env.OPENAI_API_KEY
-if (!openaiKey) throw new Error('Missing OPENAI_API_KEY')
-const openai = new OpenAI({ apiKey: openaiKey })
+// Lazy initialization — only evaluated at request time, not during build.
+function getOpenAIClient() {
+  const key = process.env.OPENAI_API_KEY
+  if (!key) throw new Error('Missing OPENAI_API_KEY')
+  return new OpenAI({ apiKey: key })
+}
 
 export async function POST(req: NextRequest) {
   try {
