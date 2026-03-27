@@ -4,18 +4,23 @@ import Stripe from 'stripe';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
 
-const stripeKey = process.env.STRIPE_SECRET_KEY
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-if (!stripeKey || !supabaseUrl || !supabaseServiceRoleKey) {
-  throw new Error('Missing required environment variables')
+// Lazy initialization — only evaluated at request time, not during build.
+function getStripeClient() {
+  const key = process.env.STRIPE_SECRET_KEY
+  if (!key) throw new Error('Missing STRIPE_SECRET_KEY')
+  return new Stripe(key)
 }
 
-const stripe = new Stripe(stripeKey);
-const supabaseAdmin = createAdminClient(supabaseUrl, supabaseServiceRoleKey);
+function getSupabaseAdmin() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url || !key) throw new Error('Missing Supabase environment variables')
+  return createClient(url, key)
+}
 
 export async function POST(request: NextRequest) {
+  const stripe = getStripeClient()
+  const supabaseAdmin = getSupabaseAdmin()
   try {
     // Always use the authenticated user — never trust userId/customerId from body
     const supabase = createClient();
