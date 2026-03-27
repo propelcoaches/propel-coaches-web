@@ -506,7 +506,7 @@ export default function MealPlansPage() {
     <div className="max-w-5xl mx-auto p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Meal Plans</h1>
+          <h1 className="text-2xl font-bold text-cb-text">Meal Plans</h1>
           <p className="text-gray-500 text-sm mt-1">AI-generated nutrition plans for your clients</p>
         </div>
         <button

@@ -187,7 +187,7 @@ export default function Sidebar({ userEmail }: { userEmail?: string | null }) {
           <div className="w-7 h-7 rounded-full bg-brand/10 border border-brand/20 flex items-center justify-center flex-shrink-0">
             <span className="text-xs font-semibold text-brand">{initials}</span>
           </div>
-          <span className="text-xs text-cb-secondary truncate flex-1">{userEmail ?? 'Coach'}</span>
+          <span className="text-xs text-cb-secondary truncate flex-1" title={userEmail ?? undefined}>{userEmail ?? 'Coach'}</span>
           <button
             onClick={toggleTheme}
             className="flex-shrink-0 p-1.5 rounded-md text-cb-muted hover:text-cb-secondary hover:bg-surface-light transition-colors"
