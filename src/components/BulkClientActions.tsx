@@ -105,9 +105,9 @@ export default function BulkClientActions({ clients, selectedIds, onSelectionCha
 
                 if (newDay && day.workout_exercises) {
                   const exercises = day.workout_exercises.map((ex: any, i: number) => ({
-                    workout_day_id: newDay.id,
-                    sort_order: i,
-                    exercise_name: ex.exercise_name,
+                    day_id: newDay.id,
+                    order_index: i,
+                    name: ex.name,
                     muscle_group: ex.muscle_group,
                     sets: ex.sets,
                     reps: ex.reps,

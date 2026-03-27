@@ -176,9 +176,9 @@ export async function POST(req: NextRequest) {
       if (day.exercises && day.exercises.length > 0) {
         await supabase.from('workout_exercises').insert(
           day.exercises.map((ex: any, i: number) => ({
-            workout_day_id: dayRow.id,
-            sort_order: i,
-            exercise_name: ex.exercise_name,
+            day_id: dayRow.id,
+            order_index: i,
+            name: ex.exercise_name,
             muscle_group: ex.muscle_group,
             sets: ex.sets,
             reps: ex.reps,

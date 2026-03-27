@@ -35,8 +35,8 @@ interface WorkoutDay {
 
 interface Exercise {
   id: string;
-  sort_order: number;
-  exercise_name: string;
+  order_index: number;
+  name: string;
   muscle_group: string;
   sets: number;
   reps: string;
@@ -371,7 +371,7 @@ export default function WorkoutProgramsPage() {
                 </thead>
                 <tbody>
                   {currentDay.workout_exercises
-                    .sort((a, b) => a.sort_order - b.sort_order)
+                    .sort((a, b) => a.order_index - b.order_index)
                     .map((ex, i) => (
                       <tr key={ex.id} className={`border-b last:border-0 ${ex.is_warmup ? 'bg-blue-50/50' : ''}`}>
                         <td className="px-4 py-3 text-gray-400">
@@ -384,7 +384,7 @@ export default function WorkoutProgramsPage() {
                           )}
                         </td>
                         <td className="px-4 py-3 font-medium text-gray-900">
-                          {ex.exercise_name}
+                          {ex.name}
                           {ex.is_warmup && <span className="ml-2 text-xs text-blue-500 font-normal">(warm-up)</span>}
                         </td>
                         <td className="px-4 py-3 text-gray-500 capitalize">{ex.muscle_group}</td>
