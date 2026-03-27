@@ -140,17 +140,16 @@ export default function MarketplacePage() {
       } catch { toast.error('Failed to clone program'); }
     } else {
       // Paid — redirect to Stripe checkout
-      const res = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'marketplace',
-          listing_id: listing.id,
-          price_cents: listing.price_cents,
-        }),
-      });
-      const { url } = await res.json();
-      if (url) window.location.href = url;
+      try {
+        const res = await fetch('/api/marketplace/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ listing_id: listing.id }),
+        });
+        const data = await res.json();
+        if (data.url) window.location.href = data.url;
+        else toast.error(data.error ?? 'Failed to start checkout');
+      } catch { toast.error('Failed to start checkout'); }
     }
   };
 

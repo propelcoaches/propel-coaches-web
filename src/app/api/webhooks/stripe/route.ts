@@ -31,7 +31,14 @@ export async function POST(req: NextRequest) {
         const session = event.data.object as Stripe.Checkout.Session
         const customerId = session.customer as string
         const subscriptionId = session.subscription as string
-        if (subscriptionId) {
+
+        if (session.metadata?.type === 'marketplace') {
+          // One-time marketplace purchase — clone the program for the buyer
+          const { listing_id, coach_id } = session.metadata
+          if (listing_id && coach_id) {
+            await cloneMarketplaceProgram(listing_id, coach_id)
+          }
+        } else if (subscriptionId) {
           const subscription = await stripe.subscriptions.retrieve(subscriptionId)
           const priceId = subscription.items.data[0]?.price.id || ''
           const tier = getPlanTier(priceId)
@@ -105,6 +112,81 @@ function getPlanTier(priceId: string): string {
   if (process.env.STRIPE_PRICE_PRO) tierMap[process.env.STRIPE_PRICE_PRO] = 'pro'
   if (process.env.STRIPE_PRICE_ELITE) tierMap[process.env.STRIPE_PRICE_ELITE] = 'elite'
   return tierMap[priceId] ?? 'unknown'
+}
+
+async function cloneMarketplaceProgram(listingId: string, coachId: string) {
+  const { data: listing } = await supabase
+    .from('marketplace_listings')
+    .select('*, program:programs(id, name, description, goal, difficulty, duration_weeks, days_per_week)')
+    .eq('id', listingId)
+    .single()
+
+  if (!listing?.program) return
+
+  const sourceProgram = listing.program as any
+
+  const { data: newProgram } = await supabase
+    .from('programs')
+    .insert({
+      coach_id: coachId,
+      name: sourceProgram.name,
+      description: sourceProgram.description,
+      goal: sourceProgram.goal,
+      difficulty: sourceProgram.difficulty,
+      duration_weeks: sourceProgram.duration_weeks,
+      days_per_week: sourceProgram.days_per_week,
+      status: 'draft',
+      marketplace_source_id: listingId,
+    })
+    .select('id')
+    .single()
+
+  if (!newProgram) return
+
+  const { data: workouts } = await supabase
+    .from('program_workouts')
+    .select('id, week_number, day_number, name, notes')
+    .eq('program_id', sourceProgram.id)
+    .order('week_number')
+    .order('day_number')
+
+  if (workouts && workouts.length > 0) {
+    for (const workout of workouts) {
+      const { data: newWorkout } = await supabase
+        .from('program_workouts')
+        .insert({
+          program_id: newProgram.id,
+          week_number: workout.week_number,
+          day_number: workout.day_number,
+          name: workout.name,
+          notes: workout.notes,
+        })
+        .select('id')
+        .single()
+
+      if (!newWorkout) continue
+
+      const { data: exercises } = await supabase
+        .from('program_workout_exercises')
+        .select('*')
+        .eq('workout_id', workout.id)
+        .order('order_index')
+
+      if (exercises && exercises.length > 0) {
+        await supabase.from('program_workout_exercises').insert(
+          exercises.map(({ id: _id, workout_id: _wid, ...ex }: any) => ({
+            ...ex,
+            workout_id: newWorkout.id,
+          }))
+        )
+      }
+    }
+  }
+
+  await supabase
+    .from('marketplace_listings')
+    .update({ purchase_count: (listing.purchase_count ?? 0) + 1 })
+    .eq('id', listingId)
 }
 
 async function logBillingEvent(customerId: string, eventType: string, amount: number) {
