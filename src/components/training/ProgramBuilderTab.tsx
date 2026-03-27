@@ -5,14 +5,13 @@ import {
   Plus, Search, X, ChevronLeft, Save, Users, GripVertical,
   Trash2, Copy, Link2, Dumbbell, Moon, FileText, Loader2,
   ChevronDown, MoreHorizontal, Check, BookOpen, Zap,
-  AlertCircle, Target, Calendar, LayoutGrid, Clock,
+  AlertCircle, Target, Calendar, LayoutGrid, Clock, Sparkles,
 } from 'lucide-react'
 import clsx from 'clsx'
 import { Profile, ProgramGoal, ProgramDifficulty } from '@/lib/types'
 import { createClient } from '@/lib/supabase/client'
-import { useIsDemo } from '@/lib/demo/useDemoMode'
 import { EXERCISES } from '@/lib/exercises'
-import { DEMO_CLIENTS } from '@/lib/demo/mockData'
+import AIWorkoutWizard from '@/components/ai/AIWorkoutWizard'
 
 // ─────────────────────────────────────────────────────────────
 // Types
@@ -480,7 +479,7 @@ function CopyWorkoutModal({
 // ExerciseSearchBar
 // ─────────────────────────────────────────────────────────────
 
-function ExerciseSearchBar({ onAdd, isDemo }: { onAdd: (ex: DraftExercise) => void; isDemo: boolean }) {
+function ExerciseSearchBar({ onAdd }: { onAdd: (ex: DraftExercise) => void }) {
   const [query,   setQuery]   = useState('')
   const [results, setResults] = useState<{ id: string; name: string; category: string }[]>([])
   const [loading, setLoading] = useState(false)
@@ -500,18 +499,6 @@ function ExerciseSearchBar({ onAdd, isDemo }: { onAdd: (ex: DraftExercise) => vo
     if (debounceRef.current) clearTimeout(debounceRef.current)
 
     if (!query.trim()) { setResults([]); setOpen(false); return }
-
-    if (isDemo) {
-      debounceRef.current = setTimeout(() => {
-        const filtered = EXERCISES
-          .filter((e) => e.name.toLowerCase().includes(query.toLowerCase()))
-          .slice(0, 8)
-          .map((e) => ({ id: e.id, name: e.name, category: e.muscle_group ?? 'Other' }))
-        setResults(filtered)
-        setOpen(filtered.length > 0)
-      }, 300)
-      return
-    }
 
     setLoading(true)
     debounceRef.current = setTimeout(() => {
@@ -537,7 +524,7 @@ function ExerciseSearchBar({ onAdd, isDemo }: { onAdd: (ex: DraftExercise) => vo
     }, 300)
 
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
-  }, [query, isDemo])
+  }, [query])
 
   function select(ex: { id: string; name: string; category: string }) {
     onAdd(makeExercise(ex))
@@ -819,7 +806,6 @@ function WorkoutEditor({
   week,
   day,
   draft,
-  isDemo,
   onUpdateCell,
   onClose,
   onCopyWorkout,
@@ -828,7 +814,6 @@ function WorkoutEditor({
   week:          number
   day:           number
   draft:         ProgramDraft
-  isDemo:        boolean
   onUpdateCell:  (cell: WorkoutCell) => void
   onClose:       () => void
   onCopyWorkout: () => void
@@ -958,7 +943,7 @@ function WorkoutEditor({
       {/* Exercise search */}
       {!cell.isRest && (
         <div className="flex-shrink-0 p-3 border-b border-cb-border bg-surface">
-          <ExerciseSearchBar onAdd={addExercise} isDemo={isDemo} />
+          <ExerciseSearchBar onAdd={addExercise} />
         </div>
       )}
 
@@ -1243,24 +1228,23 @@ function ProgramGrid({
 // ─────────────────────────────────────────────────────────────
 
 export default function ProgramBuilderTab() {
-  const isDemo = useIsDemo()
-
   // View state
   const [view,         setView]         = useState<'list' | 'builder'>('list')
   const [draft,        setDraft]        = useState<ProgramDraft | null>(null)
   const [selectedCell, setSelectedCell] = useState<{ week: number; day: number } | null>(null)
 
   // List state
-  const [programs,   setPrograms]   = useState<{ id: string; name: string; goal: ProgramGoal; difficulty: ProgramDifficulty; status: string; client?: { name: string | null } }[]>([])
+  const [programs,   setPrograms]   = useState<{ id: string; name: string; goal: ProgramGoal; difficulty: ProgramDifficulty; status: string; duration_weeks: number; days_per_week: number; client?: { name: string | null } }[]>([])
   const [clients,    setClients]    = useState<ClientOpt[]>([])
   const [loading,    setLoading]    = useState(true)
   const [loadError,  setLoadError]  = useState(false)
 
   // Modal state
-  const [showCreate,   setShowCreate]   = useState(false)
-  const [showAssign,   setShowAssign]   = useState(false)
-  const [saving,       setSaving]       = useState(false)
-  const [saveMsg,      setSaveMsg]      = useState<string | null>(null)
+  const [showCreate,    setShowCreate]    = useState(false)
+  const [showAIWizard,  setShowAIWizard]  = useState(false)
+  const [showAssign,    setShowAssign]    = useState(false)
+  const [saving,        setSaving]        = useState(false)
+  const [saveMsg,       setSaveMsg]       = useState<string | null>(null)
 
   // Notes panel
   const [showNotes, setShowNotes] = useState(false)
@@ -1270,12 +1254,6 @@ export default function ProgramBuilderTab() {
   const loadData = useCallback(async () => {
     setLoading(true)
     setLoadError(false)
-    if (isDemo) {
-      setClients((DEMO_CLIENTS as unknown as ClientOpt[]).slice(0, 5))
-      setPrograms([])
-      setLoading(false)
-      return
-    }
     try {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
@@ -1283,7 +1261,7 @@ export default function ProgramBuilderTab() {
 
       const [clientRes, programRes] = await Promise.all([
         supabase.from('profiles').select('id, name, email').eq('coach_id', user.id).eq('role', 'client'),
-        supabase.from('programs').select('id, name, goal, difficulty, status, client:profiles!programs_client_id_fkey(name)').eq('coach_id', user.id).order('updated_at', { ascending: false }),
+        supabase.from('programs').select('id, name, goal, difficulty, status, duration_weeks, days_per_week, client:profiles!programs_client_id_fkey(name)').eq('coach_id', user.id).order('updated_at', { ascending: false }),
       ])
       setClients(clientRes.data ?? [])
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1293,7 +1271,7 @@ export default function ProgramBuilderTab() {
     } finally {
       setLoading(false)
     }
-  }, [isDemo])
+  }, [])
 
   useEffect(() => { loadData() }, [loadData])
 
@@ -1310,17 +1288,18 @@ export default function ProgramBuilderTab() {
   }
 
   function openProgram(p: typeof programs[0]) {
-    // Load a stub draft for now (in production this would fetch full program data)
+    const durationWeeks = p.duration_weeks || 4
+    const daysPerWeek = p.days_per_week || 4
     const grid: Record<string, WorkoutCell> = {}
-    for (let w = 1; w <= 4; w++) {
+    for (let w = 1; w <= durationWeeks; w++) {
       for (let d = 1; d <= 7; d++) {
         grid[cellKey(w, d)] = makeCell(w, d)
-        if (d > 4) grid[cellKey(w, d)].isRest = true
+        if (d > daysPerWeek) grid[cellKey(w, d)].isRest = true
       }
     }
     setDraft({
       id: p.id, name: p.name, goal: p.goal, difficulty: p.difficulty,
-      durationWeeks: 4, daysPerWeek: 4, clientId: null, programNotes: '', grid,
+      durationWeeks, daysPerWeek, clientId: null, programNotes: '', grid,
     })
     setView('builder')
   }
@@ -1330,13 +1309,6 @@ export default function ProgramBuilderTab() {
   async function handleSave(status: 'draft' | 'active' = 'draft') {
     if (!draft) return
     setSaving(true)
-    if (isDemo) {
-      await new Promise((r) => setTimeout(r, 600))
-      setSaving(false)
-      setSaveMsg(status === 'active' ? 'Program published!' : 'Draft saved')
-      setTimeout(() => setSaveMsg(null), 2000)
-      return
-    }
     try {
       const supabase = createClient()
       const body = {
@@ -1364,7 +1336,6 @@ export default function ProgramBuilderTab() {
 
   async function handleAssign(clientId: string) {
     if (!draft?.id) { setDraft((d) => d ? { ...d, clientId } : d); return }
-    if (isDemo) return
     try {
       await fetch(`/api/programs/${draft.id}/assign/${clientId}`, { method: 'POST' })
       setDraft((d) => d ? { ...d, clientId } : d)
@@ -1374,6 +1345,45 @@ export default function ProgramBuilderTab() {
       setSaveMsg('Error assigning client')
       setTimeout(() => setSaveMsg(null), 3000)
     }
+  }
+
+  // ── AI wizard save handler ────────────────────────────────
+
+  async function handleAISave(prog: { name: string; goal: string | null; weeks: number; days_per_week: number; client_id: string }, aiDays: { day_number: number; name: string; exercises: { id: string; name: string; muscle_group: string }[] }[]) {
+    setShowAIWizard(false)
+    // Build a draft from the AI-generated content
+    const goal = (prog.goal ?? 'hypertrophy') as ProgramGoal
+    const grid: Record<string, WorkoutCell> = {}
+    for (let w = 1; w <= prog.weeks; w++) {
+      for (let d = 1; d <= 7; d++) {
+        const aiDay = aiDays[d - 1]
+        if (aiDay) {
+          grid[cellKey(w, d)] = {
+            uid: genUid(),
+            name: aiDay.name,
+            sessionNotes: '',
+            isRest: false,
+            exercises: aiDay.exercises.map((ex) => makeExercise(ex)),
+          }
+        } else {
+          const cell = makeCell(w, d)
+          cell.isRest = true
+          grid[cellKey(w, d)] = cell
+        }
+      }
+    }
+    setDraft({
+      id: null,
+      name: prog.name,
+      goal,
+      difficulty: 'intermediate',
+      durationWeeks: prog.weeks,
+      daysPerWeek: prog.days_per_week,
+      clientId: prog.client_id || null,
+      programNotes: '',
+      grid,
+    })
+    setView('builder')
   }
 
   // ── Render ────────────────────────────────────────────────
@@ -1395,12 +1405,20 @@ export default function ProgramBuilderTab() {
             <h1 className="text-xl font-bold text-cb-text">Training Programs</h1>
             <p className="text-sm text-cb-muted mt-0.5">Build and assign programs to your clients</p>
           </div>
-          <button
-            onClick={() => setShowCreate(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-brand hover:bg-brand/90 text-white rounded-lg text-sm font-medium transition-colors"
-          >
-            <Plus size={15} /> New Program
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowAIWizard(true)}
+              className="flex items-center gap-2 px-4 py-2 border border-brand/40 text-brand hover:bg-brand/10 rounded-lg text-sm font-medium transition-colors"
+            >
+              <Sparkles size={15} /> AI Generate
+            </button>
+            <button
+              onClick={() => setShowCreate(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-brand hover:bg-brand/90 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              <Plus size={15} /> New Program
+            </button>
+          </div>
         </div>
 
         {loading ? (
@@ -1480,6 +1498,17 @@ export default function ProgramBuilderTab() {
             clients={clients}
             onClose={() => setShowCreate(false)}
             onCreate={(d) => { setDraft(d); setView('builder') }}
+          />
+        )}
+
+        {showAIWizard && (
+          <AIWorkoutWizard
+            clients={clients}
+            onClose={() => setShowAIWizard(false)}
+            onSave={(prog, days) => handleAISave(
+              { name: prog.name, goal: prog.goal, weeks: prog.weeks, days_per_week: prog.days_per_week, client_id: prog.client_id },
+              days.map((d) => ({ day_number: d.day_number, name: d.name, exercises: d.exercises.map((e) => ({ id: e.id, name: e.name, muscle_group: e.muscle_group })) }))
+            )}
           />
         )}
       </div>
@@ -1638,7 +1667,6 @@ export default function ProgramBuilderTab() {
               week={selectedCell.week}
               day={selectedCell.day}
               draft={draft}
-              isDemo={isDemo}
               onUpdateCell={updateSelectedCell}
               onClose={() => setSelectedCell(null)}
               onCopyWorkout={() => {}}

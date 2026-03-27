@@ -3,11 +3,9 @@
 import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Message, Profile } from '@/lib/types'
-import { format } from 'date-fns'
-import { Send, MessageSquare, Bot, BotOff } from 'lucide-react'
+import { format, formatDistanceToNowStrict } from 'date-fns'
+import { Send, MessageSquare, Bot, BotOff, SquareCheck, Search, Plus, CheckCheck, Check, X, Loader2 } from 'lucide-react'
 import clsx from 'clsx'
-import { useIsDemo } from '@/lib/demo/useDemoMode'
-import { DEMO_CLIENTS } from '@/lib/demo/mockData'
 
 type ClientThread = {
   client: Profile
@@ -20,77 +18,160 @@ type AiSession = {
   is_active: boolean
 }
 
-const DEMO_MESSAGES: Message[] = [
-  {
-    id: 'dm-1',
-    coach_id: 'demo-coach-1',
-    client_id: 'demo-client-1',
-    sender_id: 'demo-client-1',
-    sender_role: 'client',
-    content: 'Hey coach! Just finished the workout, feeling great. That new squat variation is tough.',
-    message_type: 'text',
-    read: true,
-    created_at: '2026-03-08T14:22:00Z',
-  },
-  {
-    id: 'dm-2',
-    coach_id: 'demo-coach-1',
-    client_id: 'demo-client-1',
-    sender_id: 'demo-coach-1',
-    sender_role: 'coach',
-    content: 'Awesome work Liam! Yes the pause squats will fire up your quads like nothing else. Keep it up!',
-    message_type: 'text',
-    read: true,
-    created_at: '2026-03-08T14:45:00Z',
-  },
-  {
-    id: 'dm-3',
-    coach_id: 'demo-coach-1',
-    client_id: 'demo-client-2',
-    sender_id: 'demo-client-2',
-    sender_role: 'client',
-    content: 'Quick question — should I run the day before my strength session or take it off?',
-    message_type: 'text',
-    read: false,
-    created_at: '2026-03-09T08:10:00Z',
-  },
-  {
-    id: 'dm-4',
-    coach_id: 'demo-coach-1',
-    client_id: 'demo-client-3',
-    sender_id: 'demo-coach-1',
-    sender_role: 'coach',
-    content: 'Jake — make sure you\'re getting those calories in on rest days too. Recovery is where the gains happen!',
-    message_type: 'text',
-    read: true,
-    created_at: '2026-03-07T16:00:00Z',
-  },
-  {
-    id: 'dm-5',
-    coach_id: 'demo-coach-1',
-    client_id: 'demo-client-4',
-    sender_id: 'demo-client-4',
-    sender_role: 'client',
-    content: 'I did all 3 sessions this week!! First time ever. So happy right now 😊',
-    message_type: 'text',
-    read: true,
-    created_at: '2026-03-05T18:30:00Z',
-  },
-  {
-    id: 'dm-6',
-    coach_id: 'demo-coach-1',
-    client_id: 'demo-client-4',
-    sender_id: 'demo-coach-1',
-    sender_role: 'coach',
-    content: 'Emma that is AMAZING!! I\'m so proud of you. This is exactly the habit we want to build. Keep going! 💪',
-    message_type: 'text',
-    read: true,
-    created_at: '2026-03-05T19:00:00Z',
-  },
+// Deterministic avatar color from client id
+const AVATAR_COLORS = [
+  'bg-rose-400',
+  'bg-orange-400',
+  'bg-amber-400',
+  'bg-teal-500',
+  'bg-cyan-500',
+  'bg-blue-500',
+  'bg-violet-500',
+  'bg-pink-500',
 ]
+function avatarColor(id: string) {
+  let hash = 0
+  for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash)
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
+}
+function initials(name: string | null, email: string | null) {
+  if (name) return name.split(' ').map(p => p[0]).join('').toUpperCase().slice(0, 2)
+  return (email ?? '??').slice(0, 2).toUpperCase()
+}
+
+// ─── Broadcast Modal ──────────────────────────────────────────────────────────
+
+function BroadcastModal({ threads, userId, onClose }: {
+  threads: ClientThread[]
+  userId: string
+  onClose: () => void
+}) {
+  const clients = threads.map(t => t.client)
+  const [message, setMessage] = useState('')
+  const [selected, setSelected] = useState<Set<string>>(new Set(clients.map(c => c.id)))
+  const [sending, setSending] = useState(false)
+  const [sent, setSent] = useState(false)
+
+  function toggleAll() {
+    if (selected.size === clients.length) setSelected(new Set())
+    else setSelected(new Set(clients.map(c => c.id)))
+  }
+
+  function toggle(id: string) {
+    const next = new Set(selected)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
+    setSelected(next)
+  }
+
+  async function handleSend() {
+    if (!message.trim() || selected.size === 0) return
+    setSending(true)
+    const supabase = createClient()
+    const rows = Array.from(selected).map(clientId => ({
+      coach_id: userId,
+      client_id: clientId,
+      sender_id: userId,
+      sender_role: 'coach',
+      content: message.trim(),
+      message_type: 'text',
+      read: false,
+    }))
+    await supabase.from('messages').insert(rows)
+    setSending(false)
+    setSent(true)
+    setTimeout(onClose, 1200)
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-surface border border-cb-border rounded-2xl w-full max-w-lg shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 pt-6 pb-4">
+          <div>
+            <h2 className="text-base font-semibold text-cb-text">Broadcast Message</h2>
+            <p className="text-xs text-cb-muted mt-0.5">Send a message to everyone</p>
+          </div>
+          <button onClick={onClose} className="text-cb-muted hover:text-cb-secondary"><X size={18} /></button>
+        </div>
+
+        {/* Body */}
+        <div className="px-6 pb-4 space-y-4">
+          {sent ? (
+            <div className="py-8 text-center">
+              <CheckCheck size={32} className="text-cb-success mx-auto mb-2" />
+              <p className="text-sm font-medium text-cb-text">Message sent to {selected.size} client{selected.size !== 1 ? 's' : ''}!</p>
+            </div>
+          ) : (
+            <>
+              <textarea
+                autoFocus
+                rows={4}
+                value={message}
+                onChange={e => setMessage(e.target.value)}
+                placeholder="Type your message to all selected clients…"
+                className="w-full px-3 py-2.5 border border-cb-border rounded-lg text-sm text-cb-text placeholder-cb-muted bg-surface-light focus:outline-none focus:ring-2 focus:ring-brand resize-none"
+              />
+
+              {/* Select/Deselect All */}
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={selected.size === clients.length}
+                  onChange={toggleAll}
+                  className="w-4 h-4 rounded border-cb-border text-brand accent-brand"
+                />
+                <span className="text-sm text-cb-secondary">Select/Deselect All</span>
+              </label>
+
+              {/* Client list */}
+              <div className="max-h-48 overflow-y-auto space-y-1 border border-cb-border rounded-lg divide-y divide-cb-border">
+                {clients.map(client => (
+                  <label key={client.id} className="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-surface-light transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={selected.has(client.id)}
+                      onChange={() => toggle(client.id)}
+                      className="w-4 h-4 rounded border-cb-border accent-brand flex-shrink-0"
+                    />
+                    <div className={clsx('w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-bold', avatarColor(client.id))}>
+                      {initials(client.name, client.email)}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-cb-text truncate">{client.name ?? client.email}</p>
+                      {client.name && <p className="text-[11px] text-cb-muted truncate">{client.email}</p>}
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Footer */}
+        {!sent && (
+          <div className="flex items-center justify-between px-6 py-4 border-t border-cb-border">
+            <p className="text-xs text-cb-muted">
+              Broadcasting to {selected.size} client{selected.size !== 1 ? 's' : ''}.
+            </p>
+            <button
+              onClick={handleSend}
+              disabled={!message.trim() || selected.size === 0 || sending}
+              className="flex items-center gap-2 px-5 py-2 bg-brand hover:bg-brand/90 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
+            >
+              {sending ? <Loader2 size={13} className="animate-spin" /> : null}
+              Send Message &rsaquo;
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function MessagesPage() {
-  const isDemo = useIsDemo()
   const [threads, setThreads] = useState<ClientThread[]>([])
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
@@ -101,26 +182,29 @@ export default function MessagesPage() {
   const [userId, setUserId] = useState<string | null>(null)
   const [aiSession, setAiSession] = useState<AiSession | null>(null)
   const [togglingAi, setTogglingAi] = useState(false)
+  const [creatingTaskFor, setCreatingTaskFor] = useState<string | null>(null)
+  const [taskCreated, setTaskCreated] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
+  const [showBroadcast, setShowBroadcast] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const realtimeRef = useRef<ReturnType<typeof createClient> | null>(null)
 
   useEffect(() => {
     loadThreads()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDemo])
+  }, [])
 
   useEffect(() => {
     if (selectedClientId) {
       loadMessages(selectedClientId)
-      if (!isDemo) loadAiSession(selectedClientId)
-      else setAiSession(null)
+      loadAiSession(selectedClientId)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedClientId])
 
   // Real-time subscription
   useEffect(() => {
-    if (isDemo || !selectedClientId || !userId) return
+    if (!selectedClientId || !userId) return
 
     const supabase = createClient()
     realtimeRef.current = supabase
@@ -139,7 +223,6 @@ export default function MessagesPage() {
           const msg = payload.new as Message
           if (msg.client_id === selectedClientId) {
             setMessages((prev) => [...prev, msg])
-            // Mark incoming client messages as read
             if (msg.sender_role === 'client') {
               supabase
                 .from('messages')
@@ -148,7 +231,6 @@ export default function MessagesPage() {
                 .then(() => {})
             }
           }
-          // Refresh thread list for unread counts
           loadThreads()
         }
       )
@@ -158,7 +240,7 @@ export default function MessagesPage() {
       supabase.removeChannel(channel)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedClientId, userId, isDemo])
+  }, [selectedClientId, userId])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -166,29 +248,6 @@ export default function MessagesPage() {
 
   async function loadThreads() {
     setLoading(true)
-
-    if (isDemo) {
-      setUserId('demo-coach-1')
-      const demoClients = DEMO_CLIENTS as unknown as Profile[]
-      const threadList: ClientThread[] = demoClients.map((client) => {
-        const clientMsgs = DEMO_MESSAGES.filter((m) => m.client_id === client.id)
-        const lastMessage = clientMsgs.length > 0 ? clientMsgs[clientMsgs.length - 1] : null
-        const unreadCount = clientMsgs.filter((m) => !m.read && m.sender_role === 'client').length
-        return { client, lastMessage, unreadCount }
-      })
-      threadList.sort((a, b) => {
-        if (!a.lastMessage) return 1
-        if (!b.lastMessage) return -1
-        return new Date(b.lastMessage.created_at).getTime() - new Date(a.lastMessage.created_at).getTime()
-      })
-      setThreads(threadList)
-      if (threadList.length > 0 && !selectedClientId) {
-        setSelectedClientId(threadList[0].client.id)
-      }
-      setLoading(false)
-      return
-    }
-
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
@@ -240,14 +299,6 @@ export default function MessagesPage() {
 
   async function loadMessages(clientId: string) {
     setLoadingMessages(true)
-
-    if (isDemo) {
-      const msgs = DEMO_MESSAGES.filter((m) => m.client_id === clientId)
-      setMessages(msgs)
-      setLoadingMessages(false)
-      return
-    }
-
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
@@ -289,19 +340,17 @@ export default function MessagesPage() {
   }
 
   async function toggleAiMode() {
-    if (!selectedClientId || !userId || isDemo) return
+    if (!selectedClientId || !userId) return
     setTogglingAi(true)
     const supabase = createClient()
 
     if (aiSession) {
-      // Deactivate existing session
       await supabase
         .from('ai_mode_sessions')
         .update({ is_active: false })
         .eq('id', aiSession.id)
       setAiSession(null)
     } else {
-      // Create new session (7-day default)
       const endsAt = new Date()
       endsAt.setDate(endsAt.getDate() + 7)
       const { data } = await supabase
@@ -321,12 +370,27 @@ export default function MessagesPage() {
     setTogglingAi(false)
   }
 
+  async function createTaskFromMessage(msgId: string, content: string) {
+    if (!selectedClientId || !userId) return
+    setCreatingTaskFor(msgId)
+    const supabase = createClient()
+    const clientName = selectedThread?.client.name ?? selectedThread?.client.email ?? 'client'
+    await supabase.from('tasks').insert({
+      coach_id: userId,
+      client_id: selectedClientId,
+      title: `Follow up with ${clientName}`,
+      description: content.slice(0, 200),
+      source: 'message',
+      priority: 'medium',
+      completed: false,
+    })
+    setCreatingTaskFor(null)
+    setTaskCreated(msgId)
+    setTimeout(() => setTaskCreated(null), 2000)
+  }
+
   async function sendMessage() {
     if (!newMessage.trim() || !selectedClientId || !userId) return
-    if (isDemo) {
-      setNewMessage('')
-      return
-    }
     setSending(true)
     const supabase = createClient()
 
@@ -345,6 +409,12 @@ export default function MessagesPage() {
     loadThreads()
   }
 
+  const filteredThreads = threads.filter(t =>
+    search === '' ||
+    (t.client.name ?? '').toLowerCase().includes(search.toLowerCase()) ||
+    (t.client.email ?? '').toLowerCase().includes(search.toLowerCase())
+  )
+
   const selectedThread = threads.find((t) => t.client.id === selectedClientId)
 
   if (loading) {
@@ -357,60 +427,101 @@ export default function MessagesPage() {
 
   return (
     <div className="flex h-full">
-      {/* Thread List */}
+      {/* ── Thread List ── */}
       <div className="w-72 flex-shrink-0 border-r border-cb-border bg-surface flex flex-col">
-        <div className="px-4 py-4 border-b border-cb-border">
-          <h1 className="text-lg font-bold text-cb-text">Messages</h1>
+        {/* Search + actions header */}
+        <div className="px-3 py-3 border-b border-cb-border space-y-2">
+          <div className="flex items-center gap-2">
+            <div className="flex-1 relative">
+              <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-cb-muted pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="w-full pl-8 pr-3 py-2 text-sm bg-surface-light border border-cb-border rounded-lg text-cb-text placeholder-cb-muted focus:outline-none focus:ring-2 focus:ring-cb-teal"
+              />
+            </div>
+            <button
+              onClick={() => setShowBroadcast(true)}
+              title="Broadcast message"
+              className="w-8 h-8 flex items-center justify-center rounded-lg border border-cb-border text-cb-muted hover:text-cb-secondary hover:bg-surface-light transition-colors flex-shrink-0"
+            >
+              <Plus size={16} />
+            </button>
+          </div>
         </div>
 
+        {/* Thread list */}
         <div className="flex-1 overflow-y-auto">
-          {threads.length === 0 ? (
+          {filteredThreads.length === 0 ? (
             <div className="p-6 text-center text-sm text-cb-muted">
-              No clients to message.
+              {search ? 'No clients match your search.' : 'No clients to message.'}
             </div>
           ) : (
-            threads.map((thread) => (
-              <button
-                key={thread.client.id}
-                onClick={() => setSelectedClientId(thread.client.id)}
-                className={clsx(
-                  'w-full px-4 py-3 flex items-center gap-3 text-left border-b border-cb-border hover:bg-surface-light transition-colors',
-                  selectedClientId === thread.client.id ? 'bg-cb-teal/10' : ''
-                )}
-              >
-                <div className="w-9 h-9 rounded-full bg-cb-teal/10 flex items-center justify-center flex-shrink-0">
-                  <span className="text-sm font-semibold text-cb-teal">
-                    {(thread.client.name ?? '?').split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)}
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold text-cb-text truncate">{thread.client.name ?? thread.client.email}</span>
-                    {thread.unreadCount > 0 && (
-                      <span className="ml-2 flex-shrink-0 w-5 h-5 bg-cb-teal rounded-full flex items-center justify-center">
-                        <span className="text-[10px] text-white font-bold">{thread.unreadCount}</span>
-                      </span>
-                    )}
+            filteredThreads.map((thread) => {
+              const isCoachMsg = thread.lastMessage?.sender_role === 'coach'
+              const isRead = thread.lastMessage?.read ?? false
+              return (
+                <button
+                  key={thread.client.id}
+                  onClick={() => setSelectedClientId(thread.client.id)}
+                  className={clsx(
+                    'w-full px-3 py-3 flex items-center gap-3 text-left border-b border-cb-border hover:bg-surface-light transition-colors',
+                    selectedClientId === thread.client.id ? 'bg-cb-teal/5 border-l-2 border-l-cb-teal' : ''
+                  )}
+                >
+                  {/* Colored avatar */}
+                  <div className={clsx(
+                    'w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-white text-sm font-bold',
+                    avatarColor(thread.client.id)
+                  )}>
+                    {initials(thread.client.name, thread.client.email)}
                   </div>
-                  {thread.lastMessage && (
-                    <p className="text-xs text-cb-muted truncate mt-0.5">
-                      {thread.lastMessage.sender_role === 'coach' ? 'You: ' : ''}
-                      {thread.lastMessage.content}
-                    </p>
-                  )}
-                  {thread.lastMessage && (
-                    <p className="text-[10px] text-cb-muted mt-0.5">
-                      {format(new Date(thread.lastMessage.created_at), 'd MMM · h:mm a')}
-                    </p>
-                  )}
-                </div>
-              </button>
-            ))
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-0.5">
+                      <span className={clsx(
+                        'text-sm truncate',
+                        thread.unreadCount > 0 ? 'font-bold text-cb-text' : 'font-medium text-cb-text'
+                      )}>
+                        {thread.client.name ?? thread.client.email}
+                      </span>
+                      {thread.lastMessage && (
+                        <span className="text-[10px] text-cb-muted flex-shrink-0 ml-1">
+                          {formatDistanceToNowStrict(new Date(thread.lastMessage.created_at), { addSuffix: false })} ago
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1">
+                      {/* Read receipt for coach messages */}
+                      {isCoachMsg && (
+                        isRead
+                          ? <CheckCheck size={12} className="text-blue-500 flex-shrink-0" />
+                          : <Check size={12} className="text-cb-muted flex-shrink-0" />
+                      )}
+                      <p className={clsx(
+                        'text-xs truncate',
+                        thread.unreadCount > 0 ? 'text-cb-text font-medium' : 'text-cb-muted'
+                      )}>
+                        {thread.lastMessage?.content ?? 'No messages yet'}
+                      </p>
+                      {thread.unreadCount > 0 && (
+                        <span className="ml-auto flex-shrink-0 w-4 h-4 bg-cb-teal rounded-full flex items-center justify-center">
+                          <span className="text-[9px] text-white font-bold">{thread.unreadCount}</span>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </button>
+              )
+            })
           )}
         </div>
       </div>
 
-      {/* Message Thread */}
+      {/* ── Message Thread ── */}
       <div className="flex-1 flex flex-col bg-bg">
         {!selectedClientId ? (
           <div className="flex-1 flex flex-col items-center justify-center text-cb-muted">
@@ -421,10 +532,11 @@ export default function MessagesPage() {
           <>
             {/* Thread Header */}
             <div className="px-5 py-3 bg-surface border-b border-cb-border flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-cb-teal/10 flex items-center justify-center flex-shrink-0">
-                <span className="text-sm font-semibold text-cb-teal">
-                  {(selectedThread?.client.name ?? '?').split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)}
-                </span>
+              <div className={clsx(
+                'w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-white text-sm font-bold',
+                avatarColor(selectedClientId)
+              )}>
+                {initials(selectedThread?.client.name ?? null, selectedThread?.client.email ?? null)}
               </div>
               <div className="flex-1">
                 <p className="text-sm font-semibold text-cb-text">{selectedThread?.client.name ?? selectedThread?.client.email}</p>
@@ -432,34 +544,26 @@ export default function MessagesPage() {
               </div>
 
               {/* AI Mode Toggle */}
-              {!isDemo && (
-                <button
-                  onClick={toggleAiMode}
-                  disabled={togglingAi}
-                  title={aiSession ? 'AI mode is ON — click to disable' : 'Enable AI mode for this client'}
-                  className={clsx(
-                    'flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors',
-                    aiSession
-                      ? 'bg-brand/10 border-brand/30 text-brand hover:bg-brand/20'
-                      : 'bg-surface-light border-cb-border text-cb-muted hover:text-cb-secondary hover:border-cb-secondary'
-                  )}
-                >
-                  {togglingAi ? (
-                    <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  ) : aiSession ? (
-                    <Bot size={14} />
-                  ) : (
-                    <BotOff size={14} />
-                  )}
-                  {aiSession ? 'AI mode on' : 'AI mode off'}
-                </button>
-              )}
-              {isDemo && (
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border bg-brand/10 border-brand/30 text-brand">
+              <button
+                onClick={toggleAiMode}
+                disabled={togglingAi}
+                title={aiSession ? 'AI mode is ON — click to disable' : 'Enable AI mode for this client'}
+                className={clsx(
+                  'flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors',
+                  aiSession
+                    ? 'bg-brand/10 border-brand/30 text-brand hover:bg-brand/20'
+                    : 'bg-surface-light border-cb-border text-cb-muted hover:text-cb-secondary hover:border-cb-secondary'
+                )}
+              >
+                {togglingAi ? (
+                  <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                ) : aiSession ? (
                   <Bot size={14} />
-                  AI mode on
-                </div>
-              )}
+                ) : (
+                  <BotOff size={14} />
+                )}
+                {aiSession ? 'AI mode on' : 'AI mode off'}
+              </button>
             </div>
 
             {/* AI mode banner */}
@@ -484,27 +588,55 @@ export default function MessagesPage() {
               ) : (
                 messages.map((msg) => {
                   const isCoach = msg.sender_role === 'coach'
+                  const isCreating = creatingTaskFor === msg.id
+                  const wasCreated = taskCreated === msg.id
                   return (
-                    <div key={msg.id} className={clsx('flex', isCoach ? 'justify-end' : 'justify-start')}>
-                      <div
-                        className={clsx(
-                          'max-w-xs lg:max-w-md xl:max-w-lg px-4 py-2.5 rounded-2xl text-sm',
-                          isCoach
-                            ? 'bg-cb-teal text-white rounded-br-sm'
-                            : 'bg-surface text-cb-text border border-cb-border rounded-bl-sm'
-                        )}
-                      >
-                        {/* AI badge on AI-generated messages */}
-                        {(msg as Message & { is_ai_generated?: boolean }).is_ai_generated && (
-                          <div className="flex items-center gap-1 mb-1 opacity-70">
-                            <Bot size={11} />
-                            <span className="text-[10px]">AI reply</span>
+                    <div key={msg.id} className={clsx('flex group', isCoach ? 'justify-end' : 'justify-start')}>
+                      <div className={clsx('flex items-end gap-1.5', isCoach ? 'flex-row-reverse' : 'flex-row')}>
+                        <div
+                          className={clsx(
+                            'max-w-xs lg:max-w-md xl:max-w-lg px-4 py-2.5 rounded-2xl text-sm',
+                            isCoach
+                              ? 'bg-cb-teal text-white rounded-br-sm'
+                              : 'bg-surface text-cb-text border border-cb-border rounded-bl-sm'
+                          )}
+                        >
+                          {(msg as Message & { is_ai_generated?: boolean }).is_ai_generated && (
+                            <div className="flex items-center gap-1 mb-1 opacity-70">
+                              <Bot size={11} />
+                              <span className="text-[10px]">AI reply</span>
+                            </div>
+                          )}
+                          <p className="leading-relaxed">{msg.content}</p>
+                          <div className={clsx('flex items-center justify-end gap-1 mt-1', isCoach ? 'text-white/70' : 'text-cb-muted')}>
+                            <span className="text-[10px]">{format(new Date(msg.created_at), 'h:mm a')}</span>
+                            {isCoach && (
+                              msg.read
+                                ? <CheckCheck size={11} className="text-blue-300" />
+                                : <Check size={11} className="opacity-60" />
+                            )}
                           </div>
+                        </div>
+                        {/* Create task from message */}
+                        {!isCoach && (
+                          <button
+                            onClick={() => createTaskFromMessage(msg.id, msg.content)}
+                            disabled={isCreating || wasCreated}
+                            title={wasCreated ? 'Task created!' : 'Create task from message'}
+                            className={clsx(
+                              'mb-1 flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100',
+                              wasCreated
+                                ? 'bg-cb-success/20 text-cb-success opacity-100'
+                                : 'bg-surface border border-cb-border text-cb-muted hover:text-brand hover:border-brand/40'
+                            )}
+                          >
+                            {isCreating ? (
+                              <div className="w-3 h-3 border border-cb-muted border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <SquareCheck size={12} />
+                            )}
+                          </button>
                         )}
-                        <p className="leading-relaxed">{msg.content}</p>
-                        <p className={clsx('text-[10px] mt-1', isCoach ? 'text-white/70' : 'text-cb-muted')}>
-                          {format(new Date(msg.created_at), 'h:mm a')}
-                        </p>
                       </div>
                     </div>
                   )
@@ -545,6 +677,15 @@ export default function MessagesPage() {
           </>
         )}
       </div>
+
+      {/* Broadcast modal */}
+      {showBroadcast && userId && (
+        <BroadcastModal
+          threads={threads}
+          userId={userId}
+          onClose={() => { setShowBroadcast(false); loadThreads() }}
+        />
+      )}
     </div>
   )
 }

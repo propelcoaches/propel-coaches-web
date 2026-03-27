@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { toast } from '@/lib/toast';
 
 // ─── Types ──────────────────────────────────────────────────────────
 interface WorkoutProgram {
@@ -143,10 +144,10 @@ export default function WorkoutProgramsPage() {
         setShowGenerator(false);
         setActiveDay(1);
       } else {
-        alert(data.error || 'Failed to generate program');
+        toast.error(data.error || 'Failed to generate program');
       }
     } catch {
-      alert('Network error');
+      toast.error('Network error');
     } finally {
       setGenerating(false);
     }

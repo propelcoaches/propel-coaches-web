@@ -35,7 +35,7 @@ function AdminPasswordPrompt({ onAuthenticate }: { onAuthenticate: () => void })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (pin === (process.env.NEXT_PUBLIC_ADMIN_PIN || 'propel2026')) {
+    if (process.env.NEXT_PUBLIC_ADMIN_PIN && pin === process.env.NEXT_PUBLIC_ADMIN_PIN) {
       localStorage.setItem('admin_authenticated', 'true')
       onAuthenticate()
     } else {
@@ -136,14 +136,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isChecking, setIsChecking] = useState(true)
 
   useEffect(() => {
-    // In dev, skip auth check
-    if (process.env.NODE_ENV === 'development') {
-      setIsAuthenticated(true)
-      setIsChecking(false)
-      return
-    }
-
-    // In production, check localStorage for auth
     const authenticated = localStorage.getItem('admin_authenticated') === 'true'
     setIsAuthenticated(authenticated)
     setIsChecking(false)

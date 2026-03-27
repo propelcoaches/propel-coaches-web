@@ -456,7 +456,7 @@ function AddCustomExerciseModal({
 
 // ── Main ExerciseLibrary component ────────────────────────────
 
-export default function ExerciseLibrary({ isDemo }: { isDemo: boolean }) {
+export default function ExerciseLibrary() {
   const [exercises, setExercises] = useState<ExerciseV2[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -478,16 +478,11 @@ export default function ExerciseLibrary({ isDemo }: { isDemo: boolean }) {
 
   // Load exercises
   useEffect(() => {
-    if (isDemo) {
-      setExercises(EXERCISES.map(localToV2))
-      setLoading(false)
-      return
-    }
     fetch('/api/exercises')
       .then((r) => r.json())
       .then((d) => { setExercises(d.exercises ?? []); setLoading(false) })
       .catch(() => { setExercises(EXERCISES.map(localToV2)); setLoading(false) })
-  }, [isDemo])
+  }, [])
 
   function toggleFavourite(id: string) {
     setFavourites((prev) => {

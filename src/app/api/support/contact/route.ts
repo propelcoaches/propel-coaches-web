@@ -22,6 +22,7 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { sendSupportTicketEmail } from '@/lib/email';
 
 interface ContactFormData {
   name: string;
@@ -30,56 +31,16 @@ interface ContactFormData {
   message: string;
 }
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error('Missing Supabase environment variables')
+}
+
 // Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Initialize Resend client (optional)
-const resendApiKey = process.env.RESEND_API_KEY || 'placeholder';
-
-async function sendEmailNotification(data: ContactFormData): Promise<boolean> {
-  if (!resendApiKey) {
-    console.log('Resend API key not configured. Skipping email notification.');
-    return false;
-  }
-
-  try {
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${resendApiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        from: 'support@propelcoaches.com',
-        to: 'charlesbettiolbusiness@gmail.com',
-        subject: `New Support Ticket: ${data.subject}`,
-        html: `
-          <h2>New Support Ticket</h2>
-          <p><strong>From:</strong> ${data.name} (${data.email})</p>
-          <p><strong>Subject:</strong> ${data.subject}</p>
-          <hr />
-          <p><strong>Message:</strong></p>
-          <p>${data.message.replace(/\n/g, '<br />')}</p>
-          <hr />
-          <p><small>This ticket was submitted via the Propel support form.</small></p>
-        `
-      })
-    });
-
-    if (!response.ok) {
-      console.error('Failed to send email:', await response.text());
-      return false;
-    }
-
-    console.log('Email notification sent successfully');
-    return true;
-  } catch (error) {
-    console.error('Error sending email notification:', error);
-    return false;
-  }
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -126,7 +87,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Send email notification (non-blocking)
-    await sendEmailNotification(body);
+    await sendSupportTicketEmail(body);
 
     // Return success response
     return NextResponse.json(

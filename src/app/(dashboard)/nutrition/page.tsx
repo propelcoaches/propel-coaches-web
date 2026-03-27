@@ -6,8 +6,8 @@ import {
   ChevronDown, Search, Tag, Clock, FileText
 } from 'lucide-react'
 import clsx from 'clsx'
-import { useIsDemo } from '@/lib/demo/useDemoMode'
 import { createClient } from '@/lib/supabase/client'
+import { toast } from '@/lib/toast'
 import AIMealPlanWizard, { type MealPlanOutput } from '@/components/ai/AIMealPlanWizard'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -138,14 +138,6 @@ function sumDayMacros(day: DayPlan): Macros {
     const sm = sumMealMacros(m)
     return { cal: acc.cal + sm.cal, pro: +(acc.pro + sm.pro).toFixed(1), carb: +(acc.carb + sm.carb).toFixed(1), fat: +(acc.fat + sm.fat).toFixed(1), fibre: +(acc.fibre + sm.fibre).toFixed(1), sodium: acc.sodium + sm.sodium }
   }, { cal: 0, pro: 0, carb: 0, fat: 0, fibre: 0, sodium: 0 })
-}
-
-function mkFood(name: string, qty: number, unit: Unit, cal100: number, pro100: number, carb100: number, fat100: number, fibre100: number, sodium100: number, brand?: string): FoodItem {
-  return { id: genId(), name, brand, quantity: qty, unit, cal100, pro100, carb100, fat100, fibre100, sodium100 }
-}
-
-function mkMeal(name: string, time: string, foods: FoodItem[], notes = '', tags: string[] = []): Meal {
-  return { id: genId(), name, time, notes, tags, foods }
 }
 
 /** Format a food item as a human-readable serving string, e.g. "80g Rolled Oats" */
@@ -547,7 +539,7 @@ function exportPDF(plan: NutritionPlan): void {
   const html = generatePrintHTML(plan)
   const win = window.open('', '_blank', 'width=900,height=800')
   if (!win) {
-    alert('Pop-ups are blocked. Please allow pop-ups for this site and try again.')
+    toast.error('Pop-ups are blocked. Please allow pop-ups for this site and try again.')
     return
   }
   win.document.open()
@@ -563,13 +555,6 @@ function exportPDF(plan: NutritionPlan): void {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const DEMO_CLIENTS_LIST = [
-  { id: 'demo-client-1', name: 'Liam Carter' },
-  { id: 'demo-client-2', name: 'Sophie Nguyen' },
-  { id: 'demo-client-3', name: 'Jake Wilson' },
-  { id: 'demo-client-4', name: 'Emma Thompson' },
-]
-
 const PRESET_TAGS = ['high protein', 'low carb', 'pre-workout', 'post-workout', 'meal prep', 'vegetarian', 'vegan', 'gluten-free', 'dairy-free', 'salicylate-free']
 
 const MEAL_PRESETS = ['Breakfast', 'Morning Snack', 'Lunch', 'Afternoon Snack', 'Dinner', 'Evening Snack', 'Pre-Workout', 'Post-Workout', 'Custom']
@@ -578,157 +563,6 @@ const STANDARD_MEALS = ['Breakfast', 'Morning Snack', 'Lunch', 'Afternoon Snack'
 
 const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
-// ── Demo Data ─────────────────────────────────────────────────────────────────
-
-function buildDemoPlans(): NutritionPlan[] {
-  const liamDay1: DayPlan = {
-    id: genId(), dayNumber: 1, dayName: 'Monday',
-    meals: [
-      mkMeal('Breakfast', '07:00', [
-        mkFood('Rolled Oats', 80, 'g', 389, 17, 66, 7, 10.6, 6),
-        mkFood('Whey Protein', 30, 'g', 380, 75, 8, 6, 1, 80),
-        mkFood('Blueberries', 100, 'g', 57, 0.7, 14.5, 0.3, 2.4, 1),
-        mkFood('Almond Milk', 250, 'ml', 17, 0.6, 0.7, 1.1, 0.4, 65),
-      ], 'Mix protein into oats after cooking. Cook oats with water.'),
-      mkMeal('Lunch', '12:30', [
-        mkFood('Chicken Breast', 200, 'g', 165, 31, 0, 3.6, 0, 74),
-        mkFood('White Rice', 150, 'g', 130, 2.7, 28, 0.3, 0.4, 1),
-        mkFood('Broccoli', 120, 'g', 34, 2.8, 7, 0.4, 2.6, 33),
-        mkFood('Olive Oil', 10, 'ml', 884, 0, 0, 100, 0, 2),
-      ], '', ['high protein', 'meal prep']),
-      mkMeal('Afternoon Snack', '15:30', [
-        mkFood('Greek Yogurt', 200, 'g', 59, 10, 3.6, 0.4, 0, 36),
-        mkFood('Almonds', 30, 'g', 579, 21, 22, 50, 12.5, 1),
-        mkFood('Banana', 100, 'g', 89, 1.1, 23, 0.3, 2.6, 1),
-      ]),
-      mkMeal('Dinner', '18:30', [
-        mkFood('Salmon', 200, 'g', 208, 20, 0, 13, 0, 59),
-        mkFood('Sweet Potato', 250, 'g', 86, 1.6, 20, 0.1, 3, 55),
-        mkFood('Spinach', 80, 'g', 23, 2.9, 3.6, 0.4, 2.2, 79),
-        mkFood('Olive Oil', 15, 'ml', 884, 0, 0, 100, 0, 2),
-      ], 'Bake salmon at 200°C for 18 mins.'),
-    ],
-  }
-
-  const liamDays: DayPlan[] = [
-    liamDay1,
-    { id: genId(), dayNumber: 2, dayName: 'Tuesday', meals: [
-      mkMeal('Breakfast', '07:00', [mkFood('Eggs', 3, 'piece', 155, 13, 1.1, 11, 0, 124), mkFood('Whole Grain Toast', 60, 'g', 247, 9, 47, 3, 6, 380), mkFood('Avocado', 80, 'g', 160, 2, 9, 15, 6.7, 7)], '', ['high protein']),
-      mkMeal('Lunch', '12:30', [mkFood('Turkey Breast', 180, 'g', 135, 29, 0, 1, 0, 70), mkFood('Brown Rice', 140, 'g', 123, 2.7, 26, 1, 1.8, 4), mkFood('Asparagus', 120, 'g', 20, 2.2, 3.9, 0.1, 2.1, 2), mkFood('Olive Oil', 10, 'ml', 884, 0, 0, 100, 0, 2)], '', ['meal prep']),
-      mkMeal('Dinner', '18:30', [mkFood('Lean Beef Mince', 200, 'g', 215, 26, 0, 12, 0, 79), mkFood('Pasta', 80, 'g', 371, 13, 75, 1.5, 2.7, 6), mkFood('Tomato Sauce', 100, 'g', 35, 1.5, 7, 0.3, 1.5, 320), mkFood('Parmesan', 20, 'g', 431, 38, 4, 29, 0, 1529)]),
-      mkMeal('Evening Snack', '20:30', [mkFood('Cottage Cheese', 200, 'g', 98, 11, 3.4, 4.3, 0, 364), mkFood('Casein Protein', 30, 'g', 360, 72, 8, 2, 1, 200)]),
-    ]},
-    { id: genId(), dayNumber: 3, dayName: 'Wednesday', meals: [
-      mkMeal('Breakfast', '07:00', [mkFood('Rolled Oats', 80, 'g', 389, 17, 66, 7, 10.6, 6), mkFood('Whey Protein', 30, 'g', 380, 75, 8, 6, 1, 80), mkFood('Strawberries', 100, 'g', 32, 0.7, 7.7, 0.3, 2, 1)]),
-      mkMeal('Lunch', '12:30', [mkFood('Chicken Breast', 200, 'g', 165, 31, 0, 3.6, 0, 74), mkFood('Quinoa', 100, 'g', 120, 4.4, 22, 1.9, 2.8, 7), mkFood('Kale', 80, 'g', 49, 4.3, 8.8, 0.9, 3.6, 38), mkFood('Olive Oil', 10, 'ml', 884, 0, 0, 100, 0, 2)], '', ['high protein']),
-      mkMeal('Afternoon Snack', '15:30', [mkFood('Greek Yogurt', 200, 'g', 59, 10, 3.6, 0.4, 0, 36), mkFood('Mixed Nuts', 30, 'g', 607, 20, 21, 54, 6, 4)]),
-      mkMeal('Dinner', '18:30', [mkFood('Tuna Steak', 200, 'g', 116, 26, 0, 1, 0, 45), mkFood('Sweet Potato', 200, 'g', 86, 1.6, 20, 0.1, 3, 55), mkFood('Green Beans', 120, 'g', 31, 1.8, 7, 0.1, 2.7, 6)]),
-    ]},
-    { id: genId(), dayNumber: 4, dayName: 'Thursday', meals: [
-      mkMeal('Breakfast', '07:00', [mkFood('Eggs', 4, 'piece', 155, 13, 1.1, 11, 0, 124), mkFood('Oatmeal', 60, 'g', 389, 17, 66, 7, 10.6, 6), mkFood('Banana', 120, 'g', 89, 1.1, 23, 0.3, 2.6, 1)]),
-      mkMeal('Lunch', '12:30', [mkFood('Chicken Breast', 220, 'g', 165, 31, 0, 3.6, 0, 74), mkFood('White Rice', 160, 'g', 130, 2.7, 28, 0.3, 0.4, 1), mkFood('Broccoli', 150, 'g', 34, 2.8, 7, 0.4, 2.6, 33)], '', ['meal prep', 'high protein']),
-      mkMeal('Pre-Workout', '16:00', [mkFood('Whey Protein', 30, 'g', 380, 75, 8, 6, 1, 80), mkFood('Apple', 150, 'g', 52, 0.3, 14, 0.2, 2.4, 1)], '', ['pre-workout']),
-      mkMeal('Dinner', '19:00', [mkFood('Salmon', 200, 'g', 208, 20, 0, 13, 0, 59), mkFood('Brown Rice', 150, 'g', 123, 2.7, 26, 1, 1.8, 4), mkFood('Zucchini', 120, 'g', 17, 1.2, 3.1, 0.3, 1, 8)]),
-    ]},
-    { id: genId(), dayNumber: 5, dayName: 'Friday', meals: [
-      mkMeal('Breakfast', '07:00', [mkFood('Rolled Oats', 80, 'g', 389, 17, 66, 7, 10.6, 6), mkFood('Whey Protein', 30, 'g', 380, 75, 8, 6, 1, 80), mkFood('Blueberries', 80, 'g', 57, 0.7, 14.5, 0.3, 2.4, 1)]),
-      mkMeal('Lunch', '12:30', [mkFood('Turkey Breast', 200, 'g', 135, 29, 0, 1, 0, 70), mkFood('Pasta', 90, 'g', 371, 13, 75, 1.5, 2.7, 6), mkFood('Spinach', 60, 'g', 23, 2.9, 3.6, 0.4, 2.2, 79)]),
-      mkMeal('Dinner', '18:30', [mkFood('Beef Steak', 220, 'g', 271, 26, 0, 18, 0, 54), mkFood('Sweet Potato', 200, 'g', 86, 1.6, 20, 0.1, 3, 55), mkFood('Asparagus', 100, 'g', 20, 2.2, 3.9, 0.1, 2.1, 2), mkFood('Butter', 10, 'g', 717, 0.9, 0.1, 81, 0, 714)]),
-    ]},
-    { id: genId(), dayNumber: 6, dayName: 'Saturday', meals: [
-      mkMeal('Breakfast', '08:30', [mkFood('Eggs', 3, 'piece', 155, 13, 1.1, 11, 0, 124), mkFood('Avocado', 100, 'g', 160, 2, 9, 15, 6.7, 7), mkFood('Whole Grain Toast', 80, 'g', 247, 9, 47, 3, 6, 380), mkFood('Smoked Salmon', 80, 'g', 117, 18, 0, 4.3, 0, 784)]),
-      mkMeal('Lunch', '13:00', [mkFood('Chicken Breast', 200, 'g', 165, 31, 0, 3.6, 0, 74), mkFood('Mixed Salad', 150, 'g', 17, 1.5, 3.3, 0.2, 1.8, 28), mkFood('Olive Oil', 15, 'ml', 884, 0, 0, 100, 0, 2), mkFood('Feta Cheese', 40, 'g', 264, 14, 4, 21, 0, 917)]),
-      mkMeal('Dinner', '19:00', [mkFood('Salmon', 200, 'g', 208, 20, 0, 13, 0, 59), mkFood('Quinoa', 120, 'g', 120, 4.4, 22, 1.9, 2.8, 7), mkFood('Bell Pepper', 120, 'g', 31, 1, 6, 0.3, 2.1, 4), mkFood('Olive Oil', 10, 'ml', 884, 0, 0, 100, 0, 2)]),
-    ]},
-    { id: genId(), dayNumber: 7, dayName: 'Sunday', meals: [
-      mkMeal('Breakfast', '09:00', [mkFood('Protein Pancakes', 100, 'g', 220, 18, 28, 4, 2, 380), mkFood('Greek Yogurt', 150, 'g', 59, 10, 3.6, 0.4, 0, 36), mkFood('Mixed Berries', 100, 'g', 50, 1, 12, 0.3, 3, 1)]),
-      mkMeal('Lunch', '13:00', [mkFood('Lean Beef Mince', 180, 'g', 215, 26, 0, 12, 0, 79), mkFood('White Rice', 150, 'g', 130, 2.7, 28, 0.3, 0.4, 1), mkFood('Broccoli', 150, 'g', 34, 2.8, 7, 0.4, 2.6, 33)]),
-      mkMeal('Dinner', '18:30', [mkFood('Chicken Breast', 220, 'g', 165, 31, 0, 3.6, 0, 74), mkFood('Sweet Potato', 250, 'g', 86, 1.6, 20, 0.1, 3, 55), mkFood('Kale', 80, 'g', 49, 4.3, 8.8, 0.9, 3.6, 38), mkFood('Olive Oil', 10, 'ml', 884, 0, 0, 100, 0, 2)]),
-    ]},
-  ]
-
-  const sophieDay1: DayPlan = {
-    id: genId(), dayNumber: 1, dayName: 'Monday',
-    meals: [
-      mkMeal('Breakfast', '07:30', [
-        mkFood('Egg Whites', 150, 'g', 52, 11, 0.7, 0.2, 0, 166),
-        mkFood('Spinach', 60, 'g', 23, 2.9, 3.6, 0.4, 2.2, 79),
-        mkFood('Whole Grain Toast', 40, 'g', 247, 9, 47, 3, 6, 380),
-        mkFood('Blueberries', 80, 'g', 57, 0.7, 14.5, 0.3, 2.4, 1),
-      ], 'Scramble egg whites with spinach. Serve with toast.'),
-      mkMeal('Lunch', '12:00', [
-        mkFood('Tuna (canned)', 120, 'g', 116, 26, 0, 1, 0, 364),
-        mkFood('Mixed Salad', 150, 'g', 17, 1.5, 3.3, 0.2, 1.8, 28),
-        mkFood('Chickpeas', 80, 'g', 164, 8.9, 27, 2.6, 7.6, 24),
-        mkFood('Olive Oil', 8, 'ml', 884, 0, 0, 100, 0, 2),
-      ], '', ['high protein', 'low carb']),
-      mkMeal('Afternoon Snack', '15:30', [
-        mkFood('Greek Yogurt', 150, 'g', 59, 10, 3.6, 0.4, 0, 36),
-        mkFood('Walnuts', 15, 'g', 654, 15, 14, 65, 6.7, 2),
-      ]),
-      mkMeal('Dinner', '18:30', [
-        mkFood('Chicken Breast', 150, 'g', 165, 31, 0, 3.6, 0, 74),
-        mkFood('Cauliflower Rice', 200, 'g', 25, 1.9, 5, 0.3, 2, 30),
-        mkFood('Broccoli', 120, 'g', 34, 2.8, 7, 0.4, 2.6, 33),
-        mkFood('Olive Oil', 8, 'ml', 884, 0, 0, 100, 0, 2),
-      ], 'Pan-fry chicken. Serve over cauliflower rice.', ['low carb']),
-    ],
-  }
-
-  const sophieDays: DayPlan[] = [
-    sophieDay1,
-    { id: genId(), dayNumber: 2, dayName: 'Tuesday', meals: [
-      mkMeal('Breakfast', '07:30', [mkFood('Rolled Oats', 50, 'g', 389, 17, 66, 7, 10.6, 6), mkFood('Protein Powder', 25, 'g', 380, 75, 8, 6, 1, 80), mkFood('Raspberries', 80, 'g', 52, 1.2, 12, 0.7, 6.5, 1)]),
-      mkMeal('Lunch', '12:00', [mkFood('Turkey Breast', 150, 'g', 135, 29, 0, 1, 0, 70), mkFood('Cucumber', 100, 'g', 16, 0.7, 3.6, 0.1, 0.5, 2), mkFood('Mixed Salad', 120, 'g', 17, 1.5, 3.3, 0.2, 1.8, 28), mkFood('Hummus', 40, 'g', 166, 8, 14, 9.6, 6, 380)]),
-      mkMeal('Dinner', '18:30', [mkFood('Salmon', 160, 'g', 208, 20, 0, 13, 0, 59), mkFood('Asparagus', 150, 'g', 20, 2.2, 3.9, 0.1, 2.1, 2), mkFood('Lemon', 20, 'g', 29, 1.1, 9, 0.3, 2.8, 2)]),
-    ]},
-    { id: genId(), dayNumber: 3, dayName: 'Wednesday', meals: [
-      mkMeal('Breakfast', '07:30', [mkFood('Cottage Cheese', 150, 'g', 98, 11, 3.4, 4.3, 0, 364), mkFood('Cucumber', 80, 'g', 16, 0.7, 3.6, 0.1, 0.5, 2), mkFood('Rice Cakes', 30, 'g', 387, 8, 81, 3, 1.5, 10)]),
-      mkMeal('Lunch', '12:00', [mkFood('Chicken Breast', 150, 'g', 165, 31, 0, 3.6, 0, 74), mkFood('Spinach', 100, 'g', 23, 2.9, 3.6, 0.4, 2.2, 79), mkFood('Cherry Tomatoes', 100, 'g', 18, 0.9, 3.9, 0.2, 1.2, 5), mkFood('Balsamic Vinegar', 15, 'ml', 88, 0.5, 17, 0, 0, 23)]),
-      mkMeal('Afternoon Snack', '15:30', [mkFood('Apple', 150, 'g', 52, 0.3, 14, 0.2, 2.4, 1), mkFood('Almond Butter', 15, 'g', 614, 21, 22, 56, 10.3, 7)]),
-      mkMeal('Dinner', '18:30', [mkFood('Shrimp', 180, 'g', 99, 24, 0.2, 0.3, 0, 111), mkFood('Zucchini', 150, 'g', 17, 1.2, 3.1, 0.3, 1, 8), mkFood('Bell Pepper', 100, 'g', 31, 1, 6, 0.3, 2.1, 4), mkFood('Olive Oil', 8, 'ml', 884, 0, 0, 100, 0, 2)]),
-    ]},
-    { id: genId(), dayNumber: 4, dayName: 'Thursday', meals: [
-      mkMeal('Breakfast', '07:30', [mkFood('Egg Whites', 150, 'g', 52, 11, 0.7, 0.2, 0, 166), mkFood('Mushrooms', 80, 'g', 22, 3.1, 3.3, 0.3, 1, 5), mkFood('Whole Grain Toast', 40, 'g', 247, 9, 47, 3, 6, 380)]),
-      mkMeal('Lunch', '12:00', [mkFood('Tuna (canned)', 120, 'g', 116, 26, 0, 1, 0, 364), mkFood('Brown Rice', 80, 'g', 123, 2.7, 26, 1, 1.8, 4), mkFood('Broccoli', 120, 'g', 34, 2.8, 7, 0.4, 2.6, 33)], '', ['meal prep']),
-      mkMeal('Dinner', '18:30', [mkFood('Turkey Breast', 160, 'g', 135, 29, 0, 1, 0, 70), mkFood('Sweet Potato', 150, 'g', 86, 1.6, 20, 0.1, 3, 55), mkFood('Green Beans', 120, 'g', 31, 1.8, 7, 0.1, 2.7, 6)]),
-    ]},
-    { id: genId(), dayNumber: 5, dayName: 'Friday', meals: [
-      mkMeal('Breakfast', '07:30', [mkFood('Greek Yogurt', 200, 'g', 59, 10, 3.6, 0.4, 0, 36), mkFood('Protein Powder', 20, 'g', 380, 75, 8, 6, 1, 80), mkFood('Strawberries', 100, 'g', 32, 0.7, 7.7, 0.3, 2, 1)]),
-      mkMeal('Lunch', '12:00', [mkFood('Chicken Breast', 160, 'g', 165, 31, 0, 3.6, 0, 74), mkFood('Quinoa', 70, 'g', 120, 4.4, 22, 1.9, 2.8, 7), mkFood('Kale', 80, 'g', 49, 4.3, 8.8, 0.9, 3.6, 38)]),
-      mkMeal('Dinner', '18:30', [mkFood('Salmon', 160, 'g', 208, 20, 0, 13, 0, 59), mkFood('Cauliflower Rice', 200, 'g', 25, 1.9, 5, 0.3, 2, 30), mkFood('Cucumber', 100, 'g', 16, 0.7, 3.6, 0.1, 0.5, 2)]),
-    ]},
-    { id: genId(), dayNumber: 6, dayName: 'Saturday', meals: [
-      mkMeal('Breakfast', '09:00', [mkFood('Eggs', 2, 'piece', 155, 13, 1.1, 11, 0, 124), mkFood('Avocado', 60, 'g', 160, 2, 9, 15, 6.7, 7), mkFood('Smoked Salmon', 60, 'g', 117, 18, 0, 4.3, 0, 784)]),
-      mkMeal('Lunch', '13:00', [mkFood('Turkey Mince', 150, 'g', 148, 27, 0, 4, 0, 79), mkFood('Mixed Salad', 150, 'g', 17, 1.5, 3.3, 0.2, 1.8, 28), mkFood('Olive Oil', 8, 'ml', 884, 0, 0, 100, 0, 2)]),
-      mkMeal('Dinner', '18:30', [mkFood('Chicken Breast', 160, 'g', 165, 31, 0, 3.6, 0, 74), mkFood('Brown Rice', 80, 'g', 123, 2.7, 26, 1, 1.8, 4), mkFood('Spinach', 80, 'g', 23, 2.9, 3.6, 0.4, 2.2, 79)]),
-    ]},
-    { id: genId(), dayNumber: 7, dayName: 'Sunday', meals: [
-      mkMeal('Breakfast', '09:00', [mkFood('Rolled Oats', 50, 'g', 389, 17, 66, 7, 10.6, 6), mkFood('Protein Powder', 25, 'g', 380, 75, 8, 6, 1, 80), mkFood('Banana', 80, 'g', 89, 1.1, 23, 0.3, 2.6, 1)]),
-      mkMeal('Lunch', '13:00', [mkFood('Tuna (canned)', 120, 'g', 116, 26, 0, 1, 0, 364), mkFood('Chickpeas', 60, 'g', 164, 8.9, 27, 2.6, 7.6, 24), mkFood('Mixed Salad', 120, 'g', 17, 1.5, 3.3, 0.2, 1.8, 28), mkFood('Olive Oil', 8, 'ml', 884, 0, 0, 100, 0, 2)]),
-      mkMeal('Dinner', '18:30', [mkFood('Salmon', 160, 'g', 208, 20, 0, 13, 0, 59), mkFood('Asparagus', 150, 'g', 20, 2.2, 3.9, 0.1, 2.1, 2), mkFood('Bell Pepper', 100, 'g', 31, 1, 6, 0.3, 2.1, 4)]),
-    ]},
-  ]
-
-  return [
-    {
-      id: 'demo-plan-1', name: 'Liam Carter — Lean Bulk Phase 1',
-      clientId: 'demo-client-1', clientName: 'Liam Carter',
-      status: 'published',
-      caloriesTarget: 2800, proteinTarget: 200, carbsTarget: 300, fatTarget: 80, fibreTarget: 35,
-      days: liamDays, notes: 'Focus on progressive overload. Adjust portions based on weekly check-in weight trend.',
-      createdAt: '2025-02-01T08:00:00Z',
-    },
-    {
-      id: 'demo-plan-2', name: 'Sophie Nguyen — Fat Loss Phase 1',
-      clientId: 'demo-client-2', clientName: 'Sophie Nguyen',
-      status: 'draft',
-      caloriesTarget: 1600, proteinTarget: 140, carbsTarget: 140, fatTarget: 50, fibreTarget: 28,
-      days: sophieDays, notes: 'High protein to preserve lean mass. Keep carbs around training.',
-      createdAt: '2025-02-14T10:30:00Z',
-    },
-  ]
-}
 
 // ── MacroBar ──────────────────────────────────────────────────────────────────
 
@@ -938,7 +772,7 @@ function FoodSearchModal({ onClose, onAdd }: { onClose: () => void; onAdd: (food
 
 // ── NewPlanModal ──────────────────────────────────────────────────────────────
 
-function NewPlanModal({ onClose, onAdd }: { onClose: () => void; onAdd: (plan: NutritionPlan) => void }) {
+function NewPlanModal({ onClose, onAdd, clients }: { onClose: () => void; onAdd: (plan: NutritionPlan) => void; clients: { id: string; name: string }[] }) {
   const [name, setName] = useState('')
   const [clientId, setClientId] = useState('')
   const [numDays, setNumDays] = useState(7)
@@ -950,7 +784,7 @@ function NewPlanModal({ onClose, onAdd }: { onClose: () => void; onAdd: (plan: N
 
   function handleCreate() {
     if (!name.trim()) return
-    const client = DEMO_CLIENTS_LIST.find(c => c.id === clientId) ?? null
+    const client = clients.find(c => c.id === clientId) ?? null
     const days: DayPlan[] = Array.from({ length: numDays }, (_, i) => ({
       id: genId(), dayNumber: i + 1, dayName: DAY_NAMES[i] ?? `Day ${i + 1}`, meals: [],
     }))
@@ -979,7 +813,7 @@ function NewPlanModal({ onClose, onAdd }: { onClose: () => void; onAdd: (plan: N
             <label className="text-xs text-cb-muted">Client</label>
             <select className="mt-1 w-full bg-surface-light border border-cb-border rounded-lg px-3 py-2 text-sm text-cb-text focus:outline-none focus:border-brand" value={clientId} onChange={e => setClientId(e.target.value)}>
               <option value="">— No client —</option>
-              {DEMO_CLIENTS_LIST.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
           <div>
@@ -1252,11 +1086,12 @@ function WeekGridView({ plan, onSelectDay }: { plan: NutritionPlan; onSelectDay:
 
 // ── PlanBuilder ───────────────────────────────────────────────────────────────
 
-function PlanBuilder({ plan, onBack, onChange, onSave }: {
+function PlanBuilder({ plan, onBack, onChange, onSave, clients }: {
   plan: NutritionPlan
   onBack: () => void
   onChange: (p: NutritionPlan) => void
   onSave?: (p: NutritionPlan) => Promise<void>
+  clients: { id: string; name: string }[]
 }) {
   const [viewMode, setViewMode] = useState<'day' | 'week'>('day')
   const [activeDay, setActiveDay] = useState(0)
@@ -1367,13 +1202,13 @@ function PlanBuilder({ plan, onBack, onChange, onSave }: {
         <select
           value={plan.clientId ?? ''}
           onChange={e => {
-            const client = DEMO_CLIENTS_LIST.find(c => c.id === e.target.value) ?? null
+            const client = clients.find(c => c.id === e.target.value) ?? null
             onChange({ ...plan, clientId: client?.id ?? null, clientName: client?.name ?? null })
           }}
           className="bg-surface-light border border-cb-border rounded-lg px-2.5 py-1.5 text-sm text-cb-text focus:outline-none focus:border-brand shrink-0"
         >
           <option value="">— No client —</option>
-          {DEMO_CLIENTS_LIST.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+          {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
 
         {/* View toggle */}
@@ -1654,27 +1489,25 @@ function PlanCard({ plan, onEdit, onDuplicate, onDelete }: { plan: NutritionPlan
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function NutritionPage() {
-  const isDemo = useIsDemo()
   const [plans, setPlans] = useState<NutritionPlan[]>([])
   const [activePlan, setActivePlan] = useState<NutritionPlan | null>(null)
   const [showNewPlan, setShowNewPlan] = useState(false)
   const [showAIModal, setShowAIModal] = useState(false)
   const [coachId, setCoachId] = useState<string | null>(null)
+  const [clients, setClients] = useState<{ id: string; name: string }[]>([])
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (isDemo) {
-      setPlans(buildDemoPlans())
-      return
-    }
     const supabase = createClient()
     supabase.auth.getUser().then(({ data }) => {
       if (!data.user) return
       setCoachId(data.user.id)
       loadPlansFromDB(supabase)
+      supabase.from('profiles').select('id, name').eq('coach_id', data.user.id).eq('role', 'client')
+        .then(({ data: clients }) => setClients((clients ?? []).map(c => ({ id: c.id, name: c.name ?? '' }))))
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDemo])
+  }, [])
 
   async function loadPlansFromDB(supabase: ReturnType<typeof createClient>) {
     setLoading(true)
@@ -1690,7 +1523,7 @@ export default function NutritionPage() {
   }
 
   async function persistPlan(plan: NutritionPlan): Promise<void> {
-    if (isDemo || !coachId) return
+    if (!coachId) return
     const supabase = createClient()
     await supabase
       .from('nutrition_plans_v2')
@@ -1715,7 +1548,7 @@ export default function NutritionPage() {
   }
 
   async function deletePlanFromDB(id: string): Promise<void> {
-    if (isDemo || !coachId) return
+    if (!coachId) return
     const supabase = createClient()
     await supabase.from('nutrition_plans_v2').delete().eq('id', id)
   }
@@ -1803,6 +1636,7 @@ export default function NutritionPage() {
         onBack={() => setActivePlan(null)}
         onChange={updatePlan}
         onSave={persistPlan}
+        clients={clients}
       />
     )
   }
@@ -1855,7 +1689,7 @@ export default function NutritionPage() {
         </div>
       )}
 
-      {showNewPlan && <NewPlanModal onClose={() => setShowNewPlan(false)} onAdd={addPlan} />}
+      {showNewPlan && <NewPlanModal onClose={() => setShowNewPlan(false)} onAdd={addPlan} clients={clients} />}
       {showAIModal && (
         <AIMealPlanWizard
           onClose={() => setShowAIModal(false)}

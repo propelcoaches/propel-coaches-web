@@ -84,7 +84,6 @@ export default function LeadChatbot() {
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState('')
-  const [isTyping, setIsTyping] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const unreadCount = useRef(0)
 
@@ -105,46 +104,30 @@ export default function LeadChatbot() {
   // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, isTyping])
+  }, [messages])
 
-  const handleSendMessage = async () => {
-    if (!inputValue.trim()) return
+  const handleSendMessage = (overrideText?: string) => {
+    const text = overrideText ?? inputValue
+    if (!text.trim()) return
 
-    // Add user message
     const userMessage: Message = {
       id: `user-${Date.now()}`,
-      text: inputValue,
+      text,
       sender: 'user',
       timestamp: Date.now()
     }
-    setMessages(prev => [...prev, userMessage])
-    setInputValue('')
-
-    // Show typing indicator
-    setIsTyping(true)
-
-    // Simulate bot response delay (800ms)
-    await new Promise(resolve => setTimeout(resolve, 800))
-
-    // Find and add bot response
-    const botResponseText = findBotResponse(inputValue)
     const botMessage: Message = {
       id: `bot-${Date.now()}`,
-      text: botResponseText,
+      text: findBotResponse(text),
       sender: 'bot',
       timestamp: Date.now()
     }
-    setMessages(prev => [...prev, botMessage])
-    setIsTyping(false)
+    setMessages(prev => [...prev, userMessage, botMessage])
+    if (!overrideText) setInputValue('')
   }
 
   const handleQuickReply = (reply: string) => {
-    setInputValue(reply)
-    // Small delay to make it feel natural
-    setTimeout(() => {
-      const event = new KeyboardEvent('keydown', { key: 'Enter' })
-      document.getElementById('chatbot-input')?.dispatchEvent(event)
-    }, 100)
+    handleSendMessage(reply)
   }
 
   return (
@@ -206,21 +189,8 @@ export default function LeadChatbot() {
                   </div>
                 ))}
 
-                {/* Typing indicator */}
-                {isTyping && (
-                  <div className="flex justify-start">
-                    <div className="bg-gray-100 text-gray-900 px-4 py-3 rounded-lg rounded-bl-none flex gap-2">
-                      <span className="inline-flex gap-1">
-                        <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-                        <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100" />
-                        <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200" />
-                      </span>
-                    </div>
-                  </div>
-                )}
-
                 {/* Quick replies (after opening message) */}
-                {messages.length === 1 && !isTyping && (
+                {messages.length === 1 && (
                   <div className="mt-4 space-y-2">
                     {QUICK_REPLY_OPTIONS.map(option => (
                       <button
@@ -256,7 +226,7 @@ export default function LeadChatbot() {
               className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0F7B8C] text-sm"
             />
             <button
-              onClick={handleSendMessage}
+              onClick={() => handleSendMessage()}
               disabled={!inputValue.trim()}
               className="bg-[#0F7B8C] text-white px-4 py-2 rounded-lg hover:bg-[#0d6b7a] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
             >

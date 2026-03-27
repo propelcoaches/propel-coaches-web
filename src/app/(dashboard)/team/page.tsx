@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
-import { Users, Mail, Shield, Plus, RotateCw, Trash2, ToggleLeft } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Users, Mail, Shield, Plus, RotateCw, Trash2 } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 import { format } from 'date-fns'
 
 type TeamMember = {
@@ -9,91 +10,166 @@ type TeamMember = {
   name: string
   email: string
   role: 'owner' | 'admin' | 'coach'
-  clientsAssigned: number
   joinedDate: string
 }
 
 type PendingInvitation = {
   id: string
   email: string
-  invitedBy: string
+  role: string
   sentDate: string
 }
 
-// Mock data
-const MOCK_TEAM_MEMBERS: TeamMember[] = [
-  {
-    id: '1',
-    name: 'James Khoury',
-    email: 'james@elitehm.com',
-    role: 'owner',
-    clientsAssigned: 12,
-    joinedDate: '2024-01-15',
-  },
-  {
-    id: '2',
-    name: 'Sarah Mitchell',
-    email: 'sarah@elitehm.com',
-    role: 'admin',
-    clientsAssigned: 8,
-    joinedDate: '2024-02-20',
-  },
-  {
-    id: '3',
-    name: 'Tom Reid',
-    email: 'tom@elitehm.com',
-    role: 'coach',
-    clientsAssigned: 5,
-    joinedDate: '2024-03-01',
-  },
-  {
-    id: '4',
-    name: 'Lisa Park',
-    email: 'lisa@elitehm.com',
-    role: 'coach',
-    clientsAssigned: 7,
-    joinedDate: '2024-03-10',
-  },
-]
-
-const MOCK_PENDING_INVITATIONS: PendingInvitation[] = [
-  {
-    id: '1',
-    email: 'newcoach@example.com',
-    invitedBy: 'James Khoury',
-    sentDate: '2024-03-22',
-  },
-]
+type TeamData = {
+  id: string
+  name: string
+  plan: string
+}
 
 const getRoleBadgeColor = (role: string) => {
   switch (role) {
-    case 'owner':
-      return 'bg-warning/20 text-warning'
-    case 'admin':
-      return 'bg-teal/20 text-teal'
-    default:
-      return 'bg-success/20 text-success'
+    case 'owner': return 'bg-warning/20 text-warning'
+    case 'admin': return 'bg-teal/20 text-teal'
+    default: return 'bg-success/20 text-success'
   }
 }
 
 export default function TeamPage() {
+  const [team, setTeam] = useState<TeamData | null>(null)
+  const [members, setMembers] = useState<TeamMember[]>([])
+  const [invitations, setInvitations] = useState<PendingInvitation[]>([])
+  const [loading, setLoading] = useState(true)
+  const [userId, setUserId] = useState<string | null>(null)
+
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState('coach')
   const [sendingInvite, setSendingInvite] = useState(false)
   const [inviteSent, setInviteSent] = useState(false)
-  const [allowSharedClients, setAllowSharedClients] = useState(true)
+  const [inviteError, setInviteError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) { setLoading(false); return }
+      setUserId(user.id)
+
+      // Find team where this coach is a member
+      const { data: memberRow } = await supabase
+        .from('team_members')
+        .select('team_id, role, joined_at, teams(id, name, plan)')
+        .eq('coach_id', user.id)
+        .limit(1)
+        .single()
+
+      if (!memberRow) { setLoading(false); return }
+
+      const teamData = (memberRow.teams as unknown as TeamData)
+      setTeam({ id: teamData.id, name: teamData.name, plan: teamData.plan })
+
+      // Load all members of this team
+      const { data: memberRows } = await supabase
+        .from('team_members')
+        .select('id, role, joined_at, profiles(id, full_name, email)')
+        .eq('team_id', teamData.id)
+        .order('joined_at', { ascending: true })
+
+      setMembers(
+        (memberRows ?? []).map((m: any) => ({
+          id: m.profiles.id,
+          name: m.profiles.full_name ?? m.profiles.email,
+          email: m.profiles.email,
+          role: m.role as TeamMember['role'],
+          joinedDate: m.joined_at,
+        }))
+      )
+
+      // Load pending invitations
+      const { data: inviteRows } = await supabase
+        .from('team_invitations')
+        .select('id, email, role, created_at')
+        .eq('team_id', teamData.id)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+
+      setInvitations(
+        (inviteRows ?? []).map((i: any) => ({
+          id: i.id,
+          email: i.email,
+          role: i.role,
+          sentDate: i.created_at,
+        }))
+      )
+
+      setLoading(false)
+    })
+  }, [])
 
   const handleSendInvite = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!inviteEmail.trim()) return
-
+    if (!inviteEmail.trim() || !team || !userId) return
     setSendingInvite(true)
-    setTimeout(() => {
-      setSendingInvite(false)
-      setInviteSent(true)
+    setInviteError(null)
+
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.from('team_invitations').insert({
+        team_id: team.id,
+        invited_by: userId,
+        email: inviteEmail.trim(),
+        role: inviteRole,
+        status: 'pending',
+      })
+      if (error) throw error
+
+      setInvitations(prev => [{
+        id: Date.now().toString(),
+        email: inviteEmail.trim(),
+        role: inviteRole,
+        sentDate: new Date().toISOString(),
+      }, ...prev])
       setInviteEmail('')
+      setInviteSent(true)
       setTimeout(() => setInviteSent(false), 3000)
-    }, 500)
+    } catch (e: unknown) {
+      setInviteError(e instanceof Error ? e.message : 'Failed to send invitation')
+    } finally {
+      setSendingInvite(false)
+    }
+  }
+
+  const handleRevokeInvite = async (inviteId: string) => {
+    const supabase = createClient()
+    await supabase.from('team_invitations').delete().eq('id', inviteId)
+    setInvitations(prev => prev.filter(i => i.id !== inviteId))
+  }
+
+  const handleRemoveMember = async (memberId: string) => {
+    if (!team) return
+    const supabase = createClient()
+    await supabase.from('team_members').delete().eq('team_id', team.id).eq('coach_id', memberId)
+    setMembers(prev => prev.filter(m => m.id !== memberId))
+  }
+
+  if (loading) {
+    return (
+      <div className="p-8">
+        <p className="text-cb-muted text-sm">Loading team…</p>
+      </div>
+    )
+  }
+
+  if (!team) {
+    return (
+      <div className="p-8 max-w-lg">
+        <div className="bg-surface-light border border-cb-border rounded-xl p-10 text-center">
+          <Users className="w-12 h-12 text-cb-muted mx-auto mb-4" />
+          <h2 className="text-lg font-semibold text-cb-text mb-2">No team yet</h2>
+          <p className="text-sm text-cb-muted">
+            Team features are available on multi-coach plans. Upgrade to create or join a team.
+          </p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -102,9 +178,9 @@ export default function TeamPage() {
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-3xl font-bold text-cb-text">Elite Fitness Collective</h1>
-            <span className="px-3 py-1 bg-teal/20 text-teal text-sm font-semibold rounded-full">
-              Pro Team
+            <h1 className="text-3xl font-bold text-cb-text">{team.name}</h1>
+            <span className="px-3 py-1 bg-teal/20 text-teal text-sm font-semibold rounded-full capitalize">
+              {team.plan}
             </span>
           </div>
           <p className="text-cb-muted">Manage team members and settings</p>
@@ -122,28 +198,15 @@ export default function TeamPage() {
               <table className="w-full text-sm">
                 <thead className="border-b border-cb-border">
                   <tr>
-                    <th className="text-left py-3 px-3 font-semibold text-cb-muted text-xs uppercase">
-                      Name
-                    </th>
-                    <th className="text-left py-3 px-3 font-semibold text-cb-muted text-xs uppercase">
-                      Email
-                    </th>
-                    <th className="text-left py-3 px-3 font-semibold text-cb-muted text-xs uppercase">
-                      Role
-                    </th>
-                    <th className="text-left py-3 px-3 font-semibold text-cb-muted text-xs uppercase">
-                      Clients
-                    </th>
-                    <th className="text-left py-3 px-3 font-semibold text-cb-muted text-xs uppercase">
-                      Joined
-                    </th>
-                    <th className="text-left py-3 px-3 font-semibold text-cb-muted text-xs uppercase">
-                      Actions
-                    </th>
+                    <th className="text-left py-3 px-3 font-semibold text-cb-muted text-xs uppercase">Name</th>
+                    <th className="text-left py-3 px-3 font-semibold text-cb-muted text-xs uppercase">Email</th>
+                    <th className="text-left py-3 px-3 font-semibold text-cb-muted text-xs uppercase">Role</th>
+                    <th className="text-left py-3 px-3 font-semibold text-cb-muted text-xs uppercase">Joined</th>
+                    <th className="text-left py-3 px-3 font-semibold text-cb-muted text-xs uppercase">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-cb-border">
-                  {MOCK_TEAM_MEMBERS.map((member) => (
+                  {members.map((member) => (
                     <tr key={member.id} className="hover:bg-surface transition-colors">
                       <td className="py-3 px-3 font-medium text-cb-text">{member.name}</td>
                       <td className="py-3 px-3 text-cb-muted flex items-center gap-2">
@@ -151,13 +214,10 @@ export default function TeamPage() {
                         {member.email}
                       </td>
                       <td className="py-3 px-3">
-                        <span
-                          className={`px-2 py-1 rounded-md text-xs font-semibold ${getRoleBadgeColor(member.role)}`}
-                        >
+                        <span className={`px-2 py-1 rounded-md text-xs font-semibold ${getRoleBadgeColor(member.role)}`}>
                           {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
                         </span>
                       </td>
-                      <td className="py-3 px-3 text-cb-text">{member.clientsAssigned}</td>
                       <td className="py-3 px-3 text-cb-muted">
                         {format(new Date(member.joinedDate), 'MMM d, yyyy')}
                       </td>
@@ -165,14 +225,22 @@ export default function TeamPage() {
                         <button className="p-1.5 hover:bg-surface rounded transition-colors text-cb-muted hover:text-cb-text">
                           <Shield className="w-4 h-4" />
                         </button>
-                        {member.role !== 'owner' && (
-                          <button className="p-1.5 hover:bg-surface rounded transition-colors text-cb-muted hover:text-danger">
+                        {member.role !== 'owner' && member.id !== userId && (
+                          <button
+                            onClick={() => handleRemoveMember(member.id)}
+                            className="p-1.5 hover:bg-surface rounded transition-colors text-cb-muted hover:text-danger"
+                          >
                             <Trash2 className="w-4 h-4" />
                           </button>
                         )}
                       </td>
                     </tr>
                   ))}
+                  {members.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="py-6 text-center text-sm text-cb-muted">No team members yet.</td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -184,9 +252,7 @@ export default function TeamPage() {
             <form onSubmit={handleSendInvite} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-cb-text mb-1">
-                    Email Address
-                  </label>
+                  <label className="block text-sm font-medium text-cb-text mb-1">Email Address</label>
                   <input
                     type="email"
                     value={inviteEmail}
@@ -214,6 +280,11 @@ export default function TeamPage() {
                   Invitation sent successfully!
                 </div>
               )}
+              {inviteError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                  {inviteError}
+                </div>
+              )}
               <button
                 type="submit"
                 disabled={!inviteEmail.trim() || sendingInvite}
@@ -226,33 +297,30 @@ export default function TeamPage() {
           </div>
 
           {/* Pending Invitations */}
-          {MOCK_PENDING_INVITATIONS.length > 0 && (
+          {invitations.length > 0 && (
             <div className="bg-surface-light rounded-xl border border-cb-border p-6">
               <h2 className="text-lg font-bold text-cb-text mb-4">Pending Invitations</h2>
               <div className="space-y-3">
-                {MOCK_PENDING_INVITATIONS.map((invitation) => (
-                  <div
-                    key={invitation.id}
-                    className="flex items-center justify-between p-4 bg-surface rounded-lg border border-cb-border"
-                  >
+                {invitations.map((invitation) => (
+                  <div key={invitation.id} className="flex items-center justify-between p-4 bg-surface rounded-lg border border-cb-border">
                     <div className="flex-1">
                       <p className="font-medium text-cb-text flex items-center gap-2">
                         <Mail className="w-4 h-4 text-cb-muted" />
                         {invitation.email}
+                        <span className={`ml-1 px-2 py-0.5 rounded text-xs font-semibold ${getRoleBadgeColor(invitation.role)}`}>
+                          {invitation.role}
+                        </span>
                       </p>
                       <p className="text-sm text-cb-muted">
-                        Invited by {invitation.invitedBy} on{' '}
-                        {format(new Date(invitation.sentDate), 'MMM d, yyyy')}
+                        Sent {format(new Date(invitation.sentDate), 'MMM d, yyyy')}
                       </p>
                     </div>
-                    <div className="flex gap-2">
-                      <button className="p-2 hover:bg-surface-light rounded transition-colors text-cb-muted hover:text-cb-text">
-                        <RotateCw className="w-4 h-4" />
-                      </button>
-                      <button className="p-2 hover:bg-surface-light rounded transition-colors text-cb-muted hover:text-danger">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => handleRevokeInvite(invitation.id)}
+                      className="p-2 hover:bg-surface-light rounded transition-colors text-cb-muted hover:text-danger"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 ))}
               </div>
@@ -260,59 +328,22 @@ export default function TeamPage() {
           )}
         </div>
 
-        {/* Right Column: Settings */}
+        {/* Right Column: Stats */}
         <div className="space-y-6">
-          {/* Shared Clients Setting */}
-          <div className="bg-surface-light rounded-xl border border-cb-border p-6">
-            <h2 className="text-lg font-bold text-cb-text mb-4">Team Settings</h2>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-surface rounded-lg">
-                <div className="flex-1">
-                  <label className="block font-medium text-cb-text text-sm mb-0.5">
-                    Shared Client View
-                  </label>
-                  <p className="text-xs text-cb-muted">
-                    Allow coaches to view each other's clients
-                  </p>
-                </div>
-                <button
-                  onClick={() => setAllowSharedClients(!allowSharedClients)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    allowSharedClients ? 'bg-teal' : 'bg-cb-border'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      allowSharedClients ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
-
-              <div className="text-xs text-cb-muted bg-info/10 border border-info/30 rounded-lg p-3">
-                Team coaches can view shared clients and their progress data when this is enabled.
-              </div>
-            </div>
-          </div>
-
-          {/* Team Stats */}
           <div className="bg-surface-light rounded-xl border border-cb-border p-6 space-y-4">
             <h3 className="font-bold text-cb-text">Team Stats</h3>
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
                 <span className="text-cb-muted">Total Coaches</span>
-                <span className="font-semibold text-cb-text">{MOCK_TEAM_MEMBERS.length}</span>
+                <span className="font-semibold text-cb-text">{members.length}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-cb-muted">Total Clients</span>
-                <span className="font-semibold text-cb-text">
-                  {MOCK_TEAM_MEMBERS.reduce((sum, m) => sum + m.clientsAssigned, 0)}
-                </span>
+                <span className="text-cb-muted">Pending Invites</span>
+                <span className="font-semibold text-cb-text">{invitations.length}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-cb-muted">Plan</span>
-                <span className="font-semibold text-teal">Pro Team</span>
+                <span className="font-semibold text-teal capitalize">{team.plan}</span>
               </div>
             </div>
           </div>

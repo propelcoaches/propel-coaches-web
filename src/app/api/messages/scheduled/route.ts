@@ -2,12 +2,11 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize Supabase client with service role key for server-side operations
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-if (!supabaseUrl || !supabaseServiceKey) { // @ts-ignore
-  console.warn('Missing Supabase environment variables');
+if (!supabaseUrl || !supabaseServiceKey) {
+  throw new Error('Missing Supabase environment variables')
 }
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
@@ -22,7 +21,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
  */
 function verifyAuthToken(request: NextRequest): boolean {
   const authHeader = request.headers.get('authorization');
-  const expectedToken = process.env.CRON_SECRET || 'placeholder';
+  const expectedToken = process.env.CRON_SECRET;
 
   if (!expectedToken) {
     console.warn('CRON_SECRET environment variable not set');
@@ -43,8 +42,7 @@ function verifyAuthToken(request: NextRequest): boolean {
 }
 
 /**
- * Send a push notification to a client
- * This is a placeholder implementation - integrate with your push notification service
+ * Send a push notification to a client via Expo Push Notification service
  */
 async function sendPushNotification(
   clientId: string,
@@ -52,16 +50,19 @@ async function sendPushNotification(
   body: string
 ): Promise<void> {
   try {
-    // TODO: Integrate with your push notification service
-    // Examples: Firebase Cloud Messaging, OneSignal, Pusher, etc.
-    console.log(`Push notification to ${clientId}: ${title} - ${body}`);
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('push_token')
+      .eq('id', clientId)
+      .single()
 
-    // Example Firebase implementation:
-    // const message = {
-    //   notification: { title, body },
-    //   token: deviceToken, // Retrieved from your device_tokens table
-    // };
-    // await admin.messaging().send(message);
+    if (!profile?.push_token) return
+
+    await fetch('https://exp.host/--/api/v2/push/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to: profile.push_token, title, body }),
+    })
   } catch (error) {
     console.error('Failed to send push notification:', error);
     // Don't throw - notification failure shouldn't block message processing

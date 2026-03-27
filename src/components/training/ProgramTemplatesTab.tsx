@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import { format, parseISO } from 'date-fns'
 import {
   Search, X, Plus, Upload, Download, Copy, Eye, Zap, Trash2,
@@ -8,8 +9,6 @@ import {
   Dumbbell, CheckCircle2, AlertCircle, BookOpen,
 } from 'lucide-react'
 import clsx from 'clsx'
-import { useIsDemo } from '@/lib/demo/useDemoMode'
-import { DEMO_CLIENTS } from '@/lib/demo/mockData'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -54,332 +53,6 @@ interface ProgramTemplate {
   structure: TemplateStructure
   created_at: string
   author_name?: string   // resolved for marketplace templates
-}
-
-// ─── Demo data ────────────────────────────────────────────────────────────────
-
-function mkEx(id: string, name: string, cat: string, sets: number, rMin: number, rMax: number, rest = 90, notes?: string): TplExercise {
-  return { order_index: 0, sets, reps_min: rMin, reps_max: rMax, rest_seconds: rest, notes: notes ?? null, exercise: { id, name, category: cat } }
-}
-
-function mkDay(week: number, day: number, name: string, exercises: TplExercise[]): TplWorkout {
-  return { week_number: week, day_number: day, name, exercises: exercises.map((e, i) => ({ ...e, order_index: i })) }
-}
-
-function buildDemoTemplates(): ProgramTemplate[] {
-  const ME = 'demo-coach-id'
-  const now = '2026-01-01T00:00:00.000Z'
-
-  return [
-    // ── 1. Push/Pull/Legs ──────────────────────────────────────
-    {
-      id: 'tpl-ppl', coach_id: ME, name: 'Push / Pull / Legs',
-      description: 'Classic PPL split for maximum muscle hypertrophy. High volume, 6 days per week with one rest day. Ideal for intermediate lifters who can recover from frequent training.',
-      duration_weeks: 8, days_per_week: 6, goal: 'hypertrophy', difficulty: 'intermediate', is_public: false, created_at: now,
-      structure: {
-        notes: 'Rest 60–90s on isolation exercises, 2–3 min on compounds. Increase weight when you hit the top of the rep range for all sets.',
-        workouts: [
-          mkDay(1, 1, 'Push – Chest & Shoulders', [
-            mkEx('ex-001', 'Bench Press', 'Chest', 4, 6, 10, 120, 'Lead compound — push for progressive overload'),
-            mkEx('ex-005', 'Incline Dumbbell Press', 'Chest', 3, 8, 12, 90),
-            mkEx('ex-019', 'Overhead Press', 'Shoulders', 3, 8, 12, 90),
-            mkEx('ex-022', 'Lateral Raise', 'Shoulders', 4, 12, 20, 60),
-            mkEx('ex-034', 'Tricep Pushdown', 'Triceps', 3, 12, 15, 60),
-            mkEx('ex-037', 'Overhead Tricep Extension', 'Triceps', 3, 10, 15, 60),
-          ]),
-          mkDay(1, 2, 'Pull – Back & Biceps', [
-            mkEx('ex-011', 'Deadlift', 'Back', 3, 5, 8, 150, 'Warm up thoroughly. Drive hips through.'),
-            mkEx('ex-012', 'Pull Up', 'Back', 4, 6, 10, 90),
-            mkEx('ex-015', 'Seated Cable Row', 'Back', 3, 10, 14, 90),
-            mkEx('ex-018', 'Face Pull', 'Shoulders', 4, 15, 20, 60, 'External rotation focus'),
-            mkEx('ex-027', 'Barbell Curl', 'Biceps', 3, 10, 14, 60),
-            mkEx('ex-029', 'Hammer Curl', 'Biceps', 3, 12, 16, 60),
-          ]),
-          mkDay(1, 3, 'Legs', [
-            mkEx('ex-041', 'Squat', 'Legs', 4, 6, 10, 150, 'Full depth, knees tracking toes'),
-            mkEx('ex-048', 'Romanian Deadlift', 'Legs', 3, 10, 14, 90),
-            mkEx('ex-043', 'Leg Press', 'Legs', 3, 12, 15, 90),
-            mkEx('ex-044', 'Bulgarian Split Squat', 'Legs', 3, 10, 12, 90),
-            mkEx('ex-049', 'Calf Raise', 'Legs', 4, 15, 20, 60),
-          ]),
-          mkDay(1, 4, 'Push – Volume', [
-            mkEx('ex-004', 'Dumbbell Bench Press', 'Chest', 4, 10, 14, 90),
-            mkEx('ex-006', 'Dumbbell Flye', 'Chest', 3, 12, 16, 60),
-            mkEx('ex-020', 'Dumbbell Shoulder Press', 'Shoulders', 3, 10, 14, 90),
-            mkEx('ex-022', 'Lateral Raise', 'Shoulders', 4, 15, 20, 60),
-            mkEx('ex-034', 'Tricep Pushdown', 'Triceps', 3, 15, 20, 60),
-            mkEx('ex-039', 'Diamond Push Up', 'Triceps', 2, 15, 20, 60),
-          ]),
-          mkDay(1, 5, 'Pull – Volume', [
-            mkEx('ex-014', 'Lat Pulldown', 'Back', 4, 10, 14, 90),
-            mkEx('ex-016', 'Single Arm Dumbbell Row', 'Back', 3, 10, 14, 90),
-            mkEx('ex-010', 'Barbell Row', 'Back', 3, 8, 12, 90),
-            mkEx('ex-025', 'Rear Delt Flye', 'Shoulders', 4, 15, 20, 60),
-            mkEx('ex-031', 'Cable Curl', 'Biceps', 3, 12, 16, 60),
-            mkEx('ex-030', 'Incline Dumbbell Curl', 'Biceps', 3, 10, 14, 60),
-          ]),
-          mkDay(1, 6, 'Legs – Volume', [
-            mkEx('ex-041', 'Squat', 'Legs', 4, 8, 12, 120),
-            mkEx('ex-051', 'Hip Thrust', 'Glutes', 4, 10, 15, 90),
-            mkEx('ex-045', 'Walking Lunges', 'Legs', 3, 12, 16, 90),
-            mkEx('ex-048', 'Romanian Deadlift', 'Legs', 3, 12, 15, 90),
-            mkEx('ex-049', 'Calf Raise', 'Legs', 4, 20, 25, 60),
-          ]),
-        ],
-      },
-    },
-
-    // ── 2. 5/3/1 Strength ─────────────────────────────────────
-    {
-      id: 'tpl-531', coach_id: ME, name: '5/3/1 Wendler Strength',
-      description: 'Jim Wendler\'s famous 5/3/1 program. 4-day upper/lower split rotating through Squat, Bench, Deadlift, and OHP as the main lifts with joker sets and first set last (FSL) accessory protocol.',
-      duration_weeks: 16, days_per_week: 4, goal: 'strength', difficulty: 'advanced', is_public: false, created_at: now,
-      structure: {
-        notes: 'Week 1: 5/5/5+. Week 2: 3/3/3+. Week 3: 5/3/1+. Week 4: Deload. Repeat. Use 90% of your true 1RM to calculate training maxes.',
-        workouts: [
-          mkDay(1, 1, 'Squat Day', [
-            mkEx('ex-041', 'Squat', 'Legs', 3, 5, 5, 180, 'Week 1: 65/75/85%. Hit an AMRAP on the last set.'),
-            mkEx('ex-041', 'Squat', 'Legs', 5, 5, 10, 120, 'FSL — First Set Last: 5×5 @ 65% weight'),
-            mkEx('ex-011', 'Deadlift', 'Back', 3, 8, 10, 90, 'Accessory — controlled tempo'),
-            mkEx('ex-059', 'Plank', 'Core', 3, 30, 60, 60),
-          ]),
-          mkDay(1, 2, 'Bench Press Day', [
-            mkEx('ex-001', 'Bench Press', 'Chest', 3, 5, 5, 180, 'Week 1: 65/75/85%. AMRAP on final set.'),
-            mkEx('ex-001', 'Bench Press', 'Chest', 5, 5, 10, 120, 'FSL — 5×5 @ 65%'),
-            mkEx('ex-010', 'Barbell Row', 'Back', 5, 10, 10, 90, 'Antagonist work — same volume as bench'),
-            mkEx('ex-027', 'Barbell Curl', 'Biceps', 3, 10, 15, 60),
-          ]),
-          mkDay(1, 3, 'Deadlift Day', [
-            mkEx('ex-011', 'Deadlift', 'Back', 3, 5, 5, 180, 'Week 1: 65/75/85%. Pull hard on the AMRAP set.'),
-            mkEx('ex-011', 'Deadlift', 'Back', 5, 5, 8, 120, 'FSL 5×5'),
-            mkEx('ex-041', 'Squat', 'Legs', 3, 10, 10, 90, 'Goblet or safety squat accessory'),
-            mkEx('ex-061', 'Hanging Leg Raise', 'Core', 3, 10, 15, 60),
-          ]),
-          mkDay(1, 4, 'OHP Day', [
-            mkEx('ex-019', 'Overhead Press', 'Shoulders', 3, 5, 5, 180, 'Week 1: 65/75/85%'),
-            mkEx('ex-019', 'Overhead Press', 'Shoulders', 5, 5, 10, 120, 'FSL 5×5'),
-            mkEx('ex-012', 'Pull Up', 'Back', 5, 10, 10, 90, 'Chin-ups or pull-ups — match OHP volume'),
-            mkEx('ex-025', 'Rear Delt Flye', 'Shoulders', 3, 15, 20, 60),
-          ]),
-        ],
-      },
-    },
-
-    // ── 3. Starting Strength ───────────────────────────────────
-    {
-      id: 'tpl-ss', coach_id: ME, name: 'Starting Strength',
-      description: 'Mark Rippetoe\'s linear progression program for true beginners. Three full-body sessions per week alternating between two workouts. Add weight every session.',
-      duration_weeks: 12, days_per_week: 3, goal: 'strength', difficulty: 'beginner', is_public: false, created_at: now,
-      structure: {
-        notes: 'Add 2.5 kg to upper body lifts and 5 kg to lower body lifts every session. Train Mon/Wed/Fri. Alternate A and B workouts.',
-        workouts: [
-          mkDay(1, 1, 'Workout A', [
-            mkEx('ex-041', 'Squat', 'Legs', 3, 5, 5, 180, 'The cornerstone of the program. 3×5 across.'),
-            mkEx('ex-001', 'Bench Press', 'Chest', 3, 5, 5, 120),
-            mkEx('ex-011', 'Deadlift', 'Back', 1, 5, 5, 180, 'Heavy single working set'),
-          ]),
-          mkDay(1, 3, 'Workout B', [
-            mkEx('ex-041', 'Squat', 'Legs', 3, 5, 5, 180),
-            mkEx('ex-019', 'Overhead Press', 'Shoulders', 3, 5, 5, 120),
-            mkEx('ex-010', 'Barbell Row', 'Back', 3, 5, 5, 120),
-          ]),
-          mkDay(1, 5, 'Workout A', [
-            mkEx('ex-041', 'Squat', 'Legs', 3, 5, 5, 180),
-            mkEx('ex-001', 'Bench Press', 'Chest', 3, 5, 5, 120),
-            mkEx('ex-011', 'Deadlift', 'Back', 1, 5, 5, 180),
-          ]),
-        ],
-      },
-    },
-
-    // ── 4. PHUL ────────────────────────────────────────────────
-    {
-      id: 'tpl-phul', coach_id: ME, name: 'PHUL — Power Hypertrophy Upper/Lower',
-      description: 'Brandon Lilly\'s Power Hypertrophy Upper Lower split. 4 days combining powerlifting and bodybuilding. Two power sessions focus on strength in the 3–5 rep range; two hypertrophy sessions target 8–15 reps.',
-      duration_weeks: 8, days_per_week: 4, goal: 'hypertrophy', difficulty: 'intermediate', is_public: false, created_at: now,
-      structure: {
-        notes: 'Power days: heavy, fewer reps, longer rest. Hypertrophy days: moderate weight, higher reps, shorter rest.',
-        workouts: [
-          mkDay(1, 1, 'Upper Power', [
-            mkEx('ex-001', 'Bench Press', 'Chest', 3, 3, 5, 180),
-            mkEx('ex-010', 'Barbell Row', 'Back', 3, 3, 5, 180),
-            mkEx('ex-019', 'Overhead Press', 'Shoulders', 3, 3, 5, 150),
-            mkEx('ex-012', 'Pull Up', 'Back', 3, 4, 6, 120),
-            mkEx('ex-027', 'Barbell Curl', 'Biceps', 2, 6, 8, 90),
-            mkEx('ex-035', 'Skull Crusher', 'Triceps', 2, 6, 8, 90),
-          ]),
-          mkDay(1, 2, 'Lower Power', [
-            mkEx('ex-041', 'Squat', 'Legs', 3, 3, 5, 180),
-            mkEx('ex-011', 'Deadlift', 'Back', 3, 3, 5, 180),
-            mkEx('ex-044', 'Bulgarian Split Squat', 'Legs', 2, 5, 8, 120),
-            mkEx('ex-049', 'Calf Raise', 'Legs', 2, 10, 12, 60),
-          ]),
-          mkDay(1, 4, 'Upper Hypertrophy', [
-            mkEx('ex-005', 'Incline Dumbbell Press', 'Chest', 4, 8, 12, 90),
-            mkEx('ex-007', 'Cable Crossover', 'Chest', 3, 12, 15, 60),
-            mkEx('ex-014', 'Lat Pulldown', 'Back', 4, 8, 12, 90),
-            mkEx('ex-015', 'Seated Cable Row', 'Back', 3, 10, 14, 90),
-            mkEx('ex-022', 'Lateral Raise', 'Shoulders', 4, 12, 20, 60),
-            mkEx('ex-031', 'Cable Curl', 'Biceps', 3, 10, 14, 60),
-            mkEx('ex-034', 'Tricep Pushdown', 'Triceps', 3, 10, 14, 60),
-          ]),
-          mkDay(1, 5, 'Lower Hypertrophy', [
-            mkEx('ex-041', 'Squat', 'Legs', 4, 8, 12, 120),
-            mkEx('ex-048', 'Romanian Deadlift', 'Legs', 3, 10, 14, 90),
-            mkEx('ex-043', 'Leg Press', 'Legs', 4, 10, 15, 90),
-            mkEx('ex-051', 'Hip Thrust', 'Glutes', 3, 12, 15, 90),
-            mkEx('ex-049', 'Calf Raise', 'Legs', 4, 15, 20, 60),
-          ]),
-        ],
-      },
-    },
-
-    // ── 5. Female Physique Builder ─────────────────────────────
-    {
-      id: 'tpl-female', coach_id: ME, name: 'Female Physique Builder',
-      description: 'Glute-focused hypertrophy program designed for women. Prioritises hip dominant movements, upper body pulling, and moderate push volume. 4 days/week with high volume on legs and glutes.',
-      duration_weeks: 10, days_per_week: 4, goal: 'hypertrophy', difficulty: 'intermediate', is_public: false, created_at: now,
-      structure: {
-        notes: 'Glutes are prioritised on every session. Progress loads on hip thrusts and squats each week.',
-        workouts: [
-          mkDay(1, 1, 'Lower – Glute Focus', [
-            mkEx('ex-051', 'Hip Thrust', 'Glutes', 4, 8, 12, 120, 'Squeeze hard at the top'),
-            mkEx('ex-041', 'Squat', 'Legs', 3, 8, 12, 120),
-            mkEx('ex-044', 'Bulgarian Split Squat', 'Legs', 3, 10, 14, 90),
-            mkEx('ex-048', 'Romanian Deadlift', 'Legs', 3, 10, 14, 90),
-            mkEx('ex-052', 'Glute Bridge', 'Glutes', 3, 15, 20, 60),
-            mkEx('ex-049', 'Calf Raise', 'Legs', 3, 15, 20, 60),
-          ]),
-          mkDay(1, 2, 'Upper – Pull Focus', [
-            mkEx('ex-014', 'Lat Pulldown', 'Back', 4, 10, 14, 90),
-            mkEx('ex-015', 'Seated Cable Row', 'Back', 3, 10, 14, 90),
-            mkEx('ex-016', 'Single Arm Dumbbell Row', 'Back', 3, 10, 14, 90),
-            mkEx('ex-018', 'Face Pull', 'Shoulders', 4, 15, 20, 60),
-            mkEx('ex-029', 'Hammer Curl', 'Biceps', 3, 12, 16, 60),
-            mkEx('ex-022', 'Lateral Raise', 'Shoulders', 3, 15, 20, 60),
-          ]),
-          mkDay(1, 4, 'Lower – Quad Focus', [
-            mkEx('ex-041', 'Squat', 'Legs', 4, 8, 12, 120),
-            mkEx('ex-043', 'Leg Press', 'Legs', 4, 12, 15, 90),
-            mkEx('ex-051', 'Hip Thrust', 'Glutes', 3, 12, 15, 90),
-            mkEx('ex-045', 'Walking Lunges', 'Legs', 3, 12, 16, 90),
-            mkEx('ex-056', 'Resistance Band Clamshell', 'Glutes', 3, 20, 25, 60),
-          ]),
-          mkDay(1, 5, 'Upper – Push & Accessory', [
-            mkEx('ex-005', 'Incline Dumbbell Press', 'Chest', 3, 10, 14, 90),
-            mkEx('ex-020', 'Dumbbell Shoulder Press', 'Shoulders', 3, 10, 14, 90),
-            mkEx('ex-022', 'Lateral Raise', 'Shoulders', 4, 15, 20, 60),
-            mkEx('ex-034', 'Tricep Pushdown', 'Triceps', 3, 12, 16, 60),
-            mkEx('ex-025', 'Rear Delt Flye', 'Shoulders', 3, 15, 20, 60),
-            mkEx('ex-059', 'Plank', 'Core', 3, 30, 45, 60),
-          ]),
-        ],
-      },
-    },
-
-    // ── 6. Full Body Beginner ──────────────────────────────────
-    {
-      id: 'tpl-beginner', coach_id: ME, name: 'Full Body Beginner — 3 Days',
-      description: 'Simple, effective 3-day full body routine for complete beginners. Each session covers all major movement patterns with enough volume to drive progress without overwhelming recovery.',
-      duration_weeks: 8, days_per_week: 3, goal: 'general_fitness', difficulty: 'beginner', is_public: false, created_at: now,
-      structure: {
-        notes: 'Rest at least one day between sessions. Focus on form before adding weight. Add 2.5 kg per session on lower body, 1.25 kg on upper body.',
-        workouts: [
-          mkDay(1, 1, 'Full Body A', [
-            mkEx('ex-050', 'Goblet Squat', 'Legs', 3, 8, 12, 90, 'Great for learning squat pattern'),
-            mkEx('ex-001', 'Bench Press', 'Chest', 3, 8, 10, 90),
-            mkEx('ex-011', 'Deadlift', 'Back', 3, 6, 8, 120),
-            mkEx('ex-014', 'Lat Pulldown', 'Back', 3, 10, 12, 90),
-            mkEx('ex-059', 'Plank', 'Core', 3, 20, 30, 60),
-          ]),
-          mkDay(1, 3, 'Full Body B', [
-            mkEx('ex-043', 'Leg Press', 'Legs', 3, 10, 12, 90),
-            mkEx('ex-019', 'Overhead Press', 'Shoulders', 3, 8, 10, 90),
-            mkEx('ex-010', 'Barbell Row', 'Back', 3, 8, 10, 90),
-            mkEx('ex-028', 'Dumbbell Curl', 'Biceps', 3, 10, 14, 60),
-            mkEx('ex-034', 'Tricep Pushdown', 'Triceps', 3, 10, 14, 60),
-          ]),
-          mkDay(1, 5, 'Full Body A', [
-            mkEx('ex-050', 'Goblet Squat', 'Legs', 3, 8, 12, 90),
-            mkEx('ex-001', 'Bench Press', 'Chest', 3, 8, 10, 90),
-            mkEx('ex-011', 'Deadlift', 'Back', 3, 6, 8, 120),
-            mkEx('ex-014', 'Lat Pulldown', 'Back', 3, 10, 12, 90),
-            mkEx('ex-059', 'Plank', 'Core', 3, 20, 30, 60),
-          ]),
-        ],
-      },
-    },
-
-    // ── 7. Marketplace: Lean & Strong ─────────────────────────
-    {
-      id: 'tpl-lean-strong', coach_id: 'coach-alex', name: 'Lean & Strong — 12-Week Recomp',
-      description: 'A body recomposition program combining moderate strength work with metabolic conditioning finishers. Designed to simultaneously build muscle and reduce body fat over 12 weeks.',
-      duration_weeks: 12, days_per_week: 5, goal: 'hypertrophy', difficulty: 'intermediate', is_public: true, created_at: now,
-      author_name: 'Alex Turner',
-      structure: {
-        notes: 'Cardio finishers: 10 min HIIT or 20 min steady state after each session.',
-        workouts: [
-          mkDay(1, 1, 'Upper Push', [
-            mkEx('ex-001', 'Bench Press', 'Chest', 4, 6, 8, 120),
-            mkEx('ex-002', 'Incline Bench Press', 'Chest', 3, 8, 12, 90),
-            mkEx('ex-019', 'Overhead Press', 'Shoulders', 3, 8, 12, 90),
-            mkEx('ex-022', 'Lateral Raise', 'Shoulders', 4, 15, 20, 60),
-            mkEx('ex-035', 'Skull Crusher', 'Triceps', 3, 10, 14, 60),
-          ]),
-          mkDay(1, 2, 'Lower', [
-            mkEx('ex-041', 'Squat', 'Legs', 4, 6, 8, 150),
-            mkEx('ex-048', 'Romanian Deadlift', 'Legs', 3, 10, 14, 90),
-            mkEx('ex-043', 'Leg Press', 'Legs', 3, 12, 15, 90),
-            mkEx('ex-051', 'Hip Thrust', 'Glutes', 3, 12, 15, 90),
-            mkEx('ex-049', 'Calf Raise', 'Legs', 4, 15, 20, 60),
-          ]),
-          mkDay(1, 3, 'Upper Pull', [
-            mkEx('ex-011', 'Deadlift', 'Back', 3, 5, 5, 180),
-            mkEx('ex-012', 'Pull Up', 'Back', 4, 6, 10, 90),
-            mkEx('ex-015', 'Seated Cable Row', 'Back', 3, 10, 14, 90),
-            mkEx('ex-027', 'Barbell Curl', 'Biceps', 3, 10, 14, 60),
-            mkEx('ex-018', 'Face Pull', 'Shoulders', 4, 15, 20, 60),
-          ]),
-        ],
-      },
-    },
-
-    // ── 8. Marketplace: Powerlifting Base ─────────────────────
-    {
-      id: 'tpl-pl-base', coach_id: 'coach-jordan', name: 'Powerlifting Foundation 12 Weeks',
-      description: 'A 12-week powerlifting peaking program built around the competition squat, bench, and deadlift. Progresses from 75% to 97% of 1RM across the block with volume decreasing as intensity rises.',
-      duration_weeks: 12, days_per_week: 4, goal: 'strength', difficulty: 'advanced', is_public: true, created_at: now,
-      author_name: 'Jordan Smith',
-      structure: {
-        notes: 'Use IPF-approved technique. All percentages based on your current competition 1RM. Week 12 is a mock meet.',
-        workouts: [
-          mkDay(1, 1, 'Squat & Accessories', [
-            mkEx('ex-041', 'Squat', 'Legs', 5, 5, 5, 180, 'Competition stance. Belt from set 2.'),
-            mkEx('ex-048', 'Romanian Deadlift', 'Legs', 3, 6, 8, 120),
-            mkEx('ex-044', 'Bulgarian Split Squat', 'Legs', 2, 8, 10, 90),
-            mkEx('ex-059', 'Plank', 'Core', 3, 45, 60, 60),
-          ]),
-          mkDay(1, 2, 'Bench & Accessories', [
-            mkEx('ex-001', 'Bench Press', 'Chest', 5, 5, 5, 180, 'Pause last rep of each set'),
-            mkEx('ex-036', 'Close Grip Bench Press', 'Triceps', 3, 6, 8, 120),
-            mkEx('ex-010', 'Barbell Row', 'Back', 4, 6, 8, 90),
-            mkEx('ex-018', 'Face Pull', 'Shoulders', 3, 15, 20, 60),
-          ]),
-          mkDay(1, 4, 'Deadlift & Accessories', [
-            mkEx('ex-011', 'Deadlift', 'Back', 5, 3, 5, 180, 'Competition grip. Chalk allowed.'),
-            mkEx('ex-041', 'Squat', 'Legs', 3, 3, 5, 150, 'Speed squats — 75% of squat max'),
-            mkEx('ex-061', 'Hanging Leg Raise', 'Core', 3, 10, 15, 60),
-          ]),
-          mkDay(1, 6, 'Upper Accessory Day', [
-            mkEx('ex-001', 'Bench Press', 'Chest', 3, 8, 10, 120),
-            mkEx('ex-019', 'Overhead Press', 'Shoulders', 3, 8, 10, 90),
-            mkEx('ex-014', 'Lat Pulldown', 'Back', 4, 10, 12, 90),
-            mkEx('ex-012', 'Pull Up', 'Back', 3, 6, 10, 90),
-          ]),
-        ],
-      },
-    },
-  ]
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -542,7 +215,7 @@ function PreviewModal({
 
 // ─── Quick Assign Modal ───────────────────────────────────────────────────────
 
-type DemoClient = { id: string; name: string }
+type Client = { id: string; name: string }
 
 function QuickAssignModal({
   template,
@@ -551,7 +224,7 @@ function QuickAssignModal({
   onAssign,
 }: {
   template: ProgramTemplate
-  clients: DemoClient[]
+  clients: Client[]
   onClose: () => void
   onAssign: (clientId: string, startDate: string, programName: string) => Promise<void>
 }) {
@@ -1010,9 +683,9 @@ function TemplateCard({
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function ProgramTemplatesTab() {
-  const isDemo = useIsDemo()
-
   const [templates, setTemplates] = useState<ProgramTemplate[]>([])
+  const [clients, setClients] = useState<Client[]>([])
+  const [userId, setUserId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [toast, setToast] = useState<{ msg: string; ok?: boolean } | null>(null)
 
@@ -1030,30 +703,28 @@ export default function ProgramTemplatesTab() {
   const [showImport, setShowImport]     = useState(false)
   const [showCreate, setShowCreate]     = useState(false)
 
-  const demoCoachId = 'demo-coach-id'
-
-  // Demo clients
-  const clients = useMemo<DemoClient[]>(() => {
-    if (isDemo) {
-      return (DEMO_CLIENTS as unknown as { id: string; name: string }[]).map((c) => ({ id: c.id, name: c.name }))
-    }
-    return []
-  }, [isDemo])
+  // Load clients + user id
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return
+      setUserId(user.id)
+      supabase.from('profiles').select('id, name').eq('coach_id', user.id).eq('role', 'client')
+        .then(({ data }) => setClients((data ?? []).map((c: { id: string; name: string | null }) => ({ id: c.id, name: c.name ?? '' }))))
+    })
+  }, [])
 
   // Load templates
-  useEffect(() => {
-    if (isDemo) {
-      setTemplates(buildDemoTemplates())
-      setLoading(false)
-      return
-    }
+  const loadTemplates = useCallback(() => {
     const params = new URLSearchParams()
     if (view === 'marketplace') params.set('is_public', 'true')
     fetch(`/api/program-templates?${params}`)
       .then((r) => r.json())
       .then((d) => { setTemplates(d.templates ?? []); setLoading(false) })
       .catch(() => setLoading(false))
-  }, [isDemo, view])
+  }, [view])
+
+  useEffect(() => { loadTemplates() }, [loadTemplates])
 
   const showToast = (msg: string, ok = true) => {
     setToast({ msg, ok })
@@ -1063,7 +734,6 @@ export default function ProgramTemplatesTab() {
   // Filtered list
   const filtered = useMemo(() => {
     return templates.filter((t) => {
-      if (view === 'mine' && t.coach_id !== demoCoachId && isDemo) return false
       if (view === 'marketplace' && !t.is_public) return false
       if (search && !t.name.toLowerCase().includes(search.toLowerCase()) && !(t.description ?? '').toLowerCase().includes(search.toLowerCase())) return false
       if (filterGoal && t.goal !== filterGoal) return false
@@ -1075,26 +745,11 @@ export default function ProgramTemplatesTab() {
       }
       return true
     })
-  }, [templates, view, search, filterGoal, filterDiff, filterDuration, isDemo])
+  }, [templates, view, search, filterGoal, filterDiff, filterDuration])
 
   // ── Handlers ───────────────────────────────────────────────────
 
   const handleDuplicate = async (template: ProgramTemplate, name: string) => {
-    if (isDemo) {
-      const copy: ProgramTemplate = {
-        ...template,
-        id: `tpl-copy-${Date.now()}`,
-        name,
-        coach_id: demoCoachId,
-        is_public: false,
-        created_at: new Date().toISOString(),
-        author_name: undefined,
-      }
-      setTemplates((prev) => [copy, ...prev])
-      setDuplicateTpl(null)
-      showToast(`"${name}" added to your templates`)
-      return
-    }
     const res = await fetch(`/api/program-templates/${template.id}/duplicate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1111,11 +766,6 @@ export default function ProgramTemplatesTab() {
   }
 
   const handleQuickAssign = async (template: ProgramTemplate, clientId: string, startDate: string, programName: string) => {
-    if (isDemo) {
-      setAssignTpl(null)
-      showToast(`Program assigned to ${clients.find((c) => c.id === clientId)?.name ?? 'client'} — starting ${startDate}`)
-      return
-    }
     const res = await fetch(`/api/program-templates/${template.id}/assign`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1131,43 +781,17 @@ export default function ProgramTemplatesTab() {
 
   const handleDelete = async (template: ProgramTemplate) => {
     if (!confirm(`Delete "${template.name}"? This cannot be undone.`)) return
-    if (isDemo) {
-      setTemplates((prev) => prev.filter((t) => t.id !== template.id))
-      showToast(`"${template.name}" deleted`)
-      return
-    }
     await fetch(`/api/program-templates/${template.id}`, { method: 'DELETE' })
     setTemplates((prev) => prev.filter((t) => t.id !== template.id))
     showToast(`"${template.name}" deleted`)
   }
 
   const handleExport = async (template: ProgramTemplate) => {
-    if (isDemo) {
-      const payload = {
-        _export_meta: { version: '1.0', exported_at: new Date().toISOString(), source: 'openclaw' },
-        name: template.name, description: template.description,
-        duration_weeks: template.duration_weeks, days_per_week: template.days_per_week,
-        goal: template.goal, difficulty: template.difficulty, structure: template.structure,
-      }
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
-      const a = document.createElement('a')
-      a.href = URL.createObjectURL(blob)
-      a.download = `${template.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_template.json`
-      a.click()
-      URL.revokeObjectURL(a.href)
-      showToast('Template exported')
-      return
-    }
     window.open(`/api/program-templates/${template.id}/export`, '_blank')
   }
 
   const handleTogglePublic = async (template: ProgramTemplate) => {
     const next = !template.is_public
-    if (isDemo) {
-      setTemplates((prev) => prev.map((t) => t.id === template.id ? { ...t, is_public: next } : t))
-      showToast(next ? 'Published to marketplace' : 'Unpublished from marketplace')
-      return
-    }
     await fetch(`/api/program-templates/${template.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -1178,30 +802,6 @@ export default function ProgramTemplatesTab() {
   }
 
   const handleImport = async (json: string) => {
-    if (isDemo) {
-      try {
-        const parsed = JSON.parse(json) as Partial<ProgramTemplate>
-        const tpl: ProgramTemplate = {
-          id: `tpl-import-${Date.now()}`,
-          coach_id: demoCoachId,
-          name: parsed.name ?? 'Imported Template',
-          description: parsed.description ?? null,
-          duration_weeks: parsed.duration_weeks ?? 8,
-          days_per_week: parsed.days_per_week ?? 4,
-          goal: parsed.goal ?? 'general_fitness',
-          difficulty: parsed.difficulty ?? 'intermediate',
-          is_public: false,
-          structure: parsed.structure ?? { workouts: [] },
-          created_at: new Date().toISOString(),
-        }
-        setTemplates((prev) => [tpl, ...prev])
-        setShowImport(false)
-        showToast('Template imported successfully')
-      } catch {
-        showToast('Import failed — invalid JSON', false)
-      }
-      return
-    }
     const res = await fetch('/api/program-templates/import', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1218,25 +818,6 @@ export default function ProgramTemplatesTab() {
   }
 
   const handleCreate = async (data: Partial<ProgramTemplate>) => {
-    if (isDemo) {
-      const tpl: ProgramTemplate = {
-        id: `tpl-new-${Date.now()}`,
-        coach_id: demoCoachId,
-        name: data.name ?? 'New Template',
-        description: data.description ?? null,
-        duration_weeks: data.duration_weeks ?? 8,
-        days_per_week: data.days_per_week ?? 4,
-        goal: data.goal ?? 'hypertrophy',
-        difficulty: data.difficulty ?? 'intermediate',
-        is_public: false,
-        structure: { workouts: [] },
-        created_at: new Date().toISOString(),
-      }
-      setTemplates((prev) => [tpl, ...prev])
-      setShowCreate(false)
-      showToast(`"${tpl.name}" created`)
-      return
-    }
     const res = await fetch('/api/program-templates', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1390,7 +971,7 @@ export default function ProgramTemplatesTab() {
               <TemplateCard
                 key={t.id}
                 template={t}
-                isOwn={t.coach_id === demoCoachId || (!isDemo && true)}
+                isOwn={view === 'mine' || t.coach_id === userId}
                 onPreview={() => setPreviewTpl(t)}
                 onQuickAssign={() => setAssignTpl(t)}
                 onDuplicate={() => setDuplicateTpl(t)}

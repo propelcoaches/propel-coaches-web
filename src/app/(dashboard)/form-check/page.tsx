@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { toast } from '@/lib/toast';
 
 interface FormCheck {
   id: string;
@@ -31,7 +32,8 @@ interface AiAnalysis {
 }
 
 export default function FormCheckPage() {
-  const supabase = createClient();
+  // Stable client instance — avoid recreating on every render
+  const supabase = useMemo(() => createClient(), []);
 
   const [formChecks, setFormChecks] = useState<FormCheck[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,9 +44,12 @@ export default function FormCheckPage() {
 
   const fetchFormChecks = useCallback(async () => {
     setLoading(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setLoading(false); return; }
     const { data } = await supabase
       .from('form_checks')
       .select('*, client:profiles!form_checks_client_id_fkey(full_name, avatar_url)')
+      .eq('coach_id', user.id)
       .order('created_at', { ascending: false })
       .limit(50);
     if (data) setFormChecks(data as FormCheck[]);
@@ -90,7 +95,7 @@ export default function FormCheckPage() {
         }
       }
     } catch {
-      alert('Failed to analyze');
+      toast.error('Failed to analyze form check');
     } finally {
       setAnalyzing(null);
     }

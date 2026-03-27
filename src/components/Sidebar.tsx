@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { exitDemo } from '@/lib/demo/useDemoMode'
 import { useTheme } from '@/contexts/ThemeContext'
 import clsx from 'clsx'
 import {
@@ -54,8 +53,9 @@ const NAV_SECTIONS: NavSection[] = [
     label: 'CLIENTS',
     items: [
       { href: '/clients', label: 'Clients', icon: Users },
-      { href: '/messages', label: 'Messages', icon: MessageSquare },
       { href: '/check-ins', label: 'Check-ins', icon: ClipboardCheck },
+      { href: '/tasks', label: 'Tasks', icon: ListTodo },
+      { href: '/messages', label: 'Messages', icon: MessageSquare },
     ],
   },
   {
@@ -76,7 +76,6 @@ const NAV_SECTIONS: NavSection[] = [
       { href: '/video-library', label: 'Video Library', icon: Film },
       { href: '/habits', label: 'Habits', icon: ListTodo },
       { href: '/resources', label: 'Resources', icon: BookOpen },
-      { href: '/tasks', label: 'Tasks', icon: ListTodo },
     ],
   },
   {
@@ -109,16 +108,12 @@ const NAV_SECTIONS: NavSection[] = [
   },
 ]
 
-export default function Sidebar({ userEmail, isDemo }: { userEmail?: string | null; isDemo?: boolean }) {
+export default function Sidebar({ userEmail }: { userEmail?: string | null }) {
   const pathname = usePathname()
   const router = useRouter()
   const { theme, toggleTheme } = useTheme()
 
   async function handleLogout() {
-    if (isDemo) {
-      exitDemo()
-      return
-    }
     const supabase = createClient()
     await supabase.auth.signOut()
     router.push('/login')

@@ -4,12 +4,16 @@ import OpenAI from 'openai';
 import { createClient } from '@supabase/supabase-js';
 import { jwtDecode } from 'jwt-decode';
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || 'sk-placeholder' });
+const openaiKey = process.env.OPENAI_API_KEY
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder'
-);
+if (!openaiKey || !supabaseUrl || !supabaseKey) {
+  throw new Error('Missing required environment variables')
+}
+
+const openai = new OpenAI({ apiKey: openaiKey });
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 interface FoodItem {
   name: string;

@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
+import { sendAiCoachSummaryEmail } from '@/lib/email'
 
 export const dynamic = 'force-dynamic'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder'
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+if (!supabaseUrl || !serviceRoleKey) {
+  throw new Error('Missing Supabase environment variables')
+}
 const anthropicApiKey = process.env.ANTHROPIC_API_KEY!
 const webhookSecret = process.env.AI_WEBHOOK_SECRET!
 
@@ -187,7 +192,16 @@ ${conversationText}`
     // Non-fatal — summary is saved, just log the error
   }
 
-  // TODO: Send email notification to coach with full summary
+  // 9. Send email notification to coach
+  const coachEmailResult = await admin
+    .from('profiles')
+    .select('email')
+    .eq('id', session.coach_id)
+    .single()
+
+  if (coachEmailResult.data?.email) {
+    await sendAiCoachSummaryEmail(coachEmailResult.data.email, coachName, clientName, aiSummary)
+  }
 
   // 10. Return success
   return NextResponse.json({ success: true, summary: aiSummary })

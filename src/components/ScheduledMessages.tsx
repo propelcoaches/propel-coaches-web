@@ -30,9 +30,7 @@ interface ScheduledMessage {
 interface Client {
   id: string;
   email: string;
-  user_metadata?: {
-    full_name?: string;
-  };
+  full_name: string | null;
 }
 
 export default function ScheduledMessages() {
@@ -44,6 +42,7 @@ export default function ScheduledMessages() {
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'pending' | 'sent'>('all');
 
   const [formData, setFormData] = useState({
@@ -74,9 +73,12 @@ export default function ScheduledMessages() {
   const fetchMessages = async () => {
     try {
       setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
       const { data, error: queryError } = await supabase
         .from('scheduled_messages')
         .select('*')
+        .eq('coach_id', user.id)
         .order('scheduled_at', { ascending: false });
 
       if (queryError) throw queryError;
@@ -91,19 +93,16 @@ export default function ScheduledMessages() {
 
   const fetchClients = async () => {
     try {
-      const { data, error: queryError } = await supabase.auth.admin.listUsers();
-
-      if (queryError) throw queryError;
-
-      const clientsList = (data?.users || []).map((user) => ({
-        id: user.id,
-        email: user.email || '',
-        user_metadata: user.user_metadata,
-      }));
-
-      setClients(clientsList);
-    } catch (err) {
-      console.error('Failed to load clients:', err);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .eq('coach_id', user.id)
+        .eq('role', 'client');
+      setClients(data ?? []);
+    } catch {
+      // non-fatal
     }
   };
 
@@ -169,10 +168,13 @@ export default function ScheduledMessages() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Delete this scheduled message?')) return;
-
+    if (pendingDeleteId !== id) {
+      setPendingDeleteId(id);
+      return;
+    }
     try {
       setDeleting(id);
+      setPendingDeleteId(null);
       const { error: deleteError } = await supabase
         .from('scheduled_messages')
         .update({ status: 'canceled' })
@@ -252,7 +254,7 @@ export default function ScheduledMessages() {
   const getClientName = (clientId: string | null) => {
     if (!clientId) return 'All Clients (Broadcast)';
     const client = clients.find((c) => c.id === clientId);
-    return client?.user_metadata?.full_name || client?.email || 'Unknown';
+    return client?.full_name || client?.email || 'Unknown';
   };
 
   const filteredMessages = messages.filter((msg) => {
@@ -387,7 +389,7 @@ export default function ScheduledMessages() {
                     <option value="">Select a client...</option>
                     {clients.map((client) => (
                       <option key={client.id} value={client.id}>
-                        {client.user_metadata?.full_name || client.email}
+                        {client.full_name || client.email}
                       </option>
                     ))}
                   </select>
@@ -531,13 +533,33 @@ export default function ScheduledMessages() {
                 </div>
 
                 {message.status === 'pending' && (
-                  <button
-                    onClick={() => handleDelete(message.id)}
-                    disabled={deleting === message.id}
-                    className="flex-shrink-0 rounded-lg p-2 text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50"
-                  >
-                    <Trash2 className="h-5 w-5" />
-                  </button>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {pendingDeleteId === message.id ? (
+                      <>
+                        <button
+                          onClick={() => setPendingDeleteId(null)}
+                          className="text-xs px-2 py-1 rounded text-slate-500 hover:bg-slate-100 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => handleDelete(message.id)}
+                          disabled={deleting === message.id}
+                          className="text-xs px-2 py-1 rounded bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-50"
+                        >
+                          Confirm
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => handleDelete(message.id)}
+                        disabled={deleting === message.id}
+                        className="rounded-lg p-2 text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
             </div>

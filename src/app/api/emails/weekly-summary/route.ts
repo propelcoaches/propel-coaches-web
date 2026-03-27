@@ -1,15 +1,17 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { Resend } from 'resend';
+import { sendWeeklySummaryEmail } from '@/lib/email';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error('Missing Supabase environment variables')
+}
 
 // Use service role for cron jobs
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder'
-);
-
-const resend = new Resend(process.env.RESEND_API_KEY || 're_placeholder');
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // This endpoint is called by a cron job every Sunday at 8am
 // Configure in vercel.json: { "crons": [{ "path": "/api/emails/weekly-summary", "schedule": "0 8 * * 0" }] }
@@ -57,15 +59,14 @@ export async function POST(req: NextRequest) {
         }
 
         const html = buildEmailHtml(client.full_name, coachName, summary);
+        const subject = `Your Week in Review — ${summary.workoutsCompleted} workouts, ${summary.streakDays} day streak 💪`;
 
-        await resend.emails.send({
-          from: 'Propel <noreply@propelcoach.com>',
-          to: client.email,
-          subject: `Your Week in Review — ${summary.workoutsCompleted} workouts, ${summary.streakDays} day streak 💪`,
-          html,
-        });
-
-        sent++;
+        const ok = await sendWeeklySummaryEmail(client.email, client.full_name, subject, html);
+        if (ok) {
+          sent++;
+        } else {
+          failed++;
+        }
       } catch (err) {
         console.error(`Failed to send email to ${client.email}:`, err);
         failed++;
@@ -295,7 +296,7 @@ function buildEmailHtml(clientName: string, coachName: string, summary: WeeklySu
 
     <!-- CTA -->
     <div style="text-align:center;margin-bottom:24px;">
-      <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://app.propelcoach.com'}" style="display:inline-block;background:#4f46e5;color:white;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:600;font-size:14px;">
+      <a href="${process.env.NEXT_PUBLIC_APP_URL }" style="display:inline-block;background:#4f46e5;color:white;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:600;font-size:14px;">
         Open Propel App
       </a>
     </div>

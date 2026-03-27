@@ -15,14 +15,14 @@ export async function DELETE(
     }
 
     const supabaseAdmin = createAdminClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
-      process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder'
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
     // Verify this client belongs to the coach
     const { data: profile } = await supabaseAdmin
       .from('profiles')
-      .select('id, coach_id')
+      .select('id, coach_id, email')
       .eq('id', params.clientId)
       .single()
 
@@ -32,7 +32,10 @@ export async function DELETE(
 
     // Delete profile and auth user
     await supabaseAdmin.from('profiles').delete().eq('id', params.clientId)
-    await supabaseAdmin.from('client_invitations').delete().eq('coach_id', user.id)
+    // Only delete invitations for this specific client, not all of the coach's invitations
+    await supabaseAdmin.from('client_invitations').delete()
+      .eq('coach_id', user.id)
+      .eq('invited_email', profile.email)
     await supabaseAdmin.auth.admin.deleteUser(params.clientId)
 
     return NextResponse.json({ success: true })

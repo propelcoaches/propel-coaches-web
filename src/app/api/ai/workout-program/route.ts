@@ -1,10 +1,11 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { cookies } from 'next/headers';
 import OpenAI from 'openai';
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || 'sk-placeholder' });
+const openaiKey = process.env.OPENAI_API_KEY
+if (!openaiKey) throw new Error('Missing OPENAI_API_KEY')
+const openai = new OpenAI({ apiKey: openaiKey });
 
 interface WorkoutProgramRequest {
   client_id: string;
@@ -72,6 +73,18 @@ export async function POST(req: NextRequest) {
 
     if (!client_id || !goal || !days_per_week) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    // Verify client belongs to this coach
+    const { data: clientCheck, error: clientCheckError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', client_id)
+      .eq('coach_id', user.id)
+      .single();
+
+    if (clientCheckError || !clientCheck) {
+      return NextResponse.json({ error: 'Client not found' }, { status: 403 });
     }
 
     // Build AI prompt

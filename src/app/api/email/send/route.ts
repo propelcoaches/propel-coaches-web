@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
 import {
   sendWelcomeEmail, sendDay3Email, sendDay7Email,
   sendTrialExpiring3DayEmail, sendTrialExpiring1DayEmail,
@@ -19,6 +20,12 @@ const emailHandlers: Record<string, (to: string, name: string, extra?: any) => P
 
 export async function POST(req: NextRequest) {
   try {
+    const supabase = createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { type, email, name, extra } = await req.json()
     const handler = emailHandlers[type]
     if (!handler) {

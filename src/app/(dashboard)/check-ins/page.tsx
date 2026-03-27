@@ -2,13 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { toast } from '@/lib/toast'
 import { CheckIn, Profile } from '@/lib/types'
 import { format, startOfWeek, isSameWeek } from 'date-fns'
 import { CheckSquare, ChevronDown, ChevronUp, Check, Camera, Maximize2, Play } from 'lucide-react'
 import clsx from 'clsx'
 import Image from 'next/image'
-import { useIsDemo } from '@/lib/demo/useDemoMode'
-import { DEMO_CLIENTS, DEMO_CHECK_INS } from '@/lib/demo/mockData'
 
 type CheckInWithClient = CheckIn & { client?: Profile }
 
@@ -32,7 +31,6 @@ function ScoreBadge({ value, label }: { value: number | null; label: string }) {
 }
 
 export default function CheckInsPage() {
-  const isDemo = useIsDemo()
   const [checkIns, setCheckIns] = useState<CheckInWithClient[]>([])
   const [clients, setClients] = useState<Profile[]>([])
   const [filterClient, setFilterClient] = useState<string>('all')
@@ -47,31 +45,10 @@ export default function CheckInsPage() {
   useEffect(() => {
     loadData()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDemo])
+  }, [])
 
   async function loadData() {
     setLoading(true)
-
-    if (isDemo) {
-      const demoClients = DEMO_CLIENTS as unknown as Profile[]
-      setClients(demoClients)
-      const enriched: CheckInWithClient[] = DEMO_CHECK_INS.map((ci) => ({
-        ...(ci as unknown as CheckIn),
-        client: demoClients.find((c) => c.id === ci.client_id),
-      }))
-      setCheckIns(enriched)
-      const drafts: Record<string, string> = {}
-      const loomDrafts: Record<string, string> = {}
-      enriched.forEach((ci) => {
-        drafts[ci.id] = ci.coach_comment ?? ''
-        loomDrafts[ci.id] = ci.loom_url ?? ''
-      })
-      setCommentDraft(drafts)
-      setLoomDraft(loomDrafts)
-      setLoading(false)
-      return
-    }
-
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
@@ -115,7 +92,6 @@ export default function CheckInsPage() {
   }
 
   async function saveComment(checkInId: string) {
-    if (isDemo) return
     setSavingComment(checkInId)
     const supabase = createClient()
     await supabase.from('check_ins').update({ coach_comment: commentDraft[checkInId] }).eq('id', checkInId)
@@ -124,10 +100,9 @@ export default function CheckInsPage() {
   }
 
   async function saveLoomUrl(checkInId: string) {
-    if (isDemo) return
     const url = loomDraft[checkInId]?.trim() ?? ''
     if (!url || !url.startsWith('https://www.loom.com/share/')) {
-      alert('Please enter a valid Loom URL starting with https://www.loom.com/share/')
+      toast.error('Please enter a valid Loom URL starting with https://www.loom.com/share/')
       return
     }
     setSavingLoom(checkInId)
@@ -170,16 +145,27 @@ export default function CheckInsPage() {
     )
   }
 
+  // Full-page empty state when there are no check-ins at all
+  if (checkIns.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-center px-6">
+        <div className="w-24 h-24 mb-6 rounded-2xl bg-surface border border-cb-border flex items-center justify-center">
+          <CheckSquare size={40} className="text-cb-border" />
+        </div>
+        <h2 className="text-xl font-bold text-cb-text mb-2">No check ins found</h2>
+        <p className="text-sm text-cb-muted max-w-sm">
+          You don&apos;t have any check-in submissions yet. Check back later!
+        </p>
+      </div>
+    )
+  }
+
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-cb-text">Check Ins</h1>
+          <h1 className="text-xl font-bold text-cb-text">Check Ins</h1>
           <p className="text-sm text-cb-muted mt-0.5">Review and respond to client check-ins</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <CheckSquare size={18} className="text-cb-muted" />
-          <span className="text-sm text-cb-secondary font-medium">{filtered.length} total</span>
         </div>
       </div>
 
@@ -217,9 +203,9 @@ export default function CheckInsPage() {
 
       {/* Grouped by week */}
       {filtered.length === 0 ? (
-        <div className="bg-surface border border-cb-border rounded-lg p-16 text-center">
-          <CheckSquare size={40} className="mx-auto text-cb-muted mb-3" />
-          <p className="text-cb-muted">No check-ins found.</p>
+        <div className="flex flex-col items-center justify-center py-24 text-center">
+          <CheckSquare size={32} className="text-cb-border mb-3" />
+          <p className="text-sm font-medium text-cb-secondary">No check-ins for this client yet.</p>
         </div>
       ) : (
         <div className="space-y-6">

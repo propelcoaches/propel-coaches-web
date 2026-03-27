@@ -10,7 +10,7 @@ import {
 } from 'lucide-react'
 import clsx from 'clsx'
 import { createClient } from '@/lib/supabase/client'
-import { useIsDemo } from '@/lib/demo/useDemoMode'
+import { toast } from '@/lib/toast'
 
 // ─────────────────────────────────────────────────────────────
 // Types
@@ -105,150 +105,6 @@ const CATEGORY_EMOJI: Record<string, string> = {
   push: '💪', pull: '🏋️', legs: '🦵', core: '🎯', cardio: '❤️', full_body: '⚡',
   Chest: '💪', Back: '🏋️', Shoulders: '💪', Biceps: '💪', Triceps: '💪',
   Legs: '🦵', Glutes: '🦵', Core: '🎯', Cardio: '❤️', 'Full Body': '⚡',
-}
-
-// ─────────────────────────────────────────────────────────────
-// Demo data
-// ─────────────────────────────────────────────────────────────
-
-function buildDemoProgram(): ActiveProgram {
-  const startedAt = new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString()
-
-  const ssId1 = 'ss-chest-a'
-  const ssId2 = 'ss-arms-b'
-
-  function ex(
-    id: string, exId: string, name: string, category: string,
-    sets: number, rMin: number, rMax: number, weight: number | null,
-    rest: number, notes: string | null, ssId: string | null = null,
-    idx: number = 0
-  ): SessionExercise {
-    return {
-      id, exercise_id: exId, order_index: idx, sets, reps_min: rMin, reps_max: rMax,
-      rep_range: rMin === rMax ? String(rMin) : `${rMin}–${rMax}`,
-      weight, weight_unit: 'kg', rest_seconds: rest, rpe: null, tempo: null, notes,
-      superset_id: ssId,
-      exercise: {
-        id: exId, name, category,
-        muscle_groups: [category], instructions: null,
-        demo_video_url: 'https://www.youtube.com/watch?v=rT7DgCr-3pg',
-        demo_image_url: null,
-      },
-    }
-  }
-
-  return {
-    id: 'demo-prog-1',
-    name: '4-Week Hypertrophy Block',
-    description: 'Build size and strength with progressive overload.',
-    goal: 'hypertrophy', difficulty: 'intermediate', duration_weeks: 4, days_per_week: 4,
-    status: 'active', started_at: startedAt, notes: 'Always prioritise form over load. 10-min warm-up before each session.',
-    workouts: [
-      // ── WEEK 1 ──
-      {
-        id: 'w1d1', week_number: 1, day_number: 1,
-        name: 'Upper Push',
-        notes: 'Focus on mind-muscle connection today. Keep elbows tucked on press movements.',
-        supersets: [{ id: ssId1, label: 'A' }, { id: ssId2, label: 'B' }],
-        exercises: [
-          ex('e1', 'ex-001', 'Bench Press',          'Chest',    4, 8,  12, 80,  120, 'Drive through the heels, arch into the bench.', null, 0),
-          ex('e2', 'ex-005', 'Incline Dumbbell Press','Chest',    4, 10, 12, 24,  90,  null, ssId1, 1),
-          ex('e3', 'ex-006', 'Dumbbell Flye',         'Chest',    3, 12, 15, 16,  90,  null, ssId1, 2),
-          ex('e4', 'ex-019', 'Overhead Press',        'Shoulders',3, 8,  10, 50,  120, 'Brace core, do not hyperextend lower back.', null, 3),
-          ex('e5', 'ex-022', 'Lateral Raise',         'Shoulders',3, 12, 15, 10,  60,  null, ssId2, 4),
-          ex('e6', 'ex-034', 'Tricep Pushdown',       'Triceps',  3, 12, 15, 25,  60,  null, ssId2, 5),
-        ],
-      },
-      {
-        id: 'w1d3', week_number: 1, day_number: 3,
-        name: 'Lower Body',
-        notes: 'Hit depth on squats. Control the eccentric.',
-        supersets: [],
-        exercises: [
-          ex('e7',  'ex-041', 'Squat',              'Legs', 4, 6,  8,  100, 180, 'Hip crease below parallel. Drive knees out.', null, 0),
-          ex('e8',  'ex-043', 'Leg Press',          'Legs', 4, 10, 12, 160, 120, null, null, 1),
-          ex('e9',  'ex-048', 'Romanian Deadlift',  'Legs', 3, 10, 12, 70,  90,  'Feel the stretch in hamstrings.', null, 2),
-          ex('e10', 'ex-047', 'Leg Curl',           'Legs', 3, 12, 15, 40,  90,  null, null, 3),
-          ex('e11', 'ex-049', 'Calf Raise',         'Legs', 4, 15, 20, 60,  60,  null, null, 4),
-        ],
-      },
-      {
-        id: 'w1d5', week_number: 1, day_number: 5,
-        name: 'Upper Pull',
-        notes: null,
-        supersets: [],
-        exercises: [
-          ex('e12', 'ex-012', 'Pull Up',            'Back',   4, 6,  10, null, 120, 'Full dead hang at bottom.', null, 0),
-          ex('e13', 'ex-014', 'Lat Pulldown',       'Back',   3, 10, 12, 55,  90,  null, null, 1),
-          ex('e14', 'ex-015', 'Seated Cable Row',   'Back',   3, 10, 12, 60,  90,  'Squeeze shoulder blades.', null, 2),
-          ex('e15', 'ex-027', 'Barbell Curl',       'Biceps', 3, 10, 12, 35,  60,  null, null, 3),
-          ex('e16', 'ex-018', 'Face Pull',          'Back',   3, 15, 20, 20,  60,  null, null, 4),
-        ],
-      },
-      {
-        id: 'w1d7', week_number: 1, day_number: 7,
-        name: 'Core & Cardio',
-        notes: null,
-        supersets: [],
-        exercises: [
-          ex('e17', 'ex-059', 'Plank',              'Core', 3, 30, 60, null, 60, '30-60s hold. Squeeze glutes.', null, 0),
-          ex('e18', 'ex-061', 'Hanging Leg Raise',  'Core', 3, 10, 15, null, 60, null, null, 1),
-          ex('e19', 'ex-067', 'Treadmill Run',      'Cardio',1,20, 20, null, 0,  '20 min steady-state, zone 2.', null, 2),
-        ],
-      },
-      // ── WEEK 2 (same structure, higher loads implied by progressive overload) ──
-      ...([1, 3, 5, 7] as const).map((dayNum, i) => ({
-        id: `w2d${dayNum}`,
-        week_number: 2 as const,
-        day_number: dayNum,
-        name: ['Upper Push', 'Lower Body', 'Upper Pull', 'Core & Cardio'][i],
-        notes: i === 0 ? 'Aim for one extra rep or +2.5kg on main lifts.' : null,
-        supersets: i === 0 ? [{ id: ssId1, label: 'A' }, { id: ssId2, label: 'B' }] : [],
-        exercises: i === 0 ? [
-          ex('f1', 'ex-001', 'Bench Press',          'Chest',    4, 8,  12, 82.5, 120, 'Drive through the heels, arch into the bench.', null, 0),
-          ex('f2', 'ex-005', 'Incline Dumbbell Press','Chest',    4, 10, 12, 26,   90,  null, ssId1, 1),
-          ex('f3', 'ex-006', 'Dumbbell Flye',         'Chest',    3, 12, 15, 16,   90,  null, ssId1, 2),
-          ex('f4', 'ex-019', 'Overhead Press',        'Shoulders',3, 8,  10, 52.5, 120, null, null, 3),
-          ex('f5', 'ex-022', 'Lateral Raise',         'Shoulders',3, 12, 15, 10,   60,  null, ssId2, 4),
-          ex('f6', 'ex-034', 'Tricep Pushdown',       'Triceps',  3, 12, 15, 27.5, 60,  null, ssId2, 5),
-        ] : i === 1 ? [
-          ex('f7',  'ex-041', 'Squat',             'Legs', 4, 6,  8,  102.5, 180, null, null, 0),
-          ex('f8',  'ex-043', 'Leg Press',         'Legs', 4, 10, 12, 165,   120, null, null, 1),
-          ex('f9',  'ex-048', 'Romanian Deadlift', 'Legs', 3, 10, 12, 72.5,  90,  null, null, 2),
-          ex('f10', 'ex-047', 'Leg Curl',          'Legs', 3, 12, 15, 42.5,  90,  null, null, 3),
-          ex('f11', 'ex-049', 'Calf Raise',        'Legs', 4, 15, 20, 62.5,  60,  null, null, 4),
-        ] : i === 2 ? [
-          ex('f12', 'ex-012', 'Pull Up',           'Back',   4, 6,  10, null, 120, null, null, 0),
-          ex('f13', 'ex-014', 'Lat Pulldown',      'Back',   3, 10, 12, 57.5, 90,  null, null, 1),
-          ex('f14', 'ex-015', 'Seated Cable Row',  'Back',   3, 10, 12, 62.5, 90,  null, null, 2),
-          ex('f15', 'ex-027', 'Barbell Curl',      'Biceps', 3, 10, 12, 37.5, 60,  null, null, 3),
-          ex('f16', 'ex-018', 'Face Pull',         'Back',   3, 15, 20, 22.5, 60,  null, null, 4),
-        ] : [
-          ex('f17', 'ex-059', 'Plank',             'Core',   3, 30, 60, null, 60, null, null, 0),
-          ex('f18', 'ex-061', 'Hanging Leg Raise', 'Core',   3, 10, 15, null, 60, null, null, 1),
-          ex('f19', 'ex-067', 'Treadmill Run',     'Cardio', 1, 20, 20, null, 0,  null, null, 2),
-        ],
-      })),
-      // Weeks 3 & 4 — same days, coach can edit
-      ...([3, 4] as const).flatMap((week) =>
-        ([1, 3, 5, 7] as const).map((dayNum, i) => ({
-          id: `w${week}d${dayNum}`,
-          week_number: week,
-          day_number: dayNum,
-          name: ['Upper Push', 'Lower Body', 'Upper Pull', 'Core & Cardio'][i],
-          notes: null,
-          supersets: i === 0 ? [{ id: ssId1, label: 'A' }, { id: ssId2, label: 'B' }] : [],
-          exercises: [] as SessionExercise[],
-        }))
-      ),
-    ],
-  }
-}
-
-const DEMO_PREV_LOG: PrevLog = {
-  'ex-001': [{ reps: 8, weightKg: 77.5 }, { reps: 8, weightKg: 77.5 }, { reps: 7, weightKg: 77.5 }, { reps: 7, weightKg: 77.5 }],
-  'ex-005': [{ reps: 10, weightKg: 22 }, { reps: 10, weightKg: 22 }, { reps: 9, weightKg: 22 }, { reps: 9, weightKg: 22 }],
-  'ex-041': [{ reps: 6, weightKg: 97.5 }, { reps: 6, weightKg: 97.5 }, { reps: 5, weightKg: 97.5 }, { reps: 5, weightKg: 97.5 }],
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -623,11 +479,13 @@ function WorkoutPreviewView({
 
 function LoggingView({
   workout,
+  programId,
   prevLog,
   onFinish,
   onAbort,
 }: {
   workout:   WorkoutSession
+  programId: string | null
   prevLog:   PrevLog
   onFinish:  (result: LogResult) => void
   onAbort:   () => void
@@ -709,8 +567,10 @@ function LoggingView({
   const completedSets = Object.values(logs).flat().filter((s) => s.completed).length
   const pct           = totalSets > 0 ? Math.round((completedSets / totalSets) * 100) : 0
 
-  function handleFinish() {
+  async function handleFinish() {
     if (timerRef.current) clearInterval(timerRef.current)
+
+    const durationMs = Date.now() - startedAtRef.current
 
     // Calculate volume
     let totalVolume = 0
@@ -740,8 +600,40 @@ function LoggingView({
       }
     }
 
+    // Persist to DB
+    const apiSets: { exercise_id: string; set_number: number; reps_completed: number | null; weight_input: number | null; weight_unit: 'kg'; is_warmup: boolean }[] = []
+    for (const ex of workout.exercises) {
+      const exLogs = logs[ex.id] ?? []
+      exLogs.forEach((setLog, i) => {
+        if (!setLog.completed) return
+        apiSets.push({
+          exercise_id:    ex.exercise_id,
+          set_number:     i + 1,
+          reps_completed: parseInt(setLog.repsCompleted) || null,
+          weight_input:   parseFloat(setLog.weightUsed) || null,
+          weight_unit:    'kg',
+          is_warmup:      false,
+        })
+      })
+    }
+    if (apiSets.length > 0) {
+      try {
+        await fetch('/api/workout-logs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            workout_id:       workout.id,
+            program_id:       programId,
+            duration_minutes: Math.round(durationMs / 60000),
+            notes:            sessionNote || null,
+            sets:             apiSets,
+          }),
+        })
+      } catch { toast.error('Workout saved locally but failed to sync — check your connection.') }
+    }
+
     onFinish({
-      durationMs:       Date.now() - startedAtRef.current,
+      durationMs,
       totalVolume,
       totalSets:        completedSets,
       newPersonalBests: Array.from(pbMap.values()),
@@ -1045,11 +937,8 @@ function SummaryView({
   const [submitting, setSubmitting] = useState(false)
   const [submitted,  setSubmitted]  = useState(false)
 
-  async function handleSubmit() {
-    setSubmitting(true)
-    await new Promise((r) => setTimeout(r, 600)) // simulate save
+  function handleSubmit() {
     setSubmitted(true)
-    setSubmitting(false)
   }
 
   return (
@@ -1400,7 +1289,6 @@ function ProgramOverview({
 // ─────────────────────────────────────────────────────────────
 
 export default function MyWorkoutPage() {
-  const isDemo = useIsDemo()
   const [view,     setView]     = useState<View>('loading')
   const [program,  setProgram]  = useState<ActiveProgram | null>(null)
   const [workout,  setWorkout]  = useState<WorkoutSession | null>(null)
@@ -1408,11 +1296,6 @@ export default function MyWorkoutPage() {
   const [result,   setResult]   = useState<LogResult | null>(null)
 
   const loadProgram = useCallback(async () => {
-    if (isDemo) {
-      setProgram(buildDemoProgram())
-      setView('overview')
-      return
-    }
     try {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
@@ -1426,7 +1309,7 @@ export default function MyWorkoutPage() {
     } catch {
       setView('no_program')
     }
-  }, [isDemo])
+  }, [])
 
   useEffect(() => { loadProgram() }, [loadProgram])
 
@@ -1434,35 +1317,22 @@ export default function MyWorkoutPage() {
     setWorkout(w)
 
     // Fetch previous log
-    if (isDemo) {
-      setPrevLog(DEMO_PREV_LOG)
-    } else {
-      try {
-        const res  = await fetch(`/api/workout-logs?workoutId=${w.id}&limit=1`)
-        const d    = await res.json()
-        const prev: PrevLog = {}
-        for (const set of d.logs?.[0]?.sets ?? []) {
-          if (!prev[set.exercise_id]) prev[set.exercise_id] = []
-          prev[set.exercise_id].push({ reps: set.reps_completed, weightKg: set.weight_kg })
-        }
-        setPrevLog(prev)
-      } catch { setPrevLog({}) }
-    }
+    try {
+      const res  = await fetch(`/api/workout-logs?workoutId=${w.id}&limit=1`)
+      const d    = await res.json()
+      const prev: PrevLog = {}
+      for (const set of d.logs?.[0]?.sets ?? []) {
+        if (!prev[set.exercise_id]) prev[set.exercise_id] = []
+        prev[set.exercise_id].push({ reps: set.reps_completed, weightKg: set.weight_kg })
+      }
+      setPrevLog(prev)
+    } catch { setPrevLog({}) }
 
     setView('preview')
   }
 
   function handleFinish(r: LogResult) {
     setResult(r)
-    // Mark workout as completed locally
-    if (workout && program) {
-      const key = `cb_completed_workouts_${program.id}`
-      try {
-        const existing = new Set(JSON.parse(localStorage.getItem(key) ?? '[]') as string[])
-        existing.add(workout.id)
-        localStorage.setItem(key, JSON.stringify(Array.from(existing)))
-      } catch { /* ignore */ }
-    }
     setView('summary')
   }
 
@@ -1505,6 +1375,7 @@ export default function MyWorkoutPage() {
     return (
       <LoggingView
         workout={workout}
+        programId={program?.id ?? null}
         prevLog={prevLog}
         onFinish={handleFinish}
         onAbort={() => setView('preview')}

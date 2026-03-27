@@ -2,8 +2,12 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+if (!supabaseUrl || !supabaseServiceRoleKey) {
+  throw new Error('Missing Supabase environment variables')
+}
 
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
 
@@ -31,7 +35,11 @@ export async function GET(request: NextRequest) {
   try {
     // Check admin authorization via header
     const adminSecret = request.headers.get('x-admin-secret');
-    const adminPassword = process.env.ADMIN_PASSWORD || 'propel-admin-2026';
+    const adminPassword = process.env.ADMIN_PASSWORD;
+
+    if (!adminPassword) {
+      return NextResponse.json({ error: 'ADMIN_PASSWORD not configured' }, { status: 500 });
+    }
 
     if (adminSecret !== adminPassword) {
       return NextResponse.json(

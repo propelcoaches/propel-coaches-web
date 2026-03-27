@@ -1,7 +1,6 @@
-// @ts-nocheck
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { RealtimeChannel } from '@supabase/realtime-js';
 
@@ -50,7 +49,7 @@ interface ClientProfile {
 }
 
 export default function GroupsPage() {
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   // State
   const [groups, setGroups] = useState<GroupChat[]>([]);
@@ -94,7 +93,7 @@ export default function GroupsPage() {
         setCurrentUserId(user.id);
 
         // Fetch groups
-        const { data: groupsData, error: groupsError } = await supabase
+        const { data: groupsData, error: groupsError } = await (supabase as any)
           .from('group_chats')
           .select('*')
           .eq('coach_id', user.id)
@@ -109,7 +108,7 @@ export default function GroupsPage() {
         }
 
         // Fetch clients for member selection
-        const { data: clientsData, error: clientsError } = await supabase
+        const { data: clientsData, error: clientsError } = await (supabase as any)
           .from('profiles')
           .select('id, display_name, email, avatar_url')
           .neq('id', user.id)
@@ -134,7 +133,7 @@ export default function GroupsPage() {
     const fetchGroupData = async () => {
       try {
         // Fetch messages
-        const { data: messagesData, error: messagesError } = await supabase
+        const { data: messagesData, error: messagesError } = await (supabase as any)
           .from('group_messages')
           .select(
             `
@@ -155,8 +154,8 @@ export default function GroupsPage() {
         // Fetch profiles for messages
         if (messagesData) {
           const messagesWithProfiles = await Promise.all(
-            messagesData.map(async (msg) => {
-              const { data: profile } = await supabase
+            messagesData.map(async (msg: any) => {
+              const { data: profile } = await (supabase as any)
                 .from('profiles')
                 .select('display_name, avatar_url')
                 .eq('id', msg.sender_id)
@@ -168,11 +167,11 @@ export default function GroupsPage() {
               };
             })
           );
-          setMessages(messagesWithProfiles as any);
+          setMessages(messagesWithProfiles as GroupMessage[]);
         }
 
         // Fetch members
-        const { data: membersData, error: membersError } = await supabase
+        const { data: membersData, error: membersError } = await (supabase as any)
           .from('group_chat_members')
           .select('*')
           .eq('group_chat_id', selectedGroupId);
@@ -187,7 +186,7 @@ export default function GroupsPage() {
     fetchGroupData();
 
     // Subscribe to realtime messages
-    const channel = supabase
+    const channel = (supabase as any)
       .channel(`group_messages_${selectedGroupId}`)
       .on(
         'postgres_changes',
@@ -199,13 +198,12 @@ export default function GroupsPage() {
         },
         async (payload) => {
           const newMsg = payload.new as GroupMessage;
-          const { data: profile } = await supabase
+          const { data: profile } = await (supabase as any)
             .from('profiles')
             .select('display_name, avatar_url')
             .eq('id', newMsg.sender_id)
             .single();
 
-          // @ts-ignore
           setMessages((prev) => [
             ...prev,
             {
@@ -225,7 +223,7 @@ export default function GroupsPage() {
         },
         async (payload) => {
           const newMember = payload.new as GroupChatMember;
-          const { data: profile } = await supabase
+          const { data: profile } = await (supabase as any)
             .from('profiles')
             .select('display_name, avatar_url, email')
             .eq('id', newMember.user_id)
@@ -255,7 +253,7 @@ export default function GroupsPage() {
     if (!messageInput.trim() || !selectedGroupId || !currentUserId) return;
 
     try {
-      const { error } = await supabase.from('group_messages').insert({
+      const { error } = await (supabase as any).from('group_messages').insert({
         group_chat_id: selectedGroupId,
         sender_id: currentUserId,
         content: messageInput.trim(),
@@ -276,7 +274,7 @@ export default function GroupsPage() {
 
     try {
       // Create group
-      const { data: groupData, error: groupError } = await supabase
+      const { data: groupData, error: groupError } = await (supabase as any)
         .from('group_chats')
         .insert({
           coach_id: currentUserId,
@@ -296,7 +294,7 @@ export default function GroupsPage() {
           role: 'member',
         }));
 
-        const { error: memberError } = await supabase
+        const { error: memberError } = await (supabase as any)
           .from('group_chat_members')
           .insert(memberInserts);
 

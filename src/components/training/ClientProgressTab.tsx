@@ -1,15 +1,15 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { toast } from '@/lib/toast'
 import {
-  format, addDays, subWeeks, differenceInDays, parseISO, startOfWeek,
+  format, addDays, differenceInDays, parseISO, startOfWeek,
 } from 'date-fns'
 import {
   TrendingUp, Award, Calendar, BarChart3, AlertTriangle, FileDown,
   ChevronDown, ChevronUp, Dumbbell, CheckCircle2, XCircle, Clock, Activity,
 } from 'lucide-react'
 import clsx from 'clsx'
-import { useIsDemo } from '@/lib/demo/useDemoMode'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -42,173 +42,6 @@ interface AnalyticsData {
   personal_bests: PersonalBest[]
   inactivity_days: number
   last_session_date: string | null
-}
-
-// ─── Demo data ────────────────────────────────────────────────────────────────
-
-function epley(kg: number, reps: number) {
-  return reps === 1 ? kg : parseFloat((kg * (1 + reps / 30)).toFixed(2))
-}
-
-function buildDemoAnalytics(): AnalyticsData {
-  const today = new Date('2026-03-11')
-  const weeks = 12
-
-  // Progressive weight schedules: [exercise, startKg, stepKg, reps]
-  const exercises = [
-    { id: 'ex-bench', name: 'Barbell Bench Press', startKg: 80, stepKg: 1.25, reps: 8 },
-    { id: 'ex-squat', name: 'Back Squat',          startKg: 100, stepKg: 2.5,  reps: 6 },
-    { id: 'ex-dead',  name: 'Deadlift',             startKg: 130, stepKg: 2.5,  reps: 5 },
-    { id: 'ex-ohp',   name: 'Overhead Press',       startKg: 55,  stepKg: 1.25, reps: 8 },
-  ]
-
-  // Sessions: Mon/Tue/Thu/Fri over 12 weeks, ~80% adherence
-  const scheduledDays = [1, 2, 4, 5] // Mon=1 Sun=7 in date-fns offset world
-  const sessions: { date: string; weekIdx: number; dayIdx: number }[] = []
-  const skipSet = new Set([3, 7, 11, 19, 23, 27, 35, 39]) // indices to skip (missed sessions)
-
-  let idx = 0
-  for (let w = weeks - 1; w >= 0; w--) {
-    const weekStart = startOfWeek(subWeeks(today, w), { weekStartsOn: 1 })
-    for (const dayOffset of scheduledDays) {
-      const date = addDays(weekStart, dayOffset - 1)
-      if (date <= today && !skipSet.has(idx)) {
-        sessions.push({ date: format(date, 'yyyy-MM-dd'), weekIdx: weeks - 1 - w, dayIdx: dayOffset })
-      }
-      idx++
-    }
-  }
-
-  // Exercise history: each session logs a primary exercise
-  const exercise_history: ExerciseHistory[] = exercises.map((ex) => {
-    const data = sessions.map((s, i) => {
-      // linear progression with slight noise
-      const kg = ex.startKg + (i / sessions.length) * ex.stepKg * sessions.length
-      const rounded = Math.round(kg / 1.25) * 1.25
-      return { date: s.date, weight_kg: rounded, reps: ex.reps, e1rm: epley(rounded, ex.reps) }
-    }).sort((a, b) => a.date.localeCompare(b.date))
-    return { exercise_id: ex.id, exercise_name: ex.name, data }
-  })
-
-  // Weekly volume
-  const weekly_volume: WeeklyVolume[] = []
-  for (let w = weeks - 1; w >= 0; w--) {
-    const weekStart = startOfWeek(subWeeks(today, w), { weekStartsOn: 1 })
-    const key = format(weekStart, 'yyyy-MM-dd')
-    const label = format(weekStart, 'MMM d')
-    const isDeload = w === 0 || w === 4 || w === 8
-    const sessCount = isDeload ? 2 : 4
-    const sets = sessCount * 5 * 4  // sessions × exercises × sets
-    const tonnage = parseFloat((sets * 82.5 * 8 * (isDeload ? 0.7 : 1)).toFixed(0))
-    weekly_volume.push({ week: key, week_label: label, total_sets: sets, tonnage_kg: tonnage })
-  }
-
-  // Adherence calendar
-  const sessionDates = new Set(sessions.map((s) => s.date))
-  const allScheduled = new Set<string>()
-  for (let w = weeks - 1; w >= 0; w--) {
-    const weekStart = startOfWeek(subWeeks(today, w), { weekStartsOn: 1 })
-    for (const dayOff of scheduledDays) {
-      const d = addDays(weekStart, dayOff - 1)
-      if (d <= today) allScheduled.add(format(d, 'yyyy-MM-dd'))
-    }
-  }
-  const totalDays = differenceInDays(today, subWeeks(today, weeks))
-  const adherence: AdherenceDay[] = []
-  for (let i = 0; i <= totalDays; i++) {
-    const date = addDays(subWeeks(today, weeks), i)
-    const ds = format(date, 'yyyy-MM-dd')
-    const isPast = date <= today
-    const sched = allScheduled.has(ds)
-    const logged = sessionDates.has(ds)
-    let status: AdherenceDay['status'] = 'rest'
-    if (!isPast) status = sched ? 'upcoming' : 'rest'
-    else if (logged) status = 'completed'
-    else if (sched) status = 'missed'
-    adherence.push({ date: ds, status })
-  }
-
-  // Session feed (last 8 sessions reversed)
-  const recentSessions = [...sessions].reverse().slice(0, 8)
-  const sessionExercises = [
-    exercises[0], exercises[1],  // Mon: bench + squat
-    exercises[2], exercises[3],  // Tue: deadlift + OHP
-    exercises[0], exercises[2],  // Thu: bench + dead
-    exercises[1], exercises[3],  // Fri: squat + OHP
-  ]
-  const session_feed: SessionFeedItem[] = recentSessions.map((s, i) => {
-    const ex = sessionExercises[i % 4]
-    const ex2 = sessionExercises[(i % 4) + 4] ?? exercises[i % 4]
-    const kg = ex.startKg + (sessions.length - 1 - i) * (ex.stepKg * sessions.length) / sessions.length
-    const rounded = Math.round(kg / 1.25) * 1.25
-    return {
-      id: `demo-log-${i}`,
-      logged_at: `${s.date}T08:30:00.000Z`,
-      duration_minutes: 52 + (i % 3) * 8,
-      workout_name: `Day ${(i % 4) + 1} – ${['Push', 'Pull', 'Legs', 'Upper'][i % 4]}`,
-      exercises: [
-        {
-          name: ex.name,
-          sets: Array.from({ length: 4 }, (_, si) => ({
-            set_number: si + 1,
-            reps: ex.reps - (si === 3 ? 1 : 0),
-            weight_kg: rounded,
-            is_warmup: si === 0 && false,
-          })),
-        },
-        {
-          name: ex2.name,
-          sets: Array.from({ length: 3 }, (_, si) => ({
-            set_number: si + 1,
-            reps: ex2.reps,
-            weight_kg: Math.round((ex2.startKg + i * ex2.stepKg) / 1.25) * 1.25,
-            is_warmup: false,
-          })),
-        },
-      ],
-    }
-  })
-
-  // Prescribed vs actual (last 4 sessions)
-  const prescribed_vs_actual: PrescribedVsActual[] = recentSessions.slice(0, 4).map((s, i) => ({
-    workout_name: `Day ${(i % 4) + 1} – ${['Push', 'Pull', 'Legs', 'Upper'][i % 4]}`,
-    logged_at: `${s.date}T08:30:00.000Z`,
-    exercises: [
-      {
-        exercise_name: exercises[i % 4].name,
-        prescribed: { sets: 4, reps_min: 6, reps_max: 8, weight_kg: exercises[i % 4].startKg + i * 2.5 },
-        actual: { sets_completed: 4, avg_reps: 7.5, avg_weight_kg: exercises[i % 4].startKg + i * 2.5 + 1.25 },
-      },
-      {
-        exercise_name: exercises[(i + 1) % 4].name,
-        prescribed: { sets: 3, reps_min: 8, reps_max: 12, weight_kg: null },
-        actual: { sets_completed: 3, avg_reps: 10, avg_weight_kg: exercises[(i + 1) % 4].startKg + i * 1.25 },
-      },
-    ],
-  }))
-
-  // PBs
-  const personal_bests: PersonalBest[] = [
-    { exercise_name: 'Barbell Bench Press', reps: 1, weight_kg: 95,   estimated_1rm_kg: 95,   achieved_at: '2026-03-08' },
-    { exercise_name: 'Barbell Bench Press', reps: 5, weight_kg: 87.5, estimated_1rm_kg: 102.1, achieved_at: '2026-03-04' },
-    { exercise_name: 'Barbell Bench Press', reps: 8, weight_kg: 82.5, estimated_1rm_kg: 104.5, achieved_at: '2026-02-25' },
-    { exercise_name: 'Back Squat',          reps: 1, weight_kg: 122.5,estimated_1rm_kg: 122.5, achieved_at: '2026-03-06' },
-    { exercise_name: 'Back Squat',          reps: 5, weight_kg: 110,  estimated_1rm_kg: 128.3, achieved_at: '2026-03-01' },
-    { exercise_name: 'Deadlift',            reps: 1, weight_kg: 155,  estimated_1rm_kg: 155,   achieved_at: '2026-03-05' },
-    { exercise_name: 'Deadlift',            reps: 3, weight_kg: 145,  estimated_1rm_kg: 159.5, achieved_at: '2026-02-27' },
-    { exercise_name: 'Overhead Press',      reps: 5, weight_kg: 62.5, estimated_1rm_kg: 72.9,  achieved_at: '2026-03-03' },
-  ]
-
-  return {
-    exercise_history,
-    weekly_volume,
-    adherence,
-    session_feed,
-    prescribed_vs_actual,
-    personal_bests,
-    inactivity_days: 3,
-    last_session_date: '2026-03-08',
-  }
 }
 
 // ─── SVG Line Chart ────────────────────────────────────────────────────────────
@@ -822,7 +655,7 @@ ${data.inactivity_days > 7 ? `<p style="margin-top:20px;padding:10px;background:
 </body></html>`
 
   const win = window.open('', '_blank', 'width=960,height=800')
-  if (!win) { alert('Pop-ups are blocked. Please allow pop-ups to export.'); return }
+  if (!win) { toast.error('Pop-ups are blocked. Please allow pop-ups to export.'); return }
   win.document.open()
   win.document.write(html)
   win.document.close()
@@ -838,23 +671,17 @@ export default function ClientProgressTab({
   clientId: string
   clientName: string
 }) {
-  const isDemo = useIsDemo()
   const [data, setData] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [inactivityThreshold, setInactivityThreshold] = useState(7)
 
   useEffect(() => {
-    if (isDemo) {
-      setData(buildDemoAnalytics())
-      setLoading(false)
-      return
-    }
     fetch(`/api/clients/${clientId}/workout-analytics?weeks=12`)
       .then((r) => r.json())
       .then((d) => { setData(d); setLoading(false) })
       .catch(() => { setError('Failed to load analytics'); setLoading(false) })
-  }, [clientId, isDemo])
+  }, [clientId])
 
   if (loading) {
     return (

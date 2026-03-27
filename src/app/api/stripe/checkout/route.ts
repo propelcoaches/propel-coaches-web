@@ -3,11 +3,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
+const stripeKey = process.env.STRIPE_SECRET_KEY
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder';
+if (!stripeKey || !supabaseUrl || !supabaseServiceRoleKey) {
+  throw new Error('Missing required environment variables')
+}
 
+const stripe = new Stripe(stripeKey);
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
 
 const planToPriceId: Record<string, string> = {

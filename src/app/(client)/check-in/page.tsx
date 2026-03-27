@@ -2,13 +2,15 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
 
 type FormData = {
   energy: number
   stress: number
   sleepQuality: number
   trainingDifficulty: number
-  winsAndStruggles: string
+  wins: string
+  struggles: string
   bodyweight: string
 }
 
@@ -39,43 +41,57 @@ const getEmojiForScore = (score: number, category: string) => {
 export default function CheckInPage() {
   const [step, setStep] = useState(1)
   const [submitted, setSubmitted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState<FormData>({
     energy: 5,
     stress: 5,
     sleepQuality: 5,
     trainingDifficulty: 5,
-    winsAndStruggles: '',
-    bodyweight: '88.2',
+    wins: '',
+    struggles: '',
+    bodyweight: '',
   })
 
   const handleSliderChange = (field: keyof FormData, value: number) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value,
-    }))
-  }
-
-  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>, field: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: e.target.value,
-    }))
+    setFormData(prev => ({ ...prev, [field]: value }))
   }
 
   const handleNext = () => {
-    if (step < 5) {
-      setStep(step + 1)
-    }
+    if (step < 5) setStep(step + 1)
   }
 
   const handleBack = () => {
-    if (step > 1) {
-      setStep(step - 1)
-    }
+    if (step > 1) setStep(step - 1)
   }
 
-  const handleSubmit = () => {
-    setSubmitted(true)
+  const handleSubmit = async () => {
+    setSubmitting(true)
+    setError(null)
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      const { error: insertError } = await supabase.from('check_ins').insert({
+        client_id: user.id,
+        energy: formData.energy,
+        stress: formData.stress,
+        sleep_quality: formData.sleepQuality,
+        training_difficulty: formData.trainingDifficulty,
+        wins: formData.wins || null,
+        struggles: formData.struggles || null,
+        bodyweight_kg: formData.bodyweight ? parseFloat(formData.bodyweight) : null,
+        date: new Date().toISOString().slice(0, 10),
+      })
+
+      if (insertError) throw insertError
+      setSubmitted(true)
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to submit check-in')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   if (submitted) {
@@ -225,17 +241,15 @@ export default function CheckInPage() {
         {/* Step 5: Wins, Struggles, and Bodyweight */}
         {step === 5 && (
           <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-6">Final Details</h2>
-            </div>
+            <h2 className="text-2xl font-semibold text-gray-900">Final Details</h2>
 
             <div>
               <label className="block text-sm font-medium text-gray-900 mb-2">
                 Wins & Highlights this week
               </label>
               <textarea
-                value={formData.winsAndStruggles}
-                onChange={e => handleTextChange(e, 'winsAndStruggles')}
+                value={formData.wins}
+                onChange={e => setFormData(prev => ({ ...prev, wins: e.target.value }))}
                 placeholder="What went well? Any PRs, great workouts, or wins? (optional)"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
                 rows={4}
@@ -247,8 +261,8 @@ export default function CheckInPage() {
                 Struggles
               </label>
               <textarea
-                value={formData.winsAndStruggles}
-                onChange={e => handleTextChange(e, 'winsAndStruggles')}
+                value={formData.struggles}
+                onChange={e => setFormData(prev => ({ ...prev, struggles: e.target.value }))}
                 placeholder="Any challenges this week? (optional)"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
                 rows={3}
@@ -262,20 +276,21 @@ export default function CheckInPage() {
               <input
                 type="number"
                 value={formData.bodyweight}
-                onChange={e =>
-                  setFormData(prev => ({
-                    ...prev,
-                    bodyweight: e.target.value,
-                  }))
-                }
+                onChange={e => setFormData(prev => ({ ...prev, bodyweight: e.target.value }))}
                 step="0.1"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                placeholder="88.2"
+                placeholder="e.g. 82.5"
               />
             </div>
           </div>
         )}
       </div>
+
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+          {error}
+        </div>
+      )}
 
       {/* Navigation Buttons */}
       <div className="flex justify-between gap-4">
@@ -301,9 +316,10 @@ export default function CheckInPage() {
         ) : (
           <button
             onClick={handleSubmit}
-            className="px-6 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors"
+            disabled={submitting}
+            className="px-6 py-2 bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white font-medium rounded-lg transition-colors"
           >
-            Submit Check-in
+            {submitting ? 'Submitting…' : 'Submit Check-in'}
           </button>
         )}
       </div>

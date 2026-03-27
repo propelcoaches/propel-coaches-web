@@ -36,12 +36,11 @@ interface ApiResponse {
   recentSignups: any[];
 }
 
-const ADMIN_PASSWORD_DEFAULT = 'propel-admin-2026';
-
 export default function AdminDashboard() {
   const [authenticated, setAuthenticated] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [adminSecret, setAdminSecret] = useState('');
 
   const [coaches, setCoaches] = useState<Coach[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -53,32 +52,50 @@ export default function AdminDashboard() {
   // Check if already authenticated
   useEffect(() => {
     const storedAuth = sessionStorage.getItem('adminAuth');
-    if (storedAuth === 'true') {
+    const storedSecret = sessionStorage.getItem('adminSecret');
+    if (storedAuth === 'true' && storedSecret) {
+      setAdminSecret(storedSecret);
       setAuthenticated(true);
-      fetchData();
+      fetchData(storedSecret);
     }
   }, []);
 
-  const handleAuthenticate = (e: React.FormEvent) => {
+  const handleAuthenticate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (passwordInput === ADMIN_PASSWORD_DEFAULT) {
+    setLoading(true);
+    setPasswordError('');
+    try {
+      const response = await fetch('/api/admin/coaches', {
+        headers: { 'x-admin-secret': passwordInput },
+      });
+      if (!response.ok) {
+        setPasswordError('Invalid password');
+        setPasswordInput('');
+        return;
+      }
+      const data: ApiResponse = await response.json();
+      setAdminSecret(passwordInput);
       setAuthenticated(true);
       sessionStorage.setItem('adminAuth', 'true');
-      setPasswordError('');
-      fetchData();
-    } else {
-      setPasswordError('Invalid password');
+      sessionStorage.setItem('adminSecret', passwordInput);
+      setStats(data.stats);
+      setCoaches(data.coaches);
+      setRecentSignups(data.recentSignups);
+    } catch {
+      setPasswordError('Failed to authenticate');
       setPasswordInput('');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const fetchData = async () => {
+  const fetchData = async (secret?: string) => {
     setLoading(true);
     setError('');
     try {
       const response = await fetch('/api/admin/coaches', {
         headers: {
-          'x-admin-secret': ADMIN_PASSWORD_DEFAULT,
+          'x-admin-secret': secret ?? adminSecret,
         },
       });
 

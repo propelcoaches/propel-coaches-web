@@ -1,202 +1,394 @@
 'use client'
 
-import { useState } from 'react'
-import { useIsDemo } from '@/lib/demo/useDemoMode'
-import { Plus, CreditCard, Tag, Copy, Trash2 } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { Plus, CreditCard, Tag, Copy, Trash2, AlertCircle, RefreshCw, X, Check } from 'lucide-react'
 import clsx from 'clsx'
 
-const DEMO_INVOICES = [
-  {
-    id: 'inv-1',
-    clientName: 'Liam Carter',
-    clientId: 'demo-client-1',
-    invoiceNo: 'INV-0042',
-    amount: 299,
-    currency: 'AUD',
-    status: 'paid',
-    dueDate: '2026-03-01',
-    paidDate: '2026-02-28',
-    service: 'Monthly Coaching — March 2026',
-  },
-  {
-    id: 'inv-2',
-    clientName: 'Sophie Nguyen',
-    clientId: 'demo-client-2',
-    invoiceNo: 'INV-0043',
-    amount: 299,
-    currency: 'AUD',
-    status: 'paid',
-    dueDate: '2026-03-01',
-    paidDate: '2026-03-01',
-    service: 'Monthly Coaching — March 2026',
-  },
-  {
-    id: 'inv-3',
-    clientName: 'Jake Wilson',
-    clientId: 'demo-client-3',
-    invoiceNo: 'INV-0044',
-    amount: 399,
-    currency: 'AUD',
-    status: 'pending',
-    dueDate: '2026-03-28',
-    paidDate: null,
-    service: 'Premium Coaching — March 2026',
-  },
-  {
-    id: 'inv-4',
-    clientName: 'Emma Thompson',
-    clientId: 'demo-client-4',
-    invoiceNo: 'INV-0045',
-    amount: 199,
-    currency: 'AUD',
-    status: 'overdue',
-    dueDate: '2026-03-15',
-    paidDate: null,
-    service: 'Starter Coaching — March 2026',
-  },
-  {
-    id: 'inv-5',
-    clientName: 'Liam Carter',
-    clientId: 'demo-client-1',
-    invoiceNo: 'INV-0038',
-    amount: 299,
-    currency: 'AUD',
-    status: 'paid',
-    dueDate: '2026-02-01',
-    paidDate: '2026-01-31',
-    service: 'Monthly Coaching — February 2026',
-  },
-  {
-    id: 'inv-6',
-    clientName: 'Sophie Nguyen',
-    clientId: 'demo-client-2',
-    invoiceNo: 'INV-0039',
-    amount: 299,
-    currency: 'AUD',
-    status: 'paid',
-    dueDate: '2026-02-01',
-    paidDate: '2026-02-01',
-    service: 'Monthly Coaching — February 2026',
-  },
-]
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-const DEMO_SUBSCRIPTIONS = [
-  {
-    clientId: 'demo-client-1',
-    clientName: 'Liam Carter',
-    plan: 'Monthly Coaching',
-    amount: 299,
-    nextBilling: '2026-04-01',
-    status: 'active',
-  },
-  {
-    clientId: 'demo-client-2',
-    clientName: 'Sophie Nguyen',
-    plan: 'Monthly Coaching',
-    amount: 299,
-    nextBilling: '2026-04-01',
-    status: 'active',
-  },
-  {
-    clientId: 'demo-client-3',
-    clientName: 'Jake Wilson',
-    plan: 'Premium Coaching',
-    amount: 399,
-    nextBilling: '2026-04-01',
-    status: 'active',
-  },
-  {
-    clientId: 'demo-client-4',
-    clientName: 'Emma Thompson',
-    plan: 'Starter Coaching',
-    amount: 199,
-    nextBilling: '2026-04-01',
-    status: 'past_due',
-  },
-]
-
-const DEMO_BILLING_EVENTS = [
-  {
-    id: 'event-1',
-    eventType: 'subscription_started',
-    amount: 2900,
-    date: '2026-03-24',
-    status: 'success',
-    description: 'Pro subscription started',
-  },
-  {
-    id: 'event-2',
-    eventType: 'payment_succeeded',
-    amount: 2900,
-    date: '2026-03-20',
-    status: 'success',
-    description: 'Monthly payment processed',
-  },
-  {
-    id: 'event-3',
-    eventType: 'payment_succeeded',
-    amount: 2900,
-    date: '2026-02-20',
-    status: 'success',
-    description: 'Monthly payment processed',
-  },
-  {
-    id: 'event-4',
-    eventType: 'payment_failed',
-    amount: 2900,
-    date: '2026-01-25',
-    status: 'failed',
-    description: 'Payment failed - card declined',
-  },
-  {
-    id: 'event-5',
-    eventType: 'trial_ending_soon',
-    amount: 0,
-    date: '2026-01-08',
-    status: 'warning',
-    description: 'Trial ending in 5 days',
-  },
-]
-
-type InvoiceFilter = 'all' | 'paid' | 'pending' | 'overdue'
-type Tab = 'invoices' | 'subscriptions' | 'settings'
+type Invoice = {
+  id: string
+  invoice_number: string
+  description: string
+  amount_cents: number
+  currency: string
+  status: 'draft' | 'pending' | 'paid' | 'overdue' | 'cancelled'
+  due_date: string | null
+  paid_at: string | null
+  created_at: string
+  client_id: string | null
+  client: { full_name: string } | null
+}
 
 type PromoCode = {
   id: string
   code: string
-  discount: string
+  discount: number
   type: 'percent' | 'fixed'
   duration: string
+  max_uses: number | null
   uses: number
-  maxUses: number | null
-  active: boolean
+  is_active: boolean
 }
 
-const INITIAL_PROMO_CODES: PromoCode[] = []
+type PaymentSettings = {
+  payment_currency: string
+  payment_tax_rate: number
+  payment_terms_days: number
+}
+
+type Client = {
+  id: string
+  full_name: string
+  email: string
+}
+
+type InvoiceFilter = 'all' | 'paid' | 'pending' | 'overdue' | 'draft'
+type Tab = 'invoices' | 'settings'
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+
+function useToast() {
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const show = useCallback((message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type })
+    setTimeout(() => setToast(null), 3500)
+  }, [])
+  return { toast, show }
+}
+
+// ─── Revenue chart data ────────────────────────────────────────────────────────
+
+function buildRevenueChart(invoices: Invoice[]) {
+  const now = new Date()
+  const months: { label: string; key: string }[] = []
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    months.push({
+      label: d.toLocaleString('default', { month: 'short' }),
+      key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
+    })
+  }
+  const data = months.map(({ label, key }) => {
+    const amount = invoices
+      .filter(inv => inv.status === 'paid' && inv.paid_at?.startsWith(key))
+      .reduce((sum, inv) => sum + inv.amount_cents, 0)
+    return { month: label, key, amount, isFuture: key > months[4].key }
+  })
+  return data
+}
+
+// ─── New Invoice Modal ─────────────────────────────────────────────────────────
+
+function NewInvoiceModal({
+  clients,
+  currency,
+  onClose,
+  onCreated,
+}: {
+  clients: Client[]
+  currency: string
+  onClose: () => void
+  onCreated: (inv: Invoice) => void
+}) {
+  const [form, setForm] = useState({
+    client_id: '',
+    invoice_number: `INV-${String(Date.now()).slice(-4)}`,
+    description: '',
+    amount: '',
+    currency,
+    due_date: '',
+    status: 'pending' as Invoice['status'],
+  })
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleSubmit = async () => {
+    if (!form.description || !form.amount) { setError('Description and amount are required'); return }
+    const cents = Math.round(parseFloat(form.amount) * 100)
+    if (isNaN(cents) || cents <= 0) { setError('Enter a valid amount'); return }
+    setSaving(true)
+    setError('')
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+      const { data, error: err } = await supabase
+        .from('invoices')
+        .insert({
+          coach_id: user.id,
+          client_id: form.client_id || null,
+          invoice_number: form.invoice_number,
+          description: form.description,
+          amount_cents: cents,
+          currency: form.currency,
+          due_date: form.due_date || null,
+          status: form.status,
+        })
+        .select('*, client:profiles!invoices_client_id_fkey(full_name)')
+        .single()
+      if (err) throw err
+      onCreated(data)
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to create invoice')
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-surface border border-cb-border rounded-xl w-full max-w-md shadow-xl">
+        <div className="flex items-center justify-between p-5 border-b border-cb-border">
+          <h2 className="text-base font-semibold text-cb-text">New Invoice</h2>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface-light text-cb-muted hover:text-cb-text transition-colors"><X size={16} /></button>
+        </div>
+        <div className="p-5 space-y-4">
+          {error && <p className="text-xs text-cb-danger bg-cb-danger/10 px-3 py-2 rounded-lg">{error}</p>}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-semibold text-cb-muted block mb-1 uppercase tracking-wide">Invoice No</label>
+              <input
+                type="text"
+                value={form.invoice_number}
+                onChange={e => setForm(p => ({ ...p, invoice_number: e.target.value }))}
+                className="w-full px-3 py-2 border border-cb-border rounded-lg text-sm text-cb-text bg-surface font-mono focus:outline-none focus:ring-2 focus:ring-brand"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-cb-muted block mb-1 uppercase tracking-wide">Status</label>
+              <select
+                value={form.status}
+                onChange={e => setForm(p => ({ ...p, status: e.target.value as Invoice['status'] }))}
+                className="w-full px-3 py-2 border border-cb-border rounded-lg text-sm text-cb-text bg-surface focus:outline-none focus:ring-2 focus:ring-brand"
+              >
+                <option value="draft">Draft</option>
+                <option value="pending">Pending</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-cb-muted block mb-1 uppercase tracking-wide">Client (optional)</label>
+            <select
+              value={form.client_id}
+              onChange={e => setForm(p => ({ ...p, client_id: e.target.value }))}
+              className="w-full px-3 py-2 border border-cb-border rounded-lg text-sm text-cb-text bg-surface focus:outline-none focus:ring-2 focus:ring-brand"
+            >
+              <option value="">— No client —</option>
+              {clients.map(c => <option key={c.id} value={c.id}>{c.full_name}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-cb-muted block mb-1 uppercase tracking-wide">Description</label>
+            <input
+              type="text"
+              placeholder="Monthly Coaching — April 2026"
+              value={form.description}
+              onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
+              className="w-full px-3 py-2 border border-cb-border rounded-lg text-sm text-cb-text bg-surface placeholder-cb-muted focus:outline-none focus:ring-2 focus:ring-brand"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-semibold text-cb-muted block mb-1 uppercase tracking-wide">Amount</label>
+              <div className="flex items-center border border-cb-border rounded-lg overflow-hidden bg-surface focus-within:ring-2 focus-within:ring-brand">
+                <span className="px-3 text-sm text-cb-muted border-r border-cb-border bg-surface-light">$</span>
+                <input
+                  type="number"
+                  placeholder="299.00"
+                  value={form.amount}
+                  onChange={e => setForm(p => ({ ...p, amount: e.target.value }))}
+                  className="flex-1 px-3 py-2 text-sm text-cb-text bg-surface focus:outline-none"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-cb-muted block mb-1 uppercase tracking-wide">Currency</label>
+              <select
+                value={form.currency}
+                onChange={e => setForm(p => ({ ...p, currency: e.target.value }))}
+                className="w-full px-3 py-2 border border-cb-border rounded-lg text-sm text-cb-text bg-surface focus:outline-none focus:ring-2 focus:ring-brand"
+              >
+                <option value="AUD">AUD</option>
+                <option value="USD">USD</option>
+                <option value="GBP">GBP</option>
+                <option value="EUR">EUR</option>
+                <option value="NZD">NZD</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-cb-muted block mb-1 uppercase tracking-wide">Due Date (optional)</label>
+            <input
+              type="date"
+              value={form.due_date}
+              onChange={e => setForm(p => ({ ...p, due_date: e.target.value }))}
+              className="w-full px-3 py-2 border border-cb-border rounded-lg text-sm text-cb-text bg-surface focus:outline-none focus:ring-2 focus:ring-brand"
+            />
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 px-5 pb-5">
+          <button onClick={onClose} className="px-4 py-2 text-sm font-medium rounded-lg border border-cb-border text-cb-secondary hover:bg-surface-light transition-colors">Cancel</button>
+          <button
+            onClick={handleSubmit}
+            disabled={saving}
+            className="px-4 py-2 text-sm font-medium rounded-lg bg-brand text-white hover:bg-brand/90 disabled:opacity-60 transition-colors"
+          >
+            {saving ? 'Creating…' : 'Create Invoice'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Main ──────────────────────────────────────────────────────────────────────
 
 export default function PaymentsPage() {
-  const isDemo = useIsDemo()
+  const { toast, show: showToast } = useToast()
+
+  // Data state
+  const [invoices, setInvoices] = useState<Invoice[]>([])
+  const [promoCodes, setPromoCodes] = useState<PromoCode[]>([])
+  const [clients, setClients] = useState<Client[]>([])
+  const [settings, setSettings] = useState<PaymentSettings>({ payment_currency: 'AUD', payment_tax_rate: 0, payment_terms_days: 30 })
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // UI state
   const [activeTab, setActiveTab] = useState<Tab>('invoices')
-  const [promoCodes, setPromoCodes] = useState<PromoCode[]>(INITIAL_PROMO_CODES)
+  const [invoiceFilter, setInvoiceFilter] = useState<InvoiceFilter>('all')
+  const [showNewInvoice, setShowNewInvoice] = useState(false)
   const [showPromoForm, setShowPromoForm] = useState(false)
   const [newPromo, setNewPromo] = useState({ code: '', discount: '', type: 'percent' as 'percent' | 'fixed', duration: '1_month', maxUses: '' })
   const [copiedCode, setCopiedCode] = useState<string | null>(null)
+  const [savingSettings, setSavingSettings] = useState(false)
 
-  const handleCreatePromo = () => {
-    if (!newPromo.code || !newPromo.discount) return
-    const entry: PromoCode = {
-      id: Date.now().toString(),
-      code: newPromo.code.toUpperCase(),
-      discount: newPromo.discount,
-      type: newPromo.type,
-      duration: newPromo.duration,
-      uses: 0,
-      maxUses: newPromo.maxUses ? parseInt(newPromo.maxUses) : null,
-      active: true,
+  // ── Load ────────────────────────────────────────────────────────────────────
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      const [invoicesRes, promoRes, clientsRes, profileRes] = await Promise.all([
+        supabase
+          .from('invoices')
+          .select('*, client:profiles!invoices_client_id_fkey(full_name)')
+          .eq('coach_id', user.id)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('promo_codes')
+          .select('*')
+          .eq('coach_id', user.id)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('profiles')
+          .select('id, full_name, email')
+          .eq('role', 'client')
+          .eq('coach_id', user.id),
+        supabase
+          .from('profiles')
+          .select('payment_currency, payment_tax_rate, payment_terms_days')
+          .eq('id', user.id)
+          .single(),
+      ])
+
+      if (invoicesRes.error) throw invoicesRes.error
+      if (promoRes.error) throw promoRes.error
+      if (clientsRes.error) throw clientsRes.error
+
+      setInvoices(invoicesRes.data ?? [])
+      setPromoCodes(promoRes.data ?? [])
+      setClients(clientsRes.data ?? [])
+      if (!profileRes.error && profileRes.data) {
+        setSettings({
+          payment_currency: profileRes.data.payment_currency ?? 'AUD',
+          payment_tax_rate: profileRes.data.payment_tax_rate ?? 0,
+          payment_terms_days: profileRes.data.payment_terms_days ?? 30,
+        })
+      }
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to load payments data')
+    } finally {
+      setLoading(false)
     }
-    setPromoCodes(prev => [entry, ...prev])
-    setNewPromo({ code: '', discount: '', type: 'percent', duration: '1_month', maxUses: '' })
-    setShowPromoForm(false)
+  }, [])
+
+  useEffect(() => { load() }, [load])
+
+  // ── Computed ────────────────────────────────────────────────────────────────
+
+  const filteredInvoices = invoiceFilter === 'all' ? invoices : invoices.filter(inv => inv.status === invoiceFilter)
+
+  const now = new Date()
+  const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  const paidThisMonth = invoices.filter(inv => inv.status === 'paid' && inv.paid_at?.startsWith(thisMonth)).reduce((s, inv) => s + inv.amount_cents, 0)
+  const outstanding = invoices.filter(inv => inv.status === 'pending' || inv.status === 'overdue').reduce((s, inv) => s + inv.amount_cents, 0)
+  const paidRate = invoices.length > 0 ? Math.round((invoices.filter(inv => inv.status === 'paid').length / invoices.length) * 100) : 0
+  const revenueChart = buildRevenueChart(invoices)
+  const maxChartAmount = Math.max(...revenueChart.map(d => d.amount), 1)
+
+  // ── Promo code handlers ─────────────────────────────────────────────────────
+
+  const handleCreatePromo = async () => {
+    if (!newPromo.code || !newPromo.discount) return
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+      const { data, error: err } = await supabase
+        .from('promo_codes')
+        .insert({
+          coach_id: user.id,
+          code: newPromo.code.toUpperCase(),
+          discount: parseFloat(newPromo.discount),
+          type: newPromo.type,
+          duration: newPromo.duration,
+          max_uses: newPromo.maxUses ? parseInt(newPromo.maxUses) : null,
+        })
+        .select()
+        .single()
+      if (err) throw err
+      setPromoCodes(prev => [data, ...prev])
+      setNewPromo({ code: '', discount: '', type: 'percent', duration: '1_month', maxUses: '' })
+      setShowPromoForm(false)
+      showToast('Promo code created')
+    } catch (e: unknown) {
+      showToast(e instanceof Error ? e.message : 'Failed to create promo code', 'error')
+    }
+  }
+
+  const handleTogglePromo = async (id: string) => {
+    const promo = promoCodes.find(p => p.id === id)
+    if (!promo) return
+    const nextActive = !promo.is_active
+    setPromoCodes(prev => prev.map(p => p.id === id ? { ...p, is_active: nextActive } : p))
+    try {
+      const supabase = createClient()
+      const { error: err } = await supabase.from('promo_codes').update({ is_active: nextActive }).eq('id', id)
+      if (err) throw err
+    } catch (e: unknown) {
+      setPromoCodes(prev => prev.map(p => p.id === id ? { ...p, is_active: promo.is_active } : p))
+      showToast(e instanceof Error ? e.message : 'Failed to update promo code', 'error')
+    }
+  }
+
+  const handleDeletePromo = async (id: string) => {
+    const prev = [...promoCodes]
+    setPromoCodes(p => p.filter(x => x.id !== id))
+    try {
+      const supabase = createClient()
+      const { error: err } = await supabase.from('promo_codes').delete().eq('id', id)
+      if (err) throw err
+      showToast('Promo code deleted')
+    } catch (e: unknown) {
+      setPromoCodes(prev)
+      showToast(e instanceof Error ? e.message : 'Failed to delete promo code', 'error')
+    }
   }
 
   const handleCopyCode = (code: string) => {
@@ -205,112 +397,162 @@ export default function PaymentsPage() {
     setTimeout(() => setCopiedCode(null), 2000)
   }
 
-  const handleTogglePromo = (id: string) => {
-    setPromoCodes(prev => prev.map(p => p.id === id ? { ...p, active: !p.active } : p))
+  // ── Settings handler ────────────────────────────────────────────────────────
+
+  const handleSaveSettings = async () => {
+    setSavingSettings(true)
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+      const { error: err } = await supabase
+        .from('profiles')
+        .update({
+          payment_currency: settings.payment_currency,
+          payment_tax_rate: settings.payment_tax_rate,
+          payment_terms_days: settings.payment_terms_days,
+        })
+        .eq('id', user.id)
+      if (err) throw err
+      showToast('Settings saved')
+    } catch (e: unknown) {
+      showToast(e instanceof Error ? e.message : 'Failed to save settings', 'error')
+    } finally {
+      setSavingSettings(false)
+    }
   }
 
-  const handleDeletePromo = (id: string) => {
-    setPromoCodes(prev => prev.filter(p => p.id !== id))
+  // ── Mark invoice as paid ─────────────────────────────────────────────────────
+
+  const handleMarkPaid = async (id: string) => {
+    const prev = [...invoices]
+    const paidAt = new Date().toISOString()
+    setInvoices(p => p.map(inv => inv.id === id ? { ...inv, status: 'paid', paid_at: paidAt } : inv))
+    try {
+      const supabase = createClient()
+      const { error: err } = await supabase.from('invoices').update({ status: 'paid', paid_at: paidAt }).eq('id', id)
+      if (err) throw err
+      showToast('Invoice marked as paid')
+    } catch (e: unknown) {
+      setInvoices(prev)
+      showToast(e instanceof Error ? e.message : 'Failed to update invoice', 'error')
+    }
+  }
+
+  const handleDeleteInvoice = async (id: string) => {
+    const prev = [...invoices]
+    setInvoices(p => p.filter(inv => inv.id !== id))
+    try {
+      const supabase = createClient()
+      const { error: err } = await supabase.from('invoices').delete().eq('id', id)
+      if (err) throw err
+      showToast('Invoice deleted')
+    } catch (e: unknown) {
+      setInvoices(prev)
+      showToast(e instanceof Error ? e.message : 'Failed to delete invoice', 'error')
+    }
   }
 
   const durationLabel = (d: string) => {
     const map: Record<string, string> = { '1_month': '1 month free', '2_months': '2 months free', '3_months': '3 months free', 'forever': 'Forever' }
     return map[d] ?? d
   }
-  const [invoiceFilter, setInvoiceFilter] = useState<InvoiceFilter>('all')
 
-  const invoices = isDemo ? DEMO_INVOICES : []
-  const subscriptions = isDemo ? DEMO_SUBSCRIPTIONS : []
-  const billingEvents = isDemo ? DEMO_BILLING_EVENTS : []
+  const fmt = (cents: number, cur = 'AUD') => `$${(cents / 100).toLocaleString('en-AU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${cur}`
 
-  // Filter invoices
-  const filteredInvoices =
-    invoiceFilter === 'all'
-      ? invoices
-      : invoices.filter(inv => inv.status === invoiceFilter)
+  // ── Loading / Error ─────────────────────────────────────────────────────────
 
-  // Calculate stats
-  const paidThisMonth = invoices
-    .filter(inv => inv.status === 'paid' && inv.paidDate?.startsWith('2026-03'))
-    .reduce((sum, inv) => sum + inv.amount, 0)
+  if (loading) {
+    return (
+      <div className="p-6 max-w-7xl mx-auto">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <div className="h-7 w-32 bg-surface-light rounded animate-pulse" />
+            <div className="h-4 w-40 bg-surface-light rounded animate-pulse mt-1" />
+          </div>
+        </div>
+        <div className="grid grid-cols-4 gap-4 mb-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="bg-surface border border-cb-border rounded-lg p-4 h-20 animate-pulse" />
+          ))}
+        </div>
+        <div className="bg-surface border border-cb-border rounded-lg h-52 animate-pulse mb-6" />
+        <div className="bg-surface border border-cb-border rounded-lg h-64 animate-pulse" />
+      </div>
+    )
+  }
 
-  const outstanding = invoices
-    .filter(inv => inv.status === 'pending' || inv.status === 'overdue')
-    .reduce((sum, inv) => sum + inv.amount, 0)
-
-  const paidRate =
-    invoices.length > 0
-      ? Math.round((invoices.filter(inv => inv.status === 'paid').length / invoices.length) * 100)
-      : 0
-
-  const activeSubscriptions = subscriptions.filter(sub => sub.status === 'active').length
+  if (error) {
+    return (
+      <div className="p-6 max-w-7xl mx-auto">
+        <div className="flex flex-col items-center justify-center py-24 gap-4">
+          <AlertCircle size={32} className="text-cb-danger" />
+          <p className="text-cb-secondary text-sm">{error}</p>
+          <button onClick={load} className="flex items-center gap-2 px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:bg-brand/90 transition-colors">
+            <RefreshCw size={14} /> Retry
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
+      {/* Toast */}
+      {toast && (
+        <div className={clsx(
+          'fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg text-sm font-medium transition-all',
+          toast.type === 'success' ? 'bg-cb-success text-white' : 'bg-cb-danger text-white'
+        )}>
+          {toast.type === 'success' ? <Check size={14} /> : <AlertCircle size={14} />}
+          {toast.message}
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-cb-text">Payments</h1>
-          <p className="text-sm text-cb-muted mt-0.5">Revenue & invoices</p>
+          <p className="text-sm text-cb-muted mt-0.5">Revenue &amp; invoices</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand/90 transition-colors font-medium text-sm">
-          <Plus size={16} />
-          New Invoice
+        <button
+          onClick={() => setShowNewInvoice(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand/90 transition-colors font-medium text-sm"
+        >
+          <Plus size={16} /> New Invoice
         </button>
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-4 gap-4 mb-6">
         {[
-          { label: 'Monthly Revenue', value: `$${paidThisMonth}`, unit: 'AUD (paid)' },
-          { label: 'Outstanding', value: `$${outstanding}`, unit: 'AUD' },
-          { label: 'Paid Rate', value: `${paidRate}%`, unit: '' },
-          { label: 'Active Subscriptions', value: activeSubscriptions.toString(), unit: '' },
-          { label: 'Webhook Status', value: 'Active', unit: 'Connected', badge: true },
-        ].map(({ label, value, unit, badge }) => (
+          { label: 'This Month (paid)', value: fmt(paidThisMonth, settings.payment_currency) },
+          { label: 'Outstanding', value: fmt(outstanding, settings.payment_currency) },
+          { label: 'Paid Rate', value: `${paidRate}%` },
+          { label: 'Total Invoices', value: invoices.length.toString() },
+        ].map(({ label, value }) => (
           <div key={label} className="bg-surface border border-cb-border rounded-lg p-4">
             <p className="text-xs text-cb-muted mb-1">{label}</p>
-            <div className="flex items-baseline gap-1">
-              {badge ? (
-                <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-cb-success rounded-full" />
-                  <p className="text-xl font-bold text-cb-text">{value}</p>
-                </div>
-              ) : (
-                <>
-                  <p className="text-xl font-bold text-cb-text">{value}</p>
-                  {unit && <p className="text-xs text-cb-muted">{unit}</p>}
-                </>
-              )}
-            </div>
-            {badge && unit && <p className="text-xs text-cb-success mt-1">{unit}</p>}
+            <p className="text-xl font-bold text-cb-text">{value}</p>
           </div>
         ))}
       </div>
 
-      {/* Monthly revenue chart */}
+      {/* Revenue chart */}
       <div className="bg-surface border border-cb-border rounded-lg p-5 mb-6">
-        <h2 className="text-sm font-semibold text-cb-text mb-4">Monthly Revenue (last 6 months)</h2>
-        <div className="flex items-end gap-3 h-40">
-          {[
-            { month: 'Jan', amount: 950, isFuture: false },
-            { month: 'Feb', amount: 798, isFuture: false },
-            { month: 'Mar', amount: 1196, isFuture: false },
-            { month: 'Apr', amount: 0, isFuture: true },
-            { month: 'May', amount: 0, isFuture: true },
-            { month: 'Jun', amount: 0, isFuture: true },
-          ].map(({ month, amount, isFuture }) => {
-            const maxAmount = 1196
-            const height = amount > 0 ? (amount / maxAmount) * 100 : 5
+        <h2 className="text-sm font-semibold text-cb-text mb-4">Monthly Revenue — last 6 months</h2>
+        <div className="flex items-end gap-3 h-36">
+          {revenueChart.map(({ month, amount, isFuture }) => {
+            const height = amount > 0 ? (amount / maxChartAmount) * 100 : 0
             return (
               <div key={month} className="flex flex-col items-center flex-1">
                 <div
-                  className={clsx('w-full rounded-t-md transition-colors', isFuture ? 'bg-cb-border' : 'bg-brand')}
-                  style={{ height: height + '%', minHeight: 8 }}
-                  title={`${month}: $${amount}`}
+                  className={clsx('w-full rounded-t-md transition-colors', amount === 0 ? 'bg-cb-border' : isFuture ? 'bg-brand/30' : 'bg-brand')}
+                  style={{ height: Math.max(height, 4) + '%' }}
+                  title={`${month}: ${fmt(amount, settings.payment_currency)}`}
                 />
                 <span className="text-xs text-cb-muted mt-2">{month}</span>
-                <span className="text-xs font-medium text-cb-text mt-1">${amount}</span>
+                <span className="text-xs font-medium text-cb-text mt-0.5">${(amount / 100).toFixed(0)}</span>
               </div>
             )
           })}
@@ -319,7 +561,7 @@ export default function PaymentsPage() {
 
       {/* Tabs */}
       <div className="flex gap-2 mb-6 border-b border-cb-border">
-        {(['invoices', 'subscriptions', 'settings'] as const).map(tab => (
+        {(['invoices', 'settings'] as const).map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -330,7 +572,7 @@ export default function PaymentsPage() {
                 : 'border-transparent text-cb-muted hover:text-cb-secondary'
             )}
           >
-            {tab === 'invoices' ? 'Invoices' : tab === 'subscriptions' ? 'Subscriptions' : 'Settings'}
+            {tab === 'invoices' ? `Invoices (${invoices.length})` : 'Settings'}
           </button>
         ))}
       </div>
@@ -339,147 +581,86 @@ export default function PaymentsPage() {
       {activeTab === 'invoices' && (
         <div>
           <div className="mb-4 flex gap-2">
-            {(['all', 'paid', 'pending', 'overdue'] as const).map(filter => (
+            {(['all', 'pending', 'overdue', 'paid', 'draft'] as const).map(f => (
               <button
-                key={filter}
-                onClick={() => setInvoiceFilter(filter)}
+                key={f}
+                onClick={() => setInvoiceFilter(f)}
                 className={clsx(
                   'px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-                  invoiceFilter === filter
+                  invoiceFilter === f
                     ? 'bg-brand text-white'
                     : 'bg-surface border border-cb-border text-cb-secondary hover:bg-surface-light'
                 )}
               >
-                {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                {f.charAt(0).toUpperCase() + f.slice(1)}
               </button>
             ))}
           </div>
 
-          <div className="bg-surface border border-cb-border rounded-lg overflow-hidden">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-cb-border bg-surface-light">
-                  <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-5 py-3">
-                    Invoice No
-                  </th>
-                  <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-5 py-3">
-                    Client
-                  </th>
-                  <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-5 py-3">
-                    Service
-                  </th>
-                  <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-5 py-3">
-                    Amount
-                  </th>
-                  <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-5 py-3">
-                    Due Date
-                  </th>
-                  <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-5 py-3">
-                    Status
-                  </th>
-                  <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-5 py-3">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-cb-border">
-                {filteredInvoices.map(invoice => (
-                  <tr key={invoice.id} className="hover:bg-surface-light">
-                    <td className="px-5 py-3 text-sm font-medium text-cb-text">{invoice.invoiceNo}</td>
-                    <td className="px-5 py-3 text-sm text-cb-secondary">{invoice.clientName}</td>
-                    <td className="px-5 py-3 text-sm text-cb-secondary">{invoice.service}</td>
-                    <td className="px-5 py-3 text-sm font-medium text-cb-text">
-                      ${invoice.amount} {invoice.currency}
-                    </td>
-                    <td className="px-5 py-3 text-sm text-cb-secondary">{invoice.dueDate}</td>
-                    <td className="px-5 py-3 text-sm">
-                      <span
-                        className={clsx(
-                          'inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold',
-                          invoice.status === 'paid'
-                            ? 'bg-cb-success/15 text-cb-success'
-                            : invoice.status === 'pending'
-                              ? 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400'
-                              : 'bg-cb-danger/15 text-cb-danger'
-                        )}
-                      >
-                        {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3 text-sm flex gap-2">
-                      {(invoice.status === 'pending' || invoice.status === 'overdue') && (
-                        <button className="px-2 py-1 text-xs font-medium rounded-lg bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">
-                          Remind
-                        </button>
-                      )}
-                      <button className="px-2 py-1 text-xs font-medium rounded-lg bg-surface-light border border-cb-border text-cb-secondary hover:text-cb-text transition-colors">
-                        View
-                      </button>
-                    </td>
+          {filteredInvoices.length === 0 ? (
+            <div className="bg-surface border border-cb-border rounded-lg py-16 text-center">
+              <p className="text-cb-muted text-sm mb-3">No invoices yet</p>
+              <button
+                onClick={() => setShowNewInvoice(true)}
+                className="px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:bg-brand/90 transition-colors"
+              >
+                Create your first invoice
+              </button>
+            </div>
+          ) : (
+            <div className="bg-surface border border-cb-border rounded-lg overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-cb-border bg-surface-light">
+                    {['Invoice No', 'Client', 'Description', 'Amount', 'Due Date', 'Status', 'Actions'].map(h => (
+                      <th key={h} className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-5 py-3">{h}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Subscriptions Tab */}
-      {activeTab === 'subscriptions' && (
-        <div className="bg-surface border border-cb-border rounded-lg overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-cb-border bg-surface-light">
-                <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-5 py-3">
-                  Client
-                </th>
-                <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-5 py-3">
-                  Plan
-                </th>
-                <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-5 py-3">
-                  Amount/month
-                </th>
-                <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-5 py-3">
-                  Next Billing
-                </th>
-                <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-5 py-3">
-                  Status
-                </th>
-                <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-5 py-3">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-cb-border">
-              {subscriptions.map(sub => (
-                <tr key={sub.clientId} className="hover:bg-surface-light">
-                  <td className="px-5 py-3 text-sm font-medium text-cb-text">{sub.clientName}</td>
-                  <td className="px-5 py-3 text-sm text-cb-secondary">{sub.plan}</td>
-                  <td className="px-5 py-3 text-sm font-medium text-cb-text">${sub.amount} AUD</td>
-                  <td className="px-5 py-3 text-sm text-cb-secondary">{sub.nextBilling}</td>
-                  <td className="px-5 py-3 text-sm">
-                    <span
-                      className={clsx(
-                        'inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold',
-                        sub.status === 'active'
-                          ? 'bg-cb-success/15 text-cb-success'
-                          : 'bg-cb-danger/15 text-cb-danger'
-                      )}
-                    >
-                      {sub.status === 'active' ? 'Active' : 'Past Due'}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3 text-sm">
-                    {sub.status === 'past_due' && (
-                      <button className="px-2 py-1 text-xs font-medium rounded-lg bg-cb-danger/10 text-cb-danger border border-cb-danger/30 hover:bg-cb-danger/20 transition-colors">
-                        Retry Payment
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                </thead>
+                <tbody className="divide-y divide-cb-border">
+                  {filteredInvoices.map(invoice => (
+                    <tr key={invoice.id} className="hover:bg-surface-light">
+                      <td className="px-5 py-3 text-sm font-medium text-cb-text font-mono">{invoice.invoice_number}</td>
+                      <td className="px-5 py-3 text-sm text-cb-secondary">{invoice.client?.full_name ?? '—'}</td>
+                      <td className="px-5 py-3 text-sm text-cb-secondary max-w-xs truncate">{invoice.description}</td>
+                      <td className="px-5 py-3 text-sm font-medium text-cb-text whitespace-nowrap">{fmt(invoice.amount_cents, invoice.currency)}</td>
+                      <td className="px-5 py-3 text-sm text-cb-secondary">{invoice.due_date ?? '—'}</td>
+                      <td className="px-5 py-3 text-sm">
+                        <span className={clsx(
+                          'inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold',
+                          invoice.status === 'paid' ? 'bg-cb-success/15 text-cb-success'
+                            : invoice.status === 'pending' ? 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400'
+                            : invoice.status === 'overdue' ? 'bg-cb-danger/15 text-cb-danger'
+                            : invoice.status === 'draft' ? 'bg-cb-muted/15 text-cb-muted'
+                            : 'bg-cb-muted/15 text-cb-muted'
+                        )}>
+                          {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3 text-sm">
+                        <div className="flex items-center gap-2">
+                          {(invoice.status === 'pending' || invoice.status === 'overdue') && (
+                            <button
+                              onClick={() => handleMarkPaid(invoice.id)}
+                              className="px-2 py-1 text-xs font-medium rounded-lg bg-cb-success/10 text-cb-success border border-cb-success/30 hover:bg-cb-success/20 transition-colors"
+                            >
+                              Mark paid
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleDeleteInvoice(invoice.id)}
+                            className="p-1 rounded text-cb-muted hover:text-cb-danger hover:bg-cb-danger/10 transition-colors"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 
@@ -499,23 +680,12 @@ export default function PaymentsPage() {
                 <div className="flex-1">
                   <h3 className="text-lg font-bold mb-1">Connect Stripe</h3>
                   <p className="text-sm opacity-90">
-                    Connect your Stripe account to start accepting card payments. Clients pay online — you get paid automatically.
+                    Connect your Stripe account to accept card payments online. Clients pay directly — you get paid automatically.
                   </p>
                 </div>
               </div>
               <button className="px-4 py-2 bg-white text-purple-700 rounded-lg hover:bg-purple-50 transition-colors font-medium text-sm">
                 Connect Stripe Account
-              </button>
-            </div>
-          </div>
-
-          {/* Payment methods section */}
-          <div className="bg-surface border border-cb-border rounded-lg p-6">
-            <h3 className="text-sm font-semibold text-cb-text mb-4">Payment Methods</h3>
-            <div className="bg-surface-light rounded-lg p-4 text-center">
-              <p className="text-sm text-cb-muted">No payment methods connected yet.</p>
-              <button className="mt-3 px-3 py-1.5 text-xs font-medium rounded-lg bg-brand text-white hover:bg-brand/90 transition-colors">
-                Add Payment Method
               </button>
             </div>
           </div>
@@ -580,7 +750,7 @@ export default function PaymentsPage() {
                       <option value="1_month">1 month free</option>
                       <option value="2_months">2 months free</option>
                       <option value="3_months">3 months free</option>
-                      <option value="forever">Forever (ongoing %)</option>
+                      <option value="forever">Forever (ongoing)</option>
                     </select>
                   </div>
                   <div>
@@ -619,16 +789,25 @@ export default function PaymentsPage() {
             ) : (
               <div className="space-y-2">
                 {promoCodes.map(promo => (
-                  <div key={promo.id} className={clsx('flex items-center gap-3 p-3 rounded-lg border', promo.active ? 'border-cb-border bg-surface-light' : 'border-cb-border/50 bg-surface opacity-60')}>
+                  <div
+                    key={promo.id}
+                    className={clsx(
+                      'flex items-center gap-3 p-3 rounded-lg border',
+                      promo.is_active ? 'border-cb-border bg-surface-light' : 'border-cb-border/50 bg-surface opacity-60'
+                    )}
+                  >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="font-mono text-sm font-bold text-cb-text">{promo.code}</span>
-                        <span className={clsx('text-xs px-2 py-0.5 rounded-full font-semibold', promo.active ? 'bg-cb-success/15 text-cb-success' : 'bg-cb-muted/20 text-cb-muted')}>
-                          {promo.active ? 'Active' : 'Paused'}
+                        <span className={clsx(
+                          'text-xs px-2 py-0.5 rounded-full font-semibold',
+                          promo.is_active ? 'bg-cb-success/15 text-cb-success' : 'bg-cb-muted/20 text-cb-muted'
+                        )}>
+                          {promo.is_active ? 'Active' : 'Paused'}
                         </span>
                       </div>
                       <p className="text-xs text-cb-muted mt-0.5">
-                        {promo.discount}{promo.type === 'percent' ? '%' : '$'} off · {durationLabel(promo.duration)} · {promo.uses} uses{promo.maxUses ? ` / ${promo.maxUses}` : ''}
+                        {promo.discount}{promo.type === 'percent' ? '%' : '$'} off · {durationLabel(promo.duration)} · {promo.uses} uses{promo.max_uses ? ` / ${promo.max_uses}` : ''}
                       </p>
                     </div>
                     <div className="flex items-center gap-1">
@@ -644,7 +823,7 @@ export default function PaymentsPage() {
                         onClick={() => handleTogglePromo(promo.id)}
                         className="px-2 py-1 text-xs font-medium rounded-md border border-cb-border text-cb-secondary hover:bg-surface transition-colors"
                       >
-                        {promo.active ? 'Pause' : 'Activate'}
+                        {promo.is_active ? 'Pause' : 'Activate'}
                       </button>
                       <button
                         onClick={() => handleDeletePromo(promo.id)}
@@ -665,89 +844,64 @@ export default function PaymentsPage() {
             <h3 className="text-sm font-semibold text-cb-text mb-4">Invoice Settings</h3>
             <div className="space-y-4">
               <div>
-                <label className="text-xs font-semibold text-cb-muted block mb-2 uppercase tracking-wide">
-                  Currency
-                </label>
-                <select className="w-full px-3 py-2 border border-cb-border rounded-lg text-sm text-cb-text bg-surface-light focus:outline-none focus:ring-2 focus:ring-brand">
-                  <option>AUD - Australian Dollar</option>
-                  <option>USD - US Dollar</option>
-                  <option>GBP - British Pound</option>
+                <label className="text-xs font-semibold text-cb-muted block mb-2 uppercase tracking-wide">Currency</label>
+                <select
+                  value={settings.payment_currency}
+                  onChange={e => setSettings(s => ({ ...s, payment_currency: e.target.value }))}
+                  className="w-full px-3 py-2 border border-cb-border rounded-lg text-sm text-cb-text bg-surface-light focus:outline-none focus:ring-2 focus:ring-brand"
+                >
+                  <option value="AUD">AUD — Australian Dollar</option>
+                  <option value="USD">USD — US Dollar</option>
+                  <option value="GBP">GBP — British Pound</option>
+                  <option value="EUR">EUR — Euro</option>
+                  <option value="NZD">NZD — New Zealand Dollar</option>
                 </select>
               </div>
               <div>
-                <label className="text-xs font-semibold text-cb-muted block mb-2 uppercase tracking-wide">
-                  Tax Rate (%)
-                </label>
+                <label className="text-xs font-semibold text-cb-muted block mb-2 uppercase tracking-wide">Tax Rate (%)</label>
                 <input
                   type="number"
                   placeholder="10"
+                  value={settings.payment_tax_rate}
+                  onChange={e => setSettings(s => ({ ...s, payment_tax_rate: parseFloat(e.target.value) || 0 }))}
                   className="w-full px-3 py-2 border border-cb-border rounded-lg text-sm text-cb-text placeholder-cb-muted bg-surface-light focus:outline-none focus:ring-2 focus:ring-brand"
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-cb-muted block mb-2 uppercase tracking-wide">
-                  Payment Terms (days)
-                </label>
+                <label className="text-xs font-semibold text-cb-muted block mb-2 uppercase tracking-wide">Payment Terms (days)</label>
                 <input
                   type="number"
                   placeholder="30"
+                  value={settings.payment_terms_days}
+                  onChange={e => setSettings(s => ({ ...s, payment_terms_days: parseInt(e.target.value) || 0 }))}
                   className="w-full px-3 py-2 border border-cb-border rounded-lg text-sm text-cb-text placeholder-cb-muted bg-surface-light focus:outline-none focus:ring-2 focus:ring-brand"
                 />
               </div>
+              <button
+                onClick={handleSaveSettings}
+                disabled={savingSettings}
+                className="px-4 py-2 bg-brand text-white text-sm font-medium rounded-lg hover:bg-brand/90 disabled:opacity-60 transition-colors"
+              >
+                {savingSettings ? 'Saving…' : 'Save Settings'}
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Billing Events Section */}
-      <div className="mt-8">
-        <h2 className="text-lg font-semibold text-cb-text mb-4">Billing Events</h2>
-        <div className="bg-surface border border-cb-border rounded-lg overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-cb-border bg-surface-light">
-                <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-5 py-3">
-                  Date
-                </th>
-                <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-5 py-3">
-                  Event
-                </th>
-                <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-5 py-3">
-                  Amount
-                </th>
-                <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-5 py-3">
-                  Status
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-cb-border">
-              {billingEvents.map(event => (
-                <tr key={event.id} className="hover:bg-surface-light">
-                  <td className="px-5 py-3 text-sm text-cb-secondary">{event.date}</td>
-                  <td className="px-5 py-3 text-sm text-cb-text">{event.description}</td>
-                  <td className="px-5 py-3 text-sm font-medium text-cb-text">
-                    {event.amount > 0 ? `$${(event.amount / 100).toFixed(2)}` : '—'}
-                  </td>
-                  <td className="px-5 py-3 text-sm">
-                    <span
-                      className={clsx(
-                        'inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold',
-                        event.status === 'success'
-                          ? 'bg-cb-success/15 text-cb-success'
-                          : event.status === 'failed'
-                            ? 'bg-cb-danger/15 text-cb-danger'
-                            : 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400'
-                      )}
-                    >
-                      {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      {/* New Invoice Modal */}
+      {showNewInvoice && (
+        <NewInvoiceModal
+          clients={clients}
+          currency={settings.payment_currency}
+          onClose={() => setShowNewInvoice(false)}
+          onCreated={inv => {
+            setInvoices(prev => [inv, ...prev])
+            setShowNewInvoice(false)
+            showToast('Invoice created')
+          }}
+        />
+      )}
     </div>
   )
 }

@@ -1,16 +1,18 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from 'next/server'
-// @ts-ignore - stripe package not installed, using placeholder
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder', {
-})
+const stripeKey = process.env.STRIPE_SECRET_KEY
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder'
-)
+if (!stripeKey || !supabaseUrl || !supabaseKey) {
+  throw new Error('Missing required environment variables')
+}
+
+const stripe = new Stripe(stripeKey)
+const supabase = createClient(supabaseUrl, supabaseKey)
 
 export async function POST(req: NextRequest) {
   const body = await req.text()
@@ -18,7 +20,7 @@ export async function POST(req: NextRequest) {
 
   let event: Stripe.Event
   try {
-    event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET || 'whsec_placeholder')
+    event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!)
   } catch (err: any) {
     return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 })
   }
@@ -99,12 +101,11 @@ export async function POST(req: NextRequest) {
 }
 
 function getPlanTier(priceId: string): string {
-  const tierMap: Record<string, string> = {
-    [process.env.STRIPE_PRICE_STARTER || 'price_starter']: 'starter',
-    [process.env.STRIPE_PRICE_PRO || 'price_pro']: 'pro',
-    [process.env.STRIPE_PRICE_ELITE || 'price_elite']: 'elite',
-  }
-  return tierMap[priceId] || 'pro'
+  const tierMap: Record<string, string> = {}
+  if (process.env.STRIPE_PRICE_STARTER) tierMap[process.env.STRIPE_PRICE_STARTER] = 'starter'
+  if (process.env.STRIPE_PRICE_PRO) tierMap[process.env.STRIPE_PRICE_PRO] = 'pro'
+  if (process.env.STRIPE_PRICE_ELITE) tierMap[process.env.STRIPE_PRICE_ELITE] = 'elite'
+  return tierMap[priceId] ?? 'unknown'
 }
 
 async function logBillingEvent(customerId: string, eventType: string, amount: number) {

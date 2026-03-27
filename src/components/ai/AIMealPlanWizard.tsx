@@ -6,8 +6,7 @@ import {
   CheckCircle2, Utensils, Calculator, Heart, Coffee,
 } from 'lucide-react'
 import clsx from 'clsx'
-import { useIsDemo } from '@/lib/demo/useDemoMode'
-import { DEMO_CLIENTS } from '@/lib/demo/mockData'
+import { createClient } from '@/lib/supabase/client'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -308,7 +307,6 @@ export default function AIMealPlanWizard({
   onClose: () => void
   onSave: (plan: MealPlanOutput) => void
 }) {
-  const isDemo = useIsDemo()
   const [clients, setClients] = useState<Client[]>([])
   const [step, setStep] = useState(0)
   const [loading, setLoading] = useState(false)
@@ -327,11 +325,17 @@ export default function AIMealPlanWizard({
 
   // Load clients
   useEffect(() => {
-    if (isDemo) {
-      setClients(DEMO_CLIENTS as unknown as Client[])
-      setState((s) => ({ ...s, clientId: (DEMO_CLIENTS[0] as unknown as Client).id ?? '' }))
-    }
-  }, [isDemo])
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return
+      supabase.from('profiles').select('id, name, email').eq('coach_id', user.id).eq('role', 'client')
+        .then(({ data }) => {
+          const list = (data ?? []).map((c: { id: string; name: string | null; email: string }) => ({ id: c.id, name: c.name, email: c.email }))
+          setClients(list)
+          if (list.length > 0) setState((s) => ({ ...s, clientId: list[0].id }))
+        })
+    })
+  }, [])
 
   const set = (k: keyof WizardState, v: WizardState[keyof WizardState]) =>
     setState((s) => ({ ...s, [k]: v }))

@@ -1,30 +1,57 @@
 'use client'
-import React, { useState } from 'react'
-import { Users, Gift, Copy, Share2, TrendingUp, CheckCircle, Clock, DollarSign } from 'lucide-react'
+import React, { useState, useEffect, useCallback } from 'react'
+import { Users, Gift, Copy, CheckCircle, Clock, DollarSign } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
-const DEMO_REFERRALS = [
-  { email: 'jessica@fitlife.com', name: 'Jessica Park', status: 'converted', signedUp: '2026-03-01', converted: '2026-03-15', reward: '$20 credit' },
-  { email: 'david@coachd.com', name: 'David Kim', status: 'signed_up', signedUp: '2026-03-10', converted: null, reward: 'Pending' },
-  { email: 'lisa@trainingwith.com', name: 'Lisa Chen', status: 'pending', signedUp: null, converted: null, reward: 'Pending' },
-  { email: 'ryan@ryanfit.io', name: 'Ryan Torres', status: 'converted', signedUp: '2026-02-20', converted: '2026-03-05', reward: '$20 credit' },
-]
-
-const MY_CODE = 'PROPEL-CHARLES-K8X2'
-const REFERRAL_URL = `https://propelcoach.app/trial/setup?ref=${MY_CODE}`
+type Referral = {
+  id: string
+  referee_email: string
+  referee_name: string | null
+  status: 'invited' | 'signed_up' | 'converted'
+  signed_up_at: string | null
+  converted_at: string | null
+  reward_amount: number
+  reward_issued: boolean
+}
 
 export default function ReferralsPage() {
   const [copied, setCopied] = useState(false)
+  const [referrals, setReferrals] = useState<Referral[]>([])
+  const [referralCode, setReferralCode] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  const load = useCallback(async () => {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setLoading(false); return }
+
+    const code = 'PROPEL-' + user.id.slice(0, 8).toUpperCase()
+    setReferralCode(code)
+
+    const { data } = await supabase
+      .from('referrals')
+      .select('*')
+      .eq('referrer_id', user.id)
+      .order('created_at', { ascending: false })
+
+    setReferrals((data as Referral[]) || [])
+    setLoading(false)
+  }, [])
+
+  useEffect(() => { load() }, [load])
+
+  const referralUrl = referralCode ? `https://propelcoach.app/trial/setup?ref=${referralCode}` : ''
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(REFERRAL_URL)
+      await navigator.clipboard.writeText(referralUrl)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {}
   }
 
-  const converted = DEMO_REFERRALS.filter(r => r.status === 'converted').length
-  const signedUp = DEMO_REFERRALS.filter(r => r.status === 'signed_up').length
+  const converted = referrals.filter(r => r.status === 'converted').length
+  const signedUp = referrals.filter(r => r.status === 'signed_up').length
   const totalCredits = converted * 20
 
   return (
@@ -37,10 +64,10 @@ export default function ReferralsPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {[
-          { label: 'Total Referred', value: DEMO_REFERRALS.length, icon: Users, color: 'text-purple-600', bg: 'bg-purple-50' },
-          { label: 'Signed Up', value: signedUp, icon: Clock, color: 'text-blue-600', bg: 'bg-blue-50' },
-          { label: 'Converted', value: converted, icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50' },
-          { label: 'Credits Earned', value: `$${totalCredits}`, icon: DollarSign, color: 'text-amber-600', bg: 'bg-amber-50' },
+          { label: 'Total Referred', value: loading ? '—' : referrals.length, icon: Users, color: 'text-purple-600', bg: 'bg-purple-50' },
+          { label: 'Signed Up', value: loading ? '—' : signedUp, icon: Clock, color: 'text-blue-600', bg: 'bg-blue-50' },
+          { label: 'Converted', value: loading ? '—' : converted, icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50' },
+          { label: 'Credits Earned', value: loading ? '—' : `$${totalCredits}`, icon: DollarSign, color: 'text-amber-600', bg: 'bg-amber-50' },
         ].map(stat => (
           <div key={stat.label} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
             <div className={`w-10 h-10 ${stat.bg} rounded-lg flex items-center justify-center mb-3`}>
@@ -60,10 +87,11 @@ export default function ReferralsPage() {
         </div>
         <p className="text-purple-200 text-sm mb-4">Share this link — your friends get 20% off their first month too!</p>
         <div className="bg-white/10 rounded-xl p-3 flex items-center gap-3 mb-4">
-          <span className="text-sm font-mono flex-1 truncate">{REFERRAL_URL}</span>
+          <span className="text-sm font-mono flex-1 truncate">{referralUrl || 'Loading…'}</span>
           <button
             onClick={handleCopy}
-            className="bg-white text-purple-700 text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-purple-50 transition-colors flex items-center gap-1"
+            disabled={!referralCode}
+            className="bg-white text-purple-700 text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-purple-50 disabled:opacity-50 transition-colors flex items-center gap-1"
           >
             {copied ? <CheckCircle className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
             {copied ? 'Copied!' : 'Copy'}
@@ -71,7 +99,7 @@ export default function ReferralsPage() {
         </div>
         <div className="flex items-center gap-2">
           <span className="text-purple-200 text-sm">Your code:</span>
-          <span className="bg-white/20 px-3 py-1 rounded-full text-sm font-mono font-bold">{MY_CODE}</span>
+          <span className="bg-white/20 px-3 py-1 rounded-full text-sm font-mono font-bold">{referralCode ?? '…'}</span>
         </div>
       </div>
 
@@ -110,11 +138,19 @@ export default function ReferralsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {DEMO_REFERRALS.map(r => (
-              <tr key={r.email} className="hover:bg-gray-50">
+            {loading ? (
+              <tr>
+                <td colSpan={4} className="px-6 py-10 text-center text-sm text-gray-400">Loading…</td>
+              </tr>
+            ) : referrals.length === 0 ? (
+              <tr>
+                <td colSpan={4} className="px-6 py-10 text-center text-sm text-gray-400">No referrals yet. Share your link to get started!</td>
+              </tr>
+            ) : referrals.map(r => (
+              <tr key={r.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4">
-                  <div className="font-medium text-gray-900 text-sm">{r.name}</div>
-                  <div className="text-gray-400 text-xs">{r.email}</div>
+                  <div className="font-medium text-gray-900 text-sm">{r.referee_name ?? '—'}</div>
+                  <div className="text-gray-400 text-xs">{r.referee_email}</div>
                 </td>
                 <td className="px-6 py-4">
                   <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -125,8 +161,14 @@ export default function ReferralsPage() {
                     {r.status === 'converted' ? '✓ Converted' : r.status === 'signed_up' ? '⏳ Trial' : '📧 Invited'}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-500">{r.signedUp || '—'}</td>
-                <td className="px-6 py-4 text-sm font-medium text-purple-600">{r.reward}</td>
+                <td className="px-6 py-4 text-sm text-gray-500">
+                  {r.signed_up_at ? new Date(r.signed_up_at).toLocaleDateString() : '—'}
+                </td>
+                <td className="px-6 py-4 text-sm font-medium text-purple-600">
+                  {r.status === 'converted'
+                    ? r.reward_issued ? `$${r.reward_amount / 100} credited` : `$${r.reward_amount / 100} pending`
+                    : '—'}
+                </td>
               </tr>
             ))}
           </tbody>

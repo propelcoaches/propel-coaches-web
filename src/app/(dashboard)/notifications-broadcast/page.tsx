@@ -1,6 +1,7 @@
 'use client'
-import React, { useState } from 'react'
-import { Bell, Send, Users, CheckCircle, Megaphone, Clock, Target } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { Bell, Send, Users, CheckCircle, Megaphone, Clock, AlertCircle } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
 const TEMPLATES = [
   { id: 'checkin', title: '📋 Check-in Reminder', body: 'Hey! Don\'t forget to submit your weekly check-in. Your coach is waiting to review your progress.' },
@@ -10,11 +11,13 @@ const TEMPLATES = [
   { id: 'custom', title: '✏️ Custom Message', body: '' },
 ]
 
-const RECENT_BROADCASTS = [
-  { date: '2026-03-22', title: '💪 Week 12 — You\'re crushing it!', recipients: 14, opened: 11, type: 'Motivation' },
-  { date: '2026-03-15', title: '📋 Weekly check-in reminder', recipients: 14, opened: 13, type: 'Check-in' },
-  { date: '2026-03-08', title: '🏋️ New program dropped — check it out', recipients: 12, opened: 9, type: 'Announcement' },
-]
+type Broadcast = {
+  id: string
+  title: string
+  audience: string
+  recipient_count: number
+  sent_at: string
+}
 
 export default function BroadcastPage() {
   const [selectedTemplate, setSelectedTemplate] = useState(TEMPLATES[0])
@@ -23,6 +26,36 @@ export default function BroadcastPage() {
   const [audience, setAudience] = useState('all')
   const [sent, setSent] = useState(false)
   const [sending, setSending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const [clientCount, setClientCount] = useState<number>(0)
+  const [broadcasts, setBroadcasts] = useState<Broadcast[]>([])
+  const [userId, setUserId] = useState<string | null>(null)
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return
+      setUserId(user.id)
+
+      // Load client count
+      const { count } = await supabase
+        .from('profiles')
+        .select('id', { count: 'exact', head: true })
+        .eq('coach_id', user.id)
+        .eq('role', 'client')
+      setClientCount(count ?? 0)
+
+      // Load broadcast history
+      const { data } = await supabase
+        .from('notification_broadcasts')
+        .select('id, title, audience, recipient_count, sent_at')
+        .eq('coach_id', user.id)
+        .order('sent_at', { ascending: false })
+        .limit(10)
+      setBroadcasts(data ?? [])
+    })
+  }, [])
 
   const handleTemplateSelect = (t: typeof TEMPLATES[0]) => {
     setSelectedTemplate(t)
@@ -31,15 +64,35 @@ export default function BroadcastPage() {
   }
 
   const handleSend = async () => {
+    if (!userId || !title || !body) return
     setSending(true)
-    // In production: POST to /api/notifications/broadcast
-    await new Promise(r => setTimeout(r, 1500))
-    setSending(false)
-    setSent(true)
-    setTimeout(() => setSent(false), 4000)
-  }
+    setError(null)
+    try {
+      const res = await fetch('/api/notifications/broadcast', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, body, coachId: userId, audience }),
+      })
+      const d = await res.json()
+      if (!res.ok) throw new Error(d.error || 'Failed to send')
+      setSent(true)
+      setTimeout(() => setSent(false), 4000)
 
-  const audienceCount = audience === 'all' ? 14 : audience === 'active' ? 10 : audience === 'at_risk' ? 4 : 14
+      // Reload broadcast history
+      const supabase = createClient()
+      const { data } = await supabase
+        .from('notification_broadcasts')
+        .select('id, title, audience, recipient_count, sent_at')
+        .eq('coach_id', userId)
+        .order('sent_at', { ascending: false })
+        .limit(10)
+      setBroadcasts(data ?? [])
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to send')
+    } finally {
+      setSending(false)
+    }
+  }
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
@@ -53,11 +106,10 @@ export default function BroadcastPage() {
         </div>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-4 mb-6">
+      <div className="grid md:grid-cols-2 gap-4 mb-6">
         {[
-          { label: 'Total Clients', value: '14', icon: Users, color: 'purple' },
-          { label: 'Broadcasts Sent', value: '23', icon: Send, color: 'blue' },
-          { label: 'Avg Open Rate', value: '81%', icon: CheckCircle, color: 'green' },
+          { label: 'Total Clients', value: clientCount, icon: Users, color: 'purple' },
+          { label: 'Broadcasts Sent', value: broadcasts.length, icon: Send, color: 'blue' },
         ].map(s => (
           <div key={s.label} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
             <div className={`w-10 h-10 bg-${s.color}-50 rounded-lg flex items-center justify-center mb-3`}>
@@ -74,7 +126,6 @@ export default function BroadcastPage() {
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
           <h2 className="font-semibold text-gray-900 mb-4">Compose Broadcast</h2>
 
-          {/* Templates */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">Template</label>
             <div className="grid grid-cols-2 gap-2">
@@ -92,7 +143,6 @@ export default function BroadcastPage() {
             </div>
           </div>
 
-          {/* Title */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">Notification Title</label>
             <input
@@ -103,7 +153,6 @@ export default function BroadcastPage() {
             />
           </div>
 
-          {/* Body */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
             <textarea
@@ -116,7 +165,6 @@ export default function BroadcastPage() {
             <div className="text-xs text-gray-400 text-right mt-1">{body.length}/150</div>
           </div>
 
-          {/* Audience */}
           <div className="mb-5">
             <label className="block text-sm font-medium text-gray-700 mb-1">Audience</label>
             <select
@@ -124,9 +172,9 @@ export default function BroadcastPage() {
               onChange={e => setAudience(e.target.value)}
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
             >
-              <option value="all">All Clients (14)</option>
-              <option value="active">Active This Week (10)</option>
-              <option value="at_risk">At-Risk Clients (4)</option>
+              <option value="all">All Clients ({clientCount})</option>
+              <option value="active">Active This Week</option>
+              <option value="at_risk">At-Risk Clients</option>
             </select>
           </div>
 
@@ -144,17 +192,24 @@ export default function BroadcastPage() {
             <div className="text-gray-500 text-xs mt-2 text-right">now · Propel Coach</div>
           </div>
 
+          {error && (
+            <div className="flex items-center gap-2 text-sm text-red-600 mb-3">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              {error}
+            </div>
+          )}
+
           <button
             onClick={handleSend}
-            disabled={!body || !title || sending || sent}
+            disabled={!body || !title || sending || sent || !userId}
             className="w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-300 text-white px-4 py-3 rounded-xl text-sm font-semibold transition-colors"
           >
             {sent ? (
-              <><CheckCircle className="w-4 h-4" /> Sent to {audienceCount} clients!</>
+              <><CheckCircle className="w-4 h-4" /> Sent!</>
             ) : sending ? (
               <><Clock className="w-4 h-4 animate-spin" /> Sending...</>
             ) : (
-              <><Send className="w-4 h-4" /> Send to {audienceCount} clients</>
+              <><Send className="w-4 h-4" /> Send to {audience === 'all' ? clientCount : 'selected'} clients</>
             )}
           </button>
         </div>
@@ -162,21 +217,24 @@ export default function BroadcastPage() {
         {/* History */}
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
           <h2 className="font-semibold text-gray-900 mb-4">Recent Broadcasts</h2>
-          <div className="space-y-3">
-            {RECENT_BROADCASTS.map((b, i) => (
-              <div key={i} className="border border-gray-100 rounded-xl p-4">
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <div className="font-medium text-gray-900 text-sm">{b.title}</div>
-                  <span className="bg-purple-100 text-purple-700 text-xs px-2 py-0.5 rounded-full flex-shrink-0">{b.type}</span>
+          {broadcasts.length === 0 ? (
+            <div className="text-center py-10 text-gray-400 text-sm">No broadcasts yet.</div>
+          ) : (
+            <div className="space-y-3">
+              {broadcasts.map(b => (
+                <div key={b.id} className="border border-gray-100 rounded-xl p-4">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="font-medium text-gray-900 text-sm">{b.title}</div>
+                    <span className="bg-purple-100 text-purple-700 text-xs px-2 py-0.5 rounded-full flex-shrink-0 capitalize">{b.audience}</span>
+                  </div>
+                  <div className="flex items-center gap-4 text-xs text-gray-500">
+                    <span>{new Date(b.sent_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                    <span>{b.recipient_count} sent</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-4 text-xs text-gray-500">
-                  <span>{b.date}</span>
-                  <span>{b.recipients} sent</span>
-                  <span className="text-green-600 font-medium">{b.opened}/{b.recipients} opened ({Math.round(b.opened/b.recipients*100)}%)</span>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

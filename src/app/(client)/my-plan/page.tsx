@@ -6,7 +6,6 @@ import {
 } from 'lucide-react'
 import clsx from 'clsx'
 import { useTheme } from '@/contexts/ThemeContext'
-import { useIsDemo } from '@/lib/demo/useDemoMode'
 import { createClient } from '@/lib/supabase/client'
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js'
 
@@ -92,92 +91,6 @@ function dbRowToPlan(row: any): NutritionPlan {
     notes: row.notes ?? '',
     createdAt: row.created_at,
     publishedAt: row.published_at ?? undefined,
-  }
-}
-
-// ── Demo data ─────────────────────────────────────────────────────────────────
-
-function genId(): string {
-  return (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function')
-    ? crypto.randomUUID()
-    : `${Math.random().toString(36).slice(2)}-${Date.now()}`
-}
-
-function f(name: string, qty: number, unit: Unit, cal100: number, pro100: number, carb100: number, fat100: number, fibre100: number, sodium100: number, brand?: string): FoodItem {
-  return { id: genId(), name, brand, quantity: qty, unit, cal100, pro100, carb100, fat100, fibre100, sodium100 }
-}
-
-function m(name: string, time: string, foods: FoodItem[], notes = ''): Meal {
-  return { id: genId(), name, time, notes, tags: [], foods }
-}
-
-function buildClientPlan(): NutritionPlan {
-  const days: DayPlan[] = [
-    {
-      id: genId(), dayNumber: 1, dayName: 'Monday', meals: [
-        m('Breakfast', '07:00', [f('Rolled Oats', 80, 'g', 389, 17, 66, 7, 10.6, 6), f('Whey Protein', 30, 'g', 380, 75, 8, 6, 1, 80, 'Generic'), f('Blueberries', 100, 'g', 57, 0.7, 14.5, 0.3, 2.4, 1), f('Almond Milk', 250, 'ml', 17, 0.6, 0.7, 1.1, 0.4, 65)], 'Mix protein into oats after cooking with water.'),
-        m('Lunch', '12:30', [f('Chicken Breast', 200, 'g', 165, 31, 0, 3.6, 0, 74), f('White Rice', 150, 'g', 130, 2.7, 28, 0.3, 0.4, 1), f('Broccoli', 120, 'g', 34, 2.8, 7, 0.4, 2.6, 33), f('Olive Oil', 10, 'ml', 884, 0, 0, 100, 0, 2)]),
-        m('Afternoon Snack', '15:30', [f('Greek Yogurt', 200, 'g', 59, 10, 3.6, 0.4, 0, 36), f('Almonds', 30, 'g', 579, 21, 22, 50, 12.5, 1), f('Banana', 1, 'piece', 89, 1.1, 23, 0.3, 2.6, 1)]),
-        m('Dinner', '18:30', [f('Atlantic Salmon', 200, 'g', 208, 20, 0, 13, 0, 59), f('Sweet Potato', 250, 'g', 86, 1.6, 20, 0.1, 3, 55), f('Spinach', 80, 'g', 23, 2.9, 3.6, 0.4, 2.2, 79), f('Olive Oil', 15, 'ml', 884, 0, 0, 100, 0, 2)], 'Bake salmon at 200°C for 18 mins.'),
-      ],
-    },
-    {
-      id: genId(), dayNumber: 2, dayName: 'Tuesday', meals: [
-        m('Breakfast', '07:00', [f('Eggs', 3, 'piece', 155, 13, 1.1, 11, 0, 124), f('Whole Grain Toast', 60, 'g', 247, 9, 47, 3, 6, 380), f('Avocado', 80, 'g', 160, 2, 9, 15, 6.7, 7)]),
-        m('Lunch', '12:30', [f('Turkey Breast', 180, 'g', 135, 29, 0, 1, 0, 70), f('Brown Rice', 140, 'g', 123, 2.7, 26, 1, 1.8, 4), f('Asparagus', 120, 'g', 20, 2.2, 3.9, 0.1, 2.1, 2), f('Olive Oil', 10, 'ml', 884, 0, 0, 100, 0, 2)]),
-        m('Dinner', '18:30', [f('Lean Beef Mince', 200, 'g', 215, 26, 0, 12, 0, 79), f('Pasta', 80, 'g', 371, 13, 75, 1.5, 2.7, 6), f('Tomato Passata', 100, 'g', 35, 1.5, 7, 0.3, 1.5, 320), f('Parmesan', 20, 'g', 431, 38, 4, 29, 0, 1529)]),
-        m('Evening Snack', '21:00', [f('Cottage Cheese', 200, 'g', 98, 11, 3.4, 4.3, 0, 364)]),
-      ],
-    },
-    {
-      id: genId(), dayNumber: 3, dayName: 'Wednesday', meals: [
-        m('Breakfast', '07:00', [f('Rolled Oats', 80, 'g', 389, 17, 66, 7, 10.6, 6), f('Whey Protein', 30, 'g', 380, 75, 8, 6, 1, 80, 'Generic'), f('Strawberries', 100, 'g', 32, 0.7, 7.7, 0.3, 2, 1)]),
-        m('Lunch', '12:30', [f('Chicken Breast', 200, 'g', 165, 31, 0, 3.6, 0, 74), f('Quinoa', 100, 'g', 120, 4.4, 22, 1.9, 2.8, 7), f('Kale', 80, 'g', 49, 4.3, 8.8, 0.9, 3.6, 38), f('Olive Oil', 10, 'ml', 884, 0, 0, 100, 0, 2)]),
-        m('Afternoon Snack', '15:30', [f('Greek Yogurt', 200, 'g', 59, 10, 3.6, 0.4, 0, 36), f('Mixed Nuts', 30, 'g', 607, 20, 21, 54, 6, 4)]),
-        m('Dinner', '18:30', [f('Tuna Steak', 200, 'g', 116, 26, 0, 1, 0, 45), f('Sweet Potato', 200, 'g', 86, 1.6, 20, 0.1, 3, 55), f('Green Beans', 120, 'g', 31, 1.8, 7, 0.1, 2.7, 6)]),
-      ],
-    },
-    {
-      id: genId(), dayNumber: 4, dayName: 'Thursday', meals: [
-        m('Breakfast', '07:00', [f('Eggs', 4, 'piece', 155, 13, 1.1, 11, 0, 124), f('Rolled Oats', 60, 'g', 389, 17, 66, 7, 10.6, 6), f('Banana', 1, 'piece', 89, 1.1, 23, 0.3, 2.6, 1)]),
-        m('Lunch', '12:30', [f('Chicken Breast', 220, 'g', 165, 31, 0, 3.6, 0, 74), f('White Rice', 160, 'g', 130, 2.7, 28, 0.3, 0.4, 1), f('Broccoli', 150, 'g', 34, 2.8, 7, 0.4, 2.6, 33)]),
-        m('Pre-Workout', '16:00', [f('Whey Protein', 30, 'g', 380, 75, 8, 6, 1, 80, 'Generic'), f('Apple', 1, 'piece', 52, 0.3, 14, 0.2, 2.4, 1)], 'Have 30 mins before training.'),
-        m('Dinner', '19:00', [f('Atlantic Salmon', 200, 'g', 208, 20, 0, 13, 0, 59), f('Brown Rice', 150, 'g', 123, 2.7, 26, 1, 1.8, 4), f('Zucchini', 120, 'g', 17, 1.2, 3.1, 0.3, 1, 8)]),
-      ],
-    },
-    {
-      id: genId(), dayNumber: 5, dayName: 'Friday', meals: [
-        m('Breakfast', '07:00', [f('Rolled Oats', 80, 'g', 389, 17, 66, 7, 10.6, 6), f('Whey Protein', 30, 'g', 380, 75, 8, 6, 1, 80, 'Generic'), f('Blueberries', 80, 'g', 57, 0.7, 14.5, 0.3, 2.4, 1)]),
-        m('Lunch', '12:30', [f('Turkey Breast', 200, 'g', 135, 29, 0, 1, 0, 70), f('Pasta', 90, 'g', 371, 13, 75, 1.5, 2.7, 6), f('Spinach', 60, 'g', 23, 2.9, 3.6, 0.4, 2.2, 79)]),
-        m('Dinner', '18:30', [f('Beef Steak', 220, 'g', 271, 26, 0, 18, 0, 54), f('Sweet Potato', 200, 'g', 86, 1.6, 20, 0.1, 3, 55), f('Asparagus', 100, 'g', 20, 2.2, 3.9, 0.1, 2.1, 2), f('Butter', 10, 'g', 717, 0.9, 0.1, 81, 0, 714)]),
-      ],
-    },
-    {
-      id: genId(), dayNumber: 6, dayName: 'Saturday', meals: [
-        m('Breakfast', '08:30', [f('Eggs', 3, 'piece', 155, 13, 1.1, 11, 0, 124), f('Avocado', 100, 'g', 160, 2, 9, 15, 6.7, 7), f('Whole Grain Toast', 80, 'g', 247, 9, 47, 3, 6, 380), f('Smoked Salmon', 80, 'g', 117, 18, 0, 4.3, 0, 784)]),
-        m('Lunch', '13:00', [f('Chicken Breast', 200, 'g', 165, 31, 0, 3.6, 0, 74), f('Mixed Salad', 150, 'g', 17, 1.5, 3.3, 0.2, 1.8, 28), f('Olive Oil', 15, 'ml', 884, 0, 0, 100, 0, 2), f('Feta Cheese', 40, 'g', 264, 14, 4, 21, 0, 917)]),
-        m('Dinner', '19:00', [f('Atlantic Salmon', 200, 'g', 208, 20, 0, 13, 0, 59), f('Quinoa', 120, 'g', 120, 4.4, 22, 1.9, 2.8, 7), f('Bell Pepper', 120, 'g', 31, 1, 6, 0.3, 2.1, 4), f('Olive Oil', 10, 'ml', 884, 0, 0, 100, 0, 2)]),
-      ],
-    },
-    {
-      id: genId(), dayNumber: 7, dayName: 'Sunday', meals: [
-        m('Breakfast', '09:00', [f('Protein Pancakes', 100, 'g', 220, 18, 28, 4, 2, 380), f('Greek Yogurt', 150, 'g', 59, 10, 3.6, 0.4, 0, 36), f('Mixed Berries', 100, 'g', 50, 1, 12, 0.3, 3, 1)]),
-        m('Lunch', '13:00', [f('Lean Beef Mince', 180, 'g', 215, 26, 0, 12, 0, 79), f('White Rice', 150, 'g', 130, 2.7, 28, 0.3, 0.4, 1), f('Broccoli', 150, 'g', 34, 2.8, 7, 0.4, 2.6, 33)]),
-        m('Dinner', '18:30', [f('Chicken Breast', 220, 'g', 165, 31, 0, 3.6, 0, 74), f('Sweet Potato', 250, 'g', 86, 1.6, 20, 0.1, 3, 55), f('Kale', 80, 'g', 49, 4.3, 8.8, 0.9, 3.6, 38), f('Olive Oil', 10, 'ml', 884, 0, 0, 100, 0, 2)]),
-      ],
-    },
-  ]
-
-  return {
-    id: 'demo-client-plan-1',
-    name: 'Lean Bulk Phase 1',
-    clientId: 'client-liam', clientName: 'Liam Carter',
-    status: 'published',
-    caloriesTarget: 2800, proteinTarget: 200, carbsTarget: 300, fatTarget: 80, fibreTarget: 35,
-    days,
-    notes: 'Focus on progressive overload. Adjust portions based on your weekly weigh-in trend. Drink at least 3L of water daily.',
-    createdAt: '2026-02-01T08:00:00Z',
-    publishedAt: '2026-03-09T10:00:00Z',
   }
 }
 
@@ -282,7 +195,6 @@ const COMPLETED_LS_KEY = 'cb_plan_completed_meals'
 
 export default function MyPlanPage() {
   const { theme, toggleTheme } = useTheme()
-  const isDemo = useIsDemo()
   const [plan, setPlan] = useState<NutritionPlan | null>(null)
   const [loadingPlan, setLoadingPlan] = useState(true)
   const [activeDay, setActiveDay] = useState(0)
@@ -302,26 +214,9 @@ export default function MyPlanPage() {
     } catch { /* ignore */ }
   }, [])
 
-  // ── Demo mode: use local data ────────────────────────────────────────────────
-  useEffect(() => {
-    if (!mounted) return
-    if (!isDemo) return
-    const demoPlan = buildClientPlan()
-    setPlan(demoPlan)
-    setLoadingPlan(false)
-    // Show banner in demo mode if not previously dismissed
-    try {
-      const dismissed = localStorage.getItem(`${BANNER_LS_KEY}_${demoPlan.id}`)
-      if (!dismissed) {
-        setBannerText(demoPlan.name)
-        setBannerVisible(true)
-      }
-    } catch { /* ignore */ }
-  }, [isDemo, mounted])
-
   // ── Live mode: load from Supabase + subscribe to Realtime ───────────────────
   useEffect(() => {
-    if (!mounted || isDemo) return
+    if (!mounted) return
 
     const supabase = createClient()
     let cleanup: (() => void) | null = null
@@ -394,7 +289,7 @@ export default function MyPlanPage() {
     })
 
     return () => { cleanup?.() }
-  }, [isDemo, mounted])
+  }, [mounted])
 
   // ── Helpers ──────────────────────────────────────────────────────────────────
 

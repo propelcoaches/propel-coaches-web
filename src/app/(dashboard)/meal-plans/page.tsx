@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { toast } from '@/lib/toast';
 
 // ─── Types ──────────────────────────────────────────────────────────
 interface MealPlan {
@@ -192,11 +193,10 @@ export default function MealPlansPage() {
         setShowGenerator(false);
         setActiveDay(1);
       } else {
-        alert(data.error || 'Failed to generate meal plan');
+        toast.error(data.error || 'Failed to generate meal plan');
       }
-    } catch (err) {
-      console.error(err);
-      alert('Network error generating meal plan');
+    } catch {
+      toast.error('Network error generating meal plan');
     } finally {
       setGenerating(false);
     }

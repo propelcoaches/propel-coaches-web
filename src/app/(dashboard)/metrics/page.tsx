@@ -2,67 +2,24 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { TrendingDown, TrendingUp, Minus, Loader2 } from 'lucide-react'
-import { useIsDemo } from '@/lib/demo/useDemoMode'
-import { DEMO_CLIENTS, DEMO_WEIGHT_LOGS, DEMO_CHECK_INS } from '@/lib/demo/mockData'
 import clsx from 'clsx'
 import { createClient } from '@/lib/supabase/client'
 
-const DEMO_MEASUREMENTS: Record<string, { date: string; chest: number; waist: number; hips: number; arms: number; thighs: number }[]> = {
-  'demo-client-1': [
-    { date: '2025-09-16', chest: 108, waist: 96, hips: 102, arms: 38, thighs: 62 },
-    { date: '2026-01-10', chest: 105, waist: 92, hips: 99, arms: 39, thighs: 60 },
-    { date: '2026-03-03', chest: 103, waist: 89, hips: 97, arms: 40, thighs: 59 },
-  ],
-  'demo-client-2': [
-    { date: '2025-10-04', chest: 88, waist: 70, hips: 94, arms: 29, thighs: 55 },
-    { date: '2026-03-04', chest: 86, waist: 67, hips: 92, arms: 30, thighs: 53 },
-  ],
-  'demo-client-3': [
-    { date: '2025-11-19', chest: 100, waist: 82, hips: 96, arms: 37, thighs: 58 },
-    { date: '2026-03-02', chest: 103, waist: 84, hips: 97, arms: 40, thighs: 61 },
-  ],
-  'demo-client-4': [
-    { date: '2025-12-02', chest: 93, waist: 76, hips: 98, arms: 30, thighs: 57 },
-    { date: '2026-03-05', chest: 91, waist: 73, hips: 96, arms: 31, thighs: 55 },
-  ],
-}
-
-const DEMO_PRS: Record<string, { exercise: string; weight: number; reps: number; e1rm: number; date: string }[]> = {
-  'demo-client-1': [
-    { exercise: 'Squat', weight: 120, reps: 5, e1rm: 139, date: '2026-03-03' },
-    { exercise: 'Bench Press', weight: 100, reps: 5, e1rm: 116, date: '2026-02-10' },
-    { exercise: 'Romanian Deadlift', weight: 110, reps: 6, e1rm: 131, date: '2026-01-28' },
-  ],
-  'demo-client-2': [
-    { exercise: 'Bulgarian Split Squat', weight: 40, reps: 8, e1rm: 51, date: '2026-02-18' },
-    { exercise: 'Hip Thrust', weight: 90, reps: 10, e1rm: 120, date: '2026-03-04' },
-  ],
-  'demo-client-3': [
-    { exercise: 'Bench Press', weight: 110, reps: 3, e1rm: 123, date: '2026-03-02' },
-    { exercise: 'Deadlift', weight: 175, reps: 3, e1rm: 195, date: '2026-02-16' },
-    { exercise: 'Squat', weight: 140, reps: 5, e1rm: 163, date: '2026-01-20' },
-  ],
-  'demo-client-4': [
-    { exercise: 'Goblet Squat', weight: 24, reps: 10, e1rm: 32, date: '2026-03-05' },
-  ],
-}
-
 export default function MetricsPage() {
-  const isDemo = useIsDemo()
-  const [selectedClient, setSelectedClient] = useState<string>(isDemo ? 'demo-client-1' : '')
+  const [selectedClient, setSelectedClient] = useState<string>('')
   const [realClients, setRealClients] = useState<{ id: string; name: string; full_name: string }[]>([])
   const [realWeightLogs, setRealWeightLogs] = useState<any[]>([])
   const [realCheckIns, setRealCheckIns] = useState<any[]>([])
   const [realPRs, setRealPRs] = useState<any[]>([])
+  const [realMeasurements, setRealMeasurements] = useState<any[]>([])
   const [macroInputs, setMacroInputs] = useState({ calories: '2000', protein: '150', carbs: '200', fat: '70' })
   const [savingMacros, setSavingMacros] = useState(false)
   const [macroSaved, setMacroSaved] = useState(false)
-  const [loadingClients, setLoadingClients] = useState(!isDemo)
+  const [loadingClients, setLoadingClients] = useState(true)
   const [loadingMetrics, setLoadingMetrics] = useState(false)
 
   // Fetch clients list for the dropdown
   useEffect(() => {
-    if (isDemo) return
     const supabase = createClient()
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) return
@@ -75,11 +32,11 @@ export default function MetricsPage() {
       setRealClients((data || []).map(c => ({ id: c.id, name: c.full_name, full_name: c.full_name })))
       setLoadingClients(false)
     })
-  }, [isDemo])
+  }, [])
 
   // Fetch metrics when selectedClient changes
   useEffect(() => {
-    if (isDemo || !selectedClient) return
+    if (!selectedClient) return
     const supabase = createClient()
     setLoadingMetrics(true)
     Promise.all([
@@ -87,10 +44,12 @@ export default function MetricsPage() {
       supabase.from('check_ins').select('energy, sleep_quality, stress, date').eq('client_id', selectedClient).order('date', { ascending: false }).limit(20),
       supabase.from('personal_records').select('*').eq('client_id', selectedClient).order('date', { ascending: false }),
       supabase.from('macro_targets').select('*').eq('client_id', selectedClient).order('created_at', { ascending: false }).limit(1).maybeSingle(),
-    ]).then(([wl, ci, pr, mt]) => {
+      supabase.from('body_measurements').select('*').eq('client_id', selectedClient).order('date', { ascending: false }).limit(20),
+    ]).then(([wl, ci, pr, mt, bm]) => {
       setRealWeightLogs(wl.data || [])
       setRealCheckIns(ci.data || [])
       setRealPRs(pr.data || [])
+      setRealMeasurements(bm.data || [])
       if (mt.data) {
         setMacroInputs({
           calories: String(mt.data.calories || 2000),
@@ -100,10 +59,10 @@ export default function MetricsPage() {
         })
       }
     }).finally(() => setLoadingMetrics(false))
-  }, [isDemo, selectedClient])
+  }, [selectedClient])
 
   const handleSaveMacros = async () => {
-    if (!selectedClient || isDemo) return
+    if (!selectedClient) return
     setSavingMacros(true)
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -122,20 +81,16 @@ export default function MetricsPage() {
     setTimeout(() => setMacroSaved(false), 2500)
   }
 
-  const clients = isDemo ? DEMO_CLIENTS : realClients
-  const clientWeightLogsRaw = isDemo
-    ? DEMO_WEIGHT_LOGS.filter(w => w.client_id === selectedClient)
-    : realWeightLogs
+  const clients = realClients
+  const clientWeightLogsRaw = realWeightLogs
   const clientWeightLogs = clientWeightLogsRaw
     .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .slice(-12)
 
-  const clientCheckIns = isDemo
-    ? DEMO_CHECK_INS.filter(c => c.client_id === selectedClient)
-    : realCheckIns
+  const clientCheckIns = realCheckIns
   const clientProfile = clients.find((c: any) => c.id === selectedClient)
-  const measurements = DEMO_MEASUREMENTS[selectedClient] ?? []
-  const prs = isDemo ? (DEMO_PRS[selectedClient] ?? []) : realPRs
+  const measurements = realMeasurements
+  const prs = realPRs
 
   const latestWeight = clientWeightLogs[clientWeightLogs.length - 1]?.weight_kg
   const prevWeight = clientWeightLogs[clientWeightLogs.length - 2]?.weight_kg
@@ -206,7 +161,7 @@ export default function MetricsPage() {
             </div>
             <button
               onClick={handleSaveMacros}
-              disabled={savingMacros || !selectedClient || isDemo}
+              disabled={savingMacros || !selectedClient}
               className="mt-4 w-full px-4 py-2 bg-brand text-white text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {savingMacros && <Loader2 size={14} className="animate-spin" />}
@@ -414,10 +369,10 @@ export default function MetricsPage() {
                 <tbody className="divide-y divide-cb-border">
                   {prs.map((pr, i) => (
                     <tr key={i} className="hover:bg-surface-light">
-                      <td className="px-4 py-2 text-sm font-medium text-cb-text">{pr.exercise}</td>
-                      <td className="px-4 py-2 text-sm text-cb-secondary">{pr.weight} kg</td>
+                      <td className="px-4 py-2 text-sm font-medium text-cb-text">{pr.exercise_name}</td>
+                      <td className="px-4 py-2 text-sm text-cb-secondary">{pr.weight_kg} kg</td>
                       <td className="px-4 py-2 text-sm text-cb-secondary">{pr.reps}</td>
-                      <td className="px-4 py-2 text-sm font-semibold text-brand">{pr.e1rm} kg</td>
+                      <td className="px-4 py-2 text-sm font-semibold text-brand">{pr.estimated_1rm} kg</td>
                       <td className="px-4 py-2 text-sm text-cb-muted">
                         {new Date(pr.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}
                       </td>

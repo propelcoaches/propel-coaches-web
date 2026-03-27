@@ -1,8 +1,11 @@
 export const dynamic = "force-dynamic";
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { stripeGet, stripePost } from '@/lib/stripe'
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  if (request.headers.get('x-admin-secret') !== process.env.ADMIN_SECRET) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
   if (!process.env.STRIPE_SECRET_KEY) return NextResponse.json({ error: 'no_key' })
 
   const { searchParams } = new URL(request.url)
@@ -45,7 +48,10 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  if (request.headers.get('x-admin-secret') !== process.env.ADMIN_SECRET) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
   if (!process.env.STRIPE_SECRET_KEY) return NextResponse.json({ error: 'no_key' })
 
   try {

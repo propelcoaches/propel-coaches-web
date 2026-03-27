@@ -6,8 +6,6 @@ import {
   CheckCircle2, Dumbbell, Zap, BookOpen, RotateCcw,
 } from 'lucide-react'
 import clsx from 'clsx'
-import { useIsDemo } from '@/lib/demo/useDemoMode'
-import { DEMO_CLIENTS } from '@/lib/demo/mockData'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -525,9 +523,7 @@ export default function AIWorkoutWizard({
   onClose: () => void
   onSave: (prog: ProgramShell, days: BuilderDay[]) => void
 }) {
-  const isDemo = useIsDemo()
-  const demoClients = (DEMO_CLIENTS as unknown as Client[])
-  const allClients = isDemo ? demoClients : clients
+  const allClients = clients
 
   const [step, setStep] = useState(0)
   const [generating, setGenerating] = useState(false)
@@ -611,7 +607,7 @@ export default function AIWorkoutWizard({
   async function handleSaveAsTemplate() {
     if (!result) return
     setSavingTemplate(true)
-    if (!isDemo) {
+    {
       await fetch('/api/program-templates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -645,7 +641,6 @@ export default function AIWorkoutWizard({
             </div>
             <div>
               <h2 className="text-base font-bold text-cb-text">AI Workout Generator</h2>
-              {isDemo && <p className="text-[10px] text-cb-muted">Demo mode — using simulated AI response</p>}
             </div>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-lg text-cb-muted hover:bg-surface-light"><X size={18} /></button>

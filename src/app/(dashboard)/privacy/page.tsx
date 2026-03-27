@@ -1,16 +1,48 @@
 'use client'
 import React, { useState } from 'react'
-import { Shield, Download, Trash2, Eye, Lock, CheckCircle, AlertTriangle } from 'lucide-react'
+import { Shield, Download, Trash2, Eye, Lock, CheckCircle, AlertTriangle, Loader2 } from 'lucide-react'
+import { toast } from '@/lib/toast'
 
 export default function PrivacyPage() {
-  const [exportRequested, setExportRequested] = useState(false)
+  const [exporting, setExporting] = useState(false)
+  const [exportDone, setExportDone] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [deleteTyped, setDeleteTyped] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
 
-  const handleExport = () => {
-    // In production: trigger background job, email zip to coach
-    setExportRequested(true)
-    setTimeout(() => setExportRequested(false), 5000)
+  const handleExport = async () => {
+    setExporting(true)
+    try {
+      const res = await fetch('/api/account/export')
+      if (!res.ok) throw new Error('Export failed')
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `propel-export-${new Date().toISOString().slice(0, 10)}.json`
+      a.click()
+      URL.revokeObjectURL(url)
+      setExportDone(true)
+      setTimeout(() => setExportDone(false), 4000)
+    } catch {
+      toast.error('Export failed. Please try again.')
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    setDeleting(true)
+    setDeleteError('')
+    try {
+      const res = await fetch('/api/account/delete', { method: 'DELETE' })
+      if (!res.ok) throw new Error('Deletion failed')
+      window.location.href = '/login?deleted=1'
+    } catch {
+      setDeleteError('Failed to delete account. Please contact support.')
+      setDeleting(false)
+    }
   }
 
   return (
@@ -61,13 +93,15 @@ export default function PrivacyPage() {
         </div>
         <button
           onClick={handleExport}
-          disabled={exportRequested}
+          disabled={exporting || exportDone}
           className="mt-4 flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
         >
-          {exportRequested ? (
-            <><CheckCircle className="w-4 h-4" /> Export requested — you'll receive an email within 24 hours</>
+          {exporting ? (
+            <><Loader2 className="w-4 h-4 animate-spin" /> Preparing export…</>
+          ) : exportDone ? (
+            <><CheckCircle className="w-4 h-4" /> Downloaded!</>
           ) : (
-            <><Download className="w-4 h-4" /> Request Data Export</>
+            <><Download className="w-4 h-4" /> Download My Data</>
           )}
         </button>
       </div>
@@ -118,15 +152,19 @@ export default function PrivacyPage() {
               placeholder="DELETE MY ACCOUNT"
               className="w-full border border-red-300 rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-red-400"
             />
+            {deleteError && (
+              <p className="text-red-600 text-sm mb-2">{deleteError}</p>
+            )}
             <div className="flex gap-2">
               <button
-                disabled={deleteTyped !== 'DELETE MY ACCOUNT'}
-                className="bg-red-600 hover:bg-red-700 disabled:bg-gray-300 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                onClick={() => alert('In production: this would trigger account deletion workflow')}
+                disabled={deleteTyped !== 'DELETE MY ACCOUNT' || deleting}
+                className="flex items-center gap-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-300 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                onClick={handleDelete}
               >
-                Confirm Delete
+                {deleting && <Loader2 className="w-4 h-4 animate-spin" />}
+                {deleting ? 'Deleting…' : 'Confirm Delete'}
               </button>
-              <button onClick={() => { setDeleteConfirm(false); setDeleteTyped('') }} className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-sm font-medium">
+              <button onClick={() => { setDeleteConfirm(false); setDeleteTyped(''); setDeleteError('') }} className="bg-white border border-gray-200 px-4 py-2 rounded-lg text-sm font-medium">
                 Cancel
               </button>
             </div>

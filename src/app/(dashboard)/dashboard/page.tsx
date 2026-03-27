@@ -7,8 +7,6 @@ import {
   Users, Dumbbell, UtensilsCrossed, ArrowRight,
   TrendingUp, Clock, CheckCircle2, AlertCircle,
 } from 'lucide-react'
-import { useIsDemo } from '@/lib/demo/useDemoMode'
-import { DEMO_CLIENTS, DEMO_PROGRAMS } from '@/lib/demo/mockData'
 import { createClient } from '@/lib/supabase/client'
 import clsx from 'clsx'
 
@@ -39,44 +37,6 @@ interface ActiveEntry {
   program: ProgramRow
 }
 
-// ── Mock recent activity ──────────────────────────────────────────────────────
-
-function buildDemoActivity(clients: ClientRow[], programs: ProgramRow[]) {
-  const now = new Date()
-  return [
-    {
-      id: '1',
-      type: 'workout_logged' as const,
-      clientName: clients[0]?.name ?? 'Client',
-      detail: programs[0]?.name ?? 'Program',
-      minutesAgo: 47,
-      icon: Dumbbell,
-    },
-    {
-      id: '2',
-      type: 'checkin_submitted' as const,
-      clientName: clients[1]?.name ?? 'Client',
-      detail: 'Weekly check-in submitted',
-      minutesAgo: 180,
-      icon: CheckCircle2,
-    },
-    {
-      id: '3',
-      type: 'program_started' as const,
-      clientName: clients[2]?.name ?? clients[0]?.name ?? 'Client',
-      detail: programs[1]?.name ?? programs[0]?.name ?? 'Program',
-      minutesAgo: 720,
-      icon: TrendingUp,
-    },
-  ].map((a) => ({
-    ...a,
-    timeLabel: a.minutesAgo < 60
-      ? `${a.minutesAgo}m ago`
-      : a.minutesAgo < 1440
-      ? `${Math.round(a.minutesAgo / 60)}h ago`
-      : `${Math.round(a.minutesAgo / 1440)}d ago`,
-  }))
-}
 
 function formatTimeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime()
@@ -147,7 +107,6 @@ function ActiveProgramCard({ entry, onClick }: { entry: ActiveEntry; onClick: ()
 // ── Main Component ────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
-  const isDemo = useIsDemo()
   const router = useRouter()
   const [activePrograms, setActivePrograms] = useState<ActiveEntry[]>([])
   type ActivityItem = { id: string; type: string; clientName: string; detail: string; timeLabel: string; icon: React.ComponentType<any> }
@@ -155,19 +114,6 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (isDemo) {
-      const clients = DEMO_CLIENTS as unknown as ClientRow[]
-      const programs = (DEMO_PROGRAMS as unknown as ProgramRow[]).filter((p) => p.is_active)
-      const entries: ActiveEntry[] = programs.map((p) => ({
-        program: p,
-        client: clients.find((c) => c.id === p.client_id) ?? { id: p.client_id },
-      }))
-      setActivePrograms(entries)
-      setActivity(buildDemoActivity(clients, programs) as ActivityItem[])
-      setLoading(false)
-      return
-    }
-
     async function load() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
@@ -214,7 +160,7 @@ export default function DashboardPage() {
       setLoading(false)
     }
     load()
-  }, [isDemo])
+  }, [])
 
   const activityIcons: Record<string, React.ReactNode> = {
     workout_logged:      <Dumbbell size={13} className="text-brand" />,

@@ -6,14 +6,44 @@ interface EmailPayload {
   subject: string
   html: string
   from?: string
+  recipientName?: string
+  emailType?: string
+  sequence?: string
 }
 
 const FROM_EMAIL = 'Propel <noreply@propelcoach.app>'
 
+async function logEmailSend(payload: EmailPayload, success: boolean) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!supabaseUrl || !serviceKey) return
+  try {
+    await fetch(`${supabaseUrl}/rest/v1/email_logs`, {
+      method: 'POST',
+      headers: {
+        'apikey': serviceKey,
+        'Authorization': `Bearer ${serviceKey}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal',
+      },
+      body: JSON.stringify({
+        recipient: payload.to,
+        recipient_name: payload.recipientName ?? null,
+        sequence: payload.sequence ?? null,
+        email_type: payload.emailType ?? 'unknown',
+        subject: payload.subject,
+        success,
+      }),
+    })
+  } catch {
+    // Non-fatal — logging failure should never block email delivery
+  }
+}
+
 async function sendEmail(payload: EmailPayload): Promise<boolean> {
   const apiKey = process.env.RESEND_API_KEY
   if (!apiKey) {
-    console.log('[Email] RESEND_API_KEY not set, would send:', payload.subject, 'to', payload.to)
+    await logEmailSend(payload, true) // log as sent (dev no-op)
     return true // graceful no-op
   }
 
@@ -31,9 +61,12 @@ async function sendEmail(payload: EmailPayload): Promise<boolean> {
         html: payload.html,
       }),
     })
-    return res.ok
+    const success = res.ok
+    await logEmailSend(payload, success)
+    return success
   } catch (err) {
     console.error('[Email] Send failed:', err)
+    await logEmailSend(payload, false)
     return false
   }
 }
@@ -90,11 +123,11 @@ export async function sendWelcomeEmail(to: string, coachName: string): Promise<b
         <strong style="color:#7c3aed;">Step 3:</strong> <span style="color:#374151;">Set macro targets for your client</span>
       </td></tr>
     </table>
-    <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://propelcoach.app'}/dashboard" style="display:inline-block;margin:24px 0 0;background:#7c3aed;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:16px;">Go to Dashboard →</a>
+    <a href="${process.env.NEXT_PUBLIC_APP_URL }/dashboard" style="display:inline-block;margin:24px 0 0;background:#7c3aed;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:16px;">Go to Dashboard →</a>
     <p style="margin:24px 0 0;color:#9ca3af;font-size:14px;">Questions? Just reply to this email — we're here to help.</p>
   `, `Welcome to Propel, ${coachName}! Here's how to get started.`)
 
-  return sendEmail({ to, subject: `Welcome to Propel, ${coachName}! Here's your quick-start guide 🚀`, html })
+  return sendEmail({ to, subject: `Welcome to Propel, ${coachName}! Here's your quick-start guide 🚀`, html, recipientName: coachName, emailType: 'welcome', sequence: 'Onboarding' })
 }
 
 export async function sendDay3Email(to: string, coachName: string): Promise<boolean> {
@@ -105,10 +138,10 @@ export async function sendDay3Email(to: string, coachName: string): Promise<bool
       <h2 style="margin:0 0 12px;color:#7c3aed;font-size:18px;">💡 Pro Tip: Use Check-in Templates</h2>
       <p style="margin:0;color:#374151;line-height:1.6;">Coaches who set up weekly check-in questions see 3x higher client engagement. Head to your dashboard and set up your first check-in template — it takes 2 minutes.</p>
     </div>
-    <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://propelcoach.app'}/dashboard/check-ins" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:16px;">Set Up Check-ins →</a>
+    <a href="${process.env.NEXT_PUBLIC_APP_URL }/dashboard/check-ins" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:16px;">Set Up Check-ins →</a>
   `, `Day 3 tip: Check-in templates drive 3x engagement`)
 
-  return sendEmail({ to, subject: `Quick tip for your coaching practice, ${coachName} 💡`, html })
+  return sendEmail({ to, subject: `Quick tip for your coaching practice, ${coachName} 💡`, html, recipientName: coachName, emailType: 'day3', sequence: 'Onboarding' })
 }
 
 export async function sendDay7Email(to: string, coachName: string, clientCount = 0): Promise<boolean> {
@@ -119,10 +152,10 @@ export async function sendDay7Email(to: string, coachName: string, clientCount =
       <h2 style="margin:0 0 8px;color:#16a34a;font-size:18px;">Your trial ends in 7 days</h2>
       <p style="margin:0;color:#374151;">Upgrade now to keep all your client data, programs, and check-in history. No interruption to your coaching.</p>
     </div>
-    <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://propelcoach.app'}/pricing" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:16px;">View Pricing Plans →</a>
+    <a href="${process.env.NEXT_PUBLIC_APP_URL }/pricing" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:16px;">View Pricing Plans →</a>
   `, '7 days left in your trial — upgrade to keep everything')
 
-  return sendEmail({ to, subject: `Your Propel trial: 7 days left ⏰`, html })
+  return sendEmail({ to, subject: `Your Propel trial: 7 days left ⏰`, html, recipientName: coachName, emailType: 'day7', sequence: 'Onboarding' })
 }
 
 export async function sendTrialExpiring3DayEmail(to: string, coachName: string): Promise<boolean> {
@@ -137,22 +170,22 @@ export async function sendTrialExpiring3DayEmail(to: string, coachName: string):
         <li>Your programs will be saved but uneditable</li>
       </ul>
     </div>
-    <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://propelcoach.app'}/pricing" style="display:inline-block;background:#ea580c;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:16px;">Upgrade Before It Expires →</a>
+    <a href="${process.env.NEXT_PUBLIC_APP_URL }/pricing" style="display:inline-block;background:#ea580c;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:16px;">Upgrade Before It Expires →</a>
     <p style="margin:24px 0 0;color:#9ca3af;font-size:14px;">Starter plan is just $29/mo. Cancel anytime.</p>
   `, 'Trial expires in 3 days — upgrade to keep your data')
 
-  return sendEmail({ to, subject: `⚠️ Your Propel trial expires in 3 days`, html })
+  return sendEmail({ to, subject: `⚠️ Your Propel trial expires in 3 days`, html, recipientName: coachName, emailType: 'trial_3day', sequence: 'Trial Expiry' })
 }
 
 export async function sendTrialExpiring1DayEmail(to: string, coachName: string): Promise<boolean> {
   const html = baseTemplate(`
     <h1 style="margin:0 0 8px;color:#111827;font-size:24px;font-weight:700;">Last chance — trial ends tomorrow 🚨</h1>
     <p style="color:#6b7280;font-size:16px;line-height:1.6;">Hey ${coachName}, this is your final reminder. Your trial ends tomorrow.</p>
-    <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://propelcoach.app'}/pricing" style="display:inline-block;background:#dc2626;color:#ffffff;text-decoration:none;padding:16px 32px;border-radius:8px;font-weight:700;font-size:18px;">Upgrade Now — Keep Everything →</a>
+    <a href="${process.env.NEXT_PUBLIC_APP_URL }/pricing" style="display:inline-block;background:#dc2626;color:#ffffff;text-decoration:none;padding:16px 32px;border-radius:8px;font-weight:700;font-size:18px;">Upgrade Now — Keep Everything →</a>
     <p style="margin:24px 0 0;color:#9ca3af;font-size:14px;">Still unsure? Reply to this email and we'll help you pick the right plan.</p>
   `, 'Trial ends tomorrow — upgrade now')
 
-  return sendEmail({ to, subject: `🚨 Final notice: Your Propel trial ends tomorrow`, html })
+  return sendEmail({ to, subject: `🚨 Final notice: Your Propel trial ends tomorrow`, html, recipientName: coachName, emailType: 'trial_1day', sequence: 'Trial Expiry' })
 }
 
 export async function sendTrialExpiredEmail(to: string, coachName: string): Promise<boolean> {
@@ -164,20 +197,56 @@ export async function sendTrialExpiredEmail(to: string, coachName: string): Prom
       <p style="margin:8px 0 0;color:#374151;font-weight:600;">✅ Programs and check-ins are saved</p>
       <p style="margin:8px 0 0;color:#374151;font-weight:600;">✅ Upgrade and pick up right where you left off</p>
     </div>
-    <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://propelcoach.app'}/trial/expired" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:16px;">Reactivate My Account →</a>
+    <a href="${process.env.NEXT_PUBLIC_APP_URL }/trial/expired" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:16px;">Reactivate My Account →</a>
   `, 'Your data is safe — reactivate anytime')
 
-  return sendEmail({ to, subject: `Your Propel trial has ended — reactivate anytime`, html })
+  return sendEmail({ to, subject: `Your Propel trial has ended — reactivate anytime`, html, recipientName: coachName, emailType: 'trial_expired', sequence: 'Trial Expiry' })
 }
 
 export async function sendPaymentFailedEmail(to: string, coachName: string): Promise<boolean> {
   const html = baseTemplate(`
     <h1 style="margin:0 0 8px;color:#111827;font-size:24px;font-weight:700;">Payment issue — action needed</h1>
     <p style="color:#6b7280;font-size:16px;line-height:1.6;">Hey ${coachName}, we couldn't process your last payment. Please update your payment method to avoid service interruption.</p>
-    <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://propelcoach.app'}/dashboard/payments" style="display:inline-block;background:#dc2626;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:16px;">Update Payment Method →</a>
+    <a href="${process.env.NEXT_PUBLIC_APP_URL }/dashboard/payments" style="display:inline-block;background:#dc2626;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:16px;">Update Payment Method →</a>
   `, 'Update your payment method')
 
-  return sendEmail({ to, subject: `⚠️ Payment failed for your Propel subscription`, html })
+  return sendEmail({ to, subject: `⚠️ Payment failed for your Propel subscription`, html, recipientName: coachName, emailType: 'payment_failed', sequence: 'Billing' })
+}
+
+export async function sendAiCoachSummaryEmail(to: string, coachName: string, clientName: string, summary: string): Promise<boolean> {
+  const summaryHtml = summary
+    .split('\n')
+    .map(line => line.trim())
+    .filter(Boolean)
+    .map(line => `<p style="margin:0 0 8px;color:#374151;font-size:14px;line-height:1.6;">${line}</p>`)
+    .join('')
+
+  const html = baseTemplate(`
+    <h1 style="margin:0 0 8px;color:#111827;font-size:22px;font-weight:700;">AI Coach Summary — ${clientName}</h1>
+    <p style="color:#6b7280;font-size:15px;line-height:1.6;margin-bottom:24px;">Here's a briefing from your AI coach session with <strong>${clientName}</strong>.</p>
+    <div style="background:#faf5ff;border-radius:12px;padding:24px;margin-bottom:24px;border-left:4px solid #7c3aed;">
+      ${summaryHtml}
+    </div>
+    <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/clients" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600;font-size:14px;">View Client →</a>
+  `, `AI Coach Summary for ${clientName}`)
+
+  return sendEmail({ to, subject: `AI Coach Summary — ${clientName}`, html, recipientName: coachName, emailType: 'ai_summary', sequence: 'AI Coach' })
+}
+
+export async function sendWeeklySummaryEmail(to: string, clientName: string, subject: string, html: string): Promise<boolean> {
+  return sendEmail({ to, subject, html, recipientName: clientName, emailType: 'weekly_summary', sequence: 'Weekly Summary' })
+}
+
+export async function sendSupportTicketEmail(ticket: { name: string; email: string; subject: string; message: string }): Promise<boolean> {
+  const supportTo = process.env.SUPPORT_EMAIL ?? 'support@propelcoaches.com'
+  const html = `<h2>New Support Ticket</h2>
+<p><strong>From:</strong> ${ticket.name} (${ticket.email})</p>
+<p><strong>Subject:</strong> ${ticket.subject}</p>
+<hr />
+<p>${ticket.message.replace(/\n/g, '<br />')}</p>
+<hr />
+<p><small>Submitted via the Propel support form.</small></p>`
+  return sendEmail({ to: supportTo, subject: `New Support Ticket: ${ticket.subject}`, html, emailType: 'support_ticket' })
 }
 
 export async function sendWinBackEmail(to: string, coachName: string): Promise<boolean> {
@@ -190,8 +259,8 @@ export async function sendWinBackEmail(to: string, coachName: string): Promise<b
       <li>📋 Printable PDF progress reports</li>
       <li>🏆 Client gamification and habit streaks</li>
     </ul>
-    <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://propelcoach.app'}/pricing" style="display:inline-block;margin-top:16px;background:#7c3aed;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:16px;">Come Back — First Month 20% Off →</a>
+    <a href="${process.env.NEXT_PUBLIC_APP_URL }/pricing" style="display:inline-block;margin-top:16px;background:#7c3aed;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:16px;">Come Back — First Month 20% Off →</a>
   `, 'New features + 20% off to welcome you back')
 
-  return sendEmail({ to, subject: `We've added a lot since you left, ${coachName} 🚀`, html })
+  return sendEmail({ to, subject: `We've added a lot since you left, ${coachName} 🚀`, html, recipientName: coachName, emailType: 'win_back', sequence: 'Win-Back' })
 }

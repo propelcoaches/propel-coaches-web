@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { toast } from '@/lib/toast';
 
 interface MarketplaceListing {
   id: string;
@@ -114,7 +115,7 @@ export default function MarketplacePage() {
       setShowCreate(false);
       setActiveTab('my_listings');
     }
-    if (error) alert(error.message);
+    if (error) toast.error(error.message);
   };
 
   const publishListing = async (id: string) => {
@@ -128,14 +129,15 @@ export default function MarketplacePage() {
     if (listing.price_cents === 0) {
       // Free — clone directly
       try {
-        const res = await fetch('/api/webhooks/marketplace', {
+        const res = await fetch('/api/marketplace/clone', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ listing_id: listing.id, action: 'free_clone' }),
+          body: JSON.stringify({ listing_id: listing.id }),
         });
         const data = await res.json();
-        if (data.success) alert('Program cloned to your library!');
-      } catch { alert('Failed to clone program'); }
+        if (data.success) toast.success('Program cloned to your library!');
+        else toast.error(data.error ?? 'Failed to clone program');
+      } catch { toast.error('Failed to clone program'); }
     } else {
       // Paid — redirect to Stripe checkout
       const res = await fetch('/api/create-checkout-session', {

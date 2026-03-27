@@ -1,32 +1,45 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from 'next/server'
-// @ts-ignore - stripe package not installed, using placeholder
 import Stripe from 'stripe'
+import { createClient } from '@/lib/supabase/server'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder', {
-})
+const stripeKey = process.env.STRIPE_SECRET_KEY
+if (!stripeKey) throw new Error('Missing STRIPE_SECRET_KEY')
+const stripe = new Stripe(stripeKey)
 
-const PRICE_IDS: Record<string, Record<string, string>> = {
+const PRICE_IDS: Record<string, Record<string, string | undefined>> = {
   starter: {
-    monthly: process.env.STRIPE_PRICE_STARTER_MONTHLY || 'price_starter_monthly',
-    annual: process.env.STRIPE_PRICE_STARTER_ANNUAL || 'price_starter_annual',
+    monthly: process.env.STRIPE_PRICE_STARTER_MONTHLY,
+    annual: process.env.STRIPE_PRICE_STARTER_ANNUAL,
   },
   pro: {
-    monthly: process.env.STRIPE_PRICE_PRO_MONTHLY || 'price_pro_monthly',
-    annual: process.env.STRIPE_PRICE_PRO_ANNUAL || 'price_pro_annual',
+    monthly: process.env.STRIPE_PRICE_PRO_MONTHLY,
+    annual: process.env.STRIPE_PRICE_PRO_ANNUAL,
   },
   elite: {
-    monthly: process.env.STRIPE_PRICE_ELITE_MONTHLY || 'price_elite_monthly',
-    annual: process.env.STRIPE_PRICE_ELITE_ANNUAL || 'price_elite_annual',
+    monthly: process.env.STRIPE_PRICE_ELITE_MONTHLY,
+    annual: process.env.STRIPE_PRICE_ELITE_ANNUAL,
   },
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const { plan, billing, email, coachId } = await req.json()
+    const supabase = createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
-    const priceId = PRICE_IDS[plan]?.[billing] || PRICE_IDS.pro.monthly
+    const { plan, billing } = await req.json()
+    const email = user.email
+    const coachId = user.id
 
+    const priceId = PRICE_IDS[plan]?.[billing]
+    if (!priceId) {
+      return NextResponse.json({ error: `No price configured for plan=${plan} billing=${billing}` }, { status: 400 })
+    }
+
+    const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
@@ -36,8 +49,8 @@ export async function POST(req: NextRequest) {
         trial_period_days: 14,
         metadata: { coachId, plan },
       },
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard?subscription=success`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/pricing?cancelled=true`,
+      success_url: `${siteUrl}/dashboard?subscription=success`,
+      cancel_url: `${siteUrl}/pricing?cancelled=true`,
       metadata: { coachId, plan },
     })
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { toast } from '@/lib/toast';
 import {
   DollarSign,
   Users,
@@ -43,6 +44,7 @@ export default function PackagesPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -127,7 +129,7 @@ export default function PackagesPage() {
 
       setStats(statsRecord);
     } catch (err) {
-      console.error('Failed to fetch stats:', err);
+      toast.error('Failed to load package stats');
     }
   };
 
@@ -220,12 +222,14 @@ export default function PackagesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure? This will affect existing subscriptions.')) {
+    if (pendingDeleteId !== id) {
+      setPendingDeleteId(id);
       return;
     }
 
     try {
       setDeleting(id);
+      setPendingDeleteId(null);
       const { error } = await supabase.from('coaching_packages').delete().eq('id', id);
 
       if (error) throw error;
@@ -610,14 +614,33 @@ export default function PackagesPage() {
                       <Edit2 className="h-4 w-4" />
                       Edit
                     </button>
-                    <button
-                      onClick={() => handleDelete(pkg.id)}
-                      disabled={deleting === pkg.id}
-                      className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg border border-red-300 px-3 py-2 font-medium text-red-700 transition-colors hover:bg-red-50 disabled:opacity-50"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      Delete
-                    </button>
+                    {pendingDeleteId === pkg.id ? (
+                      <>
+                        <button
+                          onClick={() => setPendingDeleteId(null)}
+                          className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 px-3 py-2 font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => handleDelete(pkg.id)}
+                          disabled={deleting === pkg.id}
+                          className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-3 py-2 font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Confirm Delete
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => handleDelete(pkg.id)}
+                        disabled={deleting === pkg.id}
+                        className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg border border-red-300 px-3 py-2 font-medium text-red-700 transition-colors hover:bg-red-50 disabled:opacity-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Delete
+                      </button>
+                    )}
                   </div>
                 </div>
               );

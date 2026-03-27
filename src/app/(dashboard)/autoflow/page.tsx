@@ -7,8 +7,7 @@ import {
   MessageCircle, Send, Bell, StickyNote, ChevronDown, ChevronUp
 } from 'lucide-react'
 import clsx from 'clsx'
-import { useIsDemo } from '@/lib/demo/useDemoMode'
-import { DEMO_CLIENTS, DEMO_AUTOFLOWS } from '@/lib/demo/mockData'
+import { createClient } from '@/lib/supabase/client'
 
 type AutoflowWithClient = Autoflow & { client?: Profile }
 
@@ -90,7 +89,6 @@ function EventModal({
   const [selectedType, setSelectedType] = useState<AutoflowEvent['event_type'] | null>(null)
   const [dayOffset, setDayOffset] = useState(1)
   const [message, setMessage] = useState('')
-  const [tab, setTab] = useState<'add' | 'library'>('add')
 
   function handleAdd() {
     if (!selectedType) return
@@ -115,106 +113,81 @@ function EventModal({
           <button onClick={onClose} className="text-cb-muted hover:text-cb-secondary"><X size={20} /></button>
         </div>
 
-        {/* Tabs */}
-        <div className="flex border-b border-cb-border">
-          {([{ id: 'add', label: 'Add Event' }, { id: 'library', label: 'Autoflow Library' }] as const).map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={clsx('flex-1 py-3 text-sm font-medium border-b-2 -mb-px transition-colors',
-                tab === t.id ? 'border-cb-teal text-cb-teal' : 'border-transparent text-cb-secondary hover:text-cb-text'
-              )}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-
         <div className="p-5">
-          {tab === 'add' ? (
-            <>
-              {/* Event type grid */}
-              <div className="grid grid-cols-2 gap-3 mb-5">
-                {EVENT_TYPES.map((et) => {
-                  const Icon = et.icon
-                  const isSelected = selectedType === et.type
-                  return (
-                    <button
-                      key={et.type}
-                      onClick={() => setSelectedType(et.type)}
-                      className={clsx(
-                        'relative text-left p-4 rounded-lg border transition-colors',
-                        isSelected ? `border-cb-teal bg-cb-teal/10` : `${et.border} ${et.bg} hover:opacity-80`,
-                        et.premium && 'opacity-90'
-                      )}
-                    >
-                      {et.premium && (
-                        <span className="absolute top-2 right-2 px-1.5 py-0.5 bg-cb-warning/20 text-cb-warning text-[9px] font-semibold rounded uppercase tracking-wide">
-                          Premium
-                        </span>
-                      )}
-                      <div className={clsx('w-8 h-8 rounded-lg flex items-center justify-center mb-2', et.bg)}>
-                        <Icon size={18} className={et.color} />
-                      </div>
-                      <p className="text-sm font-medium text-cb-text leading-tight mb-0.5">{et.label}</p>
-                      <p className="text-[11px] text-cb-muted leading-relaxed">{et.desc}</p>
-                    </button>
-                  )
-                })}
+          {/* Event type grid */}
+          <div className="grid grid-cols-2 gap-3 mb-5">
+            {EVENT_TYPES.map((et) => {
+              const Icon = et.icon
+              const isSelected = selectedType === et.type
+              return (
+                <button
+                  key={et.type}
+                  onClick={() => setSelectedType(et.type)}
+                  className={clsx(
+                    'relative text-left p-4 rounded-lg border transition-colors',
+                    isSelected ? `border-cb-teal bg-cb-teal/10` : `${et.border} ${et.bg} hover:opacity-80`,
+                    et.premium && 'opacity-90'
+                  )}
+                >
+                  {et.premium && (
+                    <span className="absolute top-2 right-2 px-1.5 py-0.5 bg-cb-warning/20 text-cb-warning text-[9px] font-semibold rounded uppercase tracking-wide">
+                      Premium
+                    </span>
+                  )}
+                  <div className={clsx('w-8 h-8 rounded-lg flex items-center justify-center mb-2', et.bg)}>
+                    <Icon size={18} className={et.color} />
+                  </div>
+                  <p className="text-sm font-medium text-cb-text leading-tight mb-0.5">{et.label}</p>
+                  <p className="text-[11px] text-cb-muted leading-relaxed">{et.desc}</p>
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Config for selected type */}
+          {selected && (
+            <div className="space-y-3 border-t border-cb-border pt-4">
+              <div>
+                <label className="block text-xs font-medium text-cb-muted mb-1">Day Offset</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={dayOffset}
+                  onChange={(e) => setDayOffset(Number(e.target.value))}
+                  className="w-full px-3 py-2 bg-surface-light border border-cb-border rounded-lg text-sm text-cb-text focus:outline-none focus:ring-2 focus:ring-cb-teal"
+                />
+                <p className="text-[10px] text-cb-muted mt-1">Trigger this event {dayOffset} day(s) after the autoflow starts.</p>
               </div>
 
-              {/* Config for selected type */}
-              {selected && (
-                <div className="space-y-3 border-t border-cb-border pt-4">
-                  <div>
-                    <label className="block text-xs font-medium text-cb-muted mb-1">Day Offset</label>
-                    <input
-                      type="number"
-                      min={0}
-                      value={dayOffset}
-                      onChange={(e) => setDayOffset(Number(e.target.value))}
-                      className="w-full px-3 py-2 bg-surface-light border border-cb-border rounded-lg text-sm text-cb-text focus:outline-none focus:ring-2 focus:ring-cb-teal"
-                    />
-                    <p className="text-[10px] text-cb-muted mt-1">Trigger this event {dayOffset} day(s) after the autoflow starts.</p>
-                  </div>
-
-                  {selected.premium && (
-                    <div className="bg-cb-warning/10 border border-cb-warning/30 rounded-lg p-3">
-                      <p className="text-xs text-cb-warning font-medium">Premium Feature</p>
-                      <p className="text-[11px] text-cb-muted mt-0.5">Upgrade to Premium to unlock {selected.label}.</p>
-                    </div>
-                  )}
-
-                  {selected.type === 'message' && (
-                    <div className="opacity-50 pointer-events-none">
-                      <label className="block text-xs font-medium text-cb-muted mb-1">Message</label>
-                      <textarea
-                        rows={3}
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        placeholder="Type your automated message…"
-                        className="w-full px-3 py-2 bg-surface-light border border-cb-border rounded-lg text-sm text-cb-text placeholder-cb-muted focus:outline-none focus:ring-2 focus:ring-cb-teal resize-none"
-                        disabled
-                      />
-                    </div>
-                  )}
-
-                  {!selected.premium && (
-                    <button
-                      onClick={handleAdd}
-                      className="w-full py-2.5 bg-cb-teal hover:bg-cb-teal/90 text-white rounded-lg text-sm font-medium"
-                    >
-                      Add Event
-                    </button>
-                  )}
+              {selected.premium && (
+                <div className="bg-cb-warning/10 border border-cb-warning/30 rounded-lg p-3">
+                  <p className="text-xs text-cb-warning font-medium">Premium Feature</p>
+                  <p className="text-[11px] text-cb-muted mt-0.5">Upgrade to Premium to unlock {selected.label}.</p>
                 </div>
               )}
-            </>
-          ) : (
-            <div className="py-8 text-center text-cb-muted">
-              <Zap size={32} className="mx-auto mb-3 text-cb-muted" />
-              <p className="text-sm">Autoflow Library coming soon.</p>
-              <p className="text-xs mt-1">Browse and import pre-built autoflow templates.</p>
+
+              {selected.type === 'message' && (
+                <div className="opacity-50 pointer-events-none">
+                  <label className="block text-xs font-medium text-cb-muted mb-1">Message</label>
+                  <textarea
+                    rows={3}
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    placeholder="Type your automated message…"
+                    className="w-full px-3 py-2 bg-surface-light border border-cb-border rounded-lg text-sm text-cb-text placeholder-cb-muted focus:outline-none focus:ring-2 focus:ring-cb-teal resize-none"
+                    disabled
+                  />
+                </div>
+              )}
+
+              {!selected.premium && (
+                <button
+                  onClick={handleAdd}
+                  className="w-full py-2.5 bg-cb-teal hover:bg-cb-teal/90 text-white rounded-lg text-sm font-medium"
+                >
+                  Add Event
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -250,7 +223,7 @@ function AddAutoflowModal({
     const client = clients.find((c) => c.id === clientId)
     const af: AutoflowWithClient = {
       id: genId(),
-      coach_id: 'demo-coach-1',
+      coach_id: '',
       client_id: clientId || null,
       name: name.trim(),
       trigger_type: triggerType,
@@ -363,7 +336,6 @@ function AddAutoflowModal({
 
 // ── Main Page ──
 export default function AutoflowPage() {
-  const isDemo = useIsDemo()
   const [autoflows, setAutoflows] = useState<AutoflowWithClient[]>([])
   const [clients, setClients] = useState<Profile[]>([])
   const [loading, setLoading] = useState(true)
@@ -372,33 +344,61 @@ export default function AutoflowPage() {
 
   useEffect(() => {
     setLoading(true)
-    if (isDemo) {
-      const demoClients = DEMO_CLIENTS as unknown as Profile[]
-      setClients(demoClients)
-      const demoFlows: AutoflowWithClient[] = (DEMO_AUTOFLOWS as unknown as Autoflow[]).map((af) => ({
-        ...af,
-        client: demoClients.find((c) => c.id === af.client_id),
-      }))
-      setAutoflows(demoFlows)
+    const supabase = createClient()
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) { setLoading(false); return }
+      const { data: clientData } = await supabase.from('profiles').select('id, full_name, email').eq('coach_id', user.id).eq('role', 'client').order('full_name')
+      setClients((clientData ?? []).map((c: any) => ({ ...c, name: c.full_name })) as unknown as Profile[])
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: afData } = await supabase.from('autoflows').select('*, profiles(id, full_name, email)').eq('coach_id', user.id).order('created_at', { ascending: false }) as any
+      if (afData) {
+        setAutoflows(afData.map((af: any) => ({
+          ...af,
+          events: af.events ?? [],
+          client: af.profiles ? { ...af.profiles, name: af.profiles.full_name } as unknown as Profile : undefined,
+        })))
+      }
       setLoading(false)
-      return
-    }
-    // Real Supabase would go here
-    setClients([])
-    setAutoflows([])
-    setLoading(false)
-  }, [isDemo])
+    })
+  }, [])
 
-  function toggleActive(id: string) {
-    setAutoflows((prev) => prev.map((af) => af.id === id ? { ...af, is_active: !af.is_active } : af))
+  async function toggleActive(id: string) {
+    const af = autoflows.find((a) => a.id === id)
+    if (!af) return
+    const newActive = !af.is_active
+    setAutoflows((prev) => prev.map((a) => a.id === id ? { ...a, is_active: newActive } : a))
+    const supabase = createClient()
+    await supabase.from('autoflows').update({ is_active: newActive, updated_at: new Date().toISOString() }).eq('id', id)
   }
 
-  function deleteAutoflow(id: string) {
+  async function deleteAutoflow(id: string) {
     setAutoflows((prev) => prev.filter((af) => af.id !== id))
+    const supabase = createClient()
+    await supabase.from('autoflows').delete().eq('id', id)
   }
 
-  function handleAdd(af: AutoflowWithClient) {
-    setAutoflows((prev) => [af, ...prev])
+  async function handleAdd(af: AutoflowWithClient) {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const payload = {
+      coach_id: user.id,
+      client_id: af.client_id || null,
+      name: af.name,
+      trigger_type: af.trigger_type,
+      trigger_day: af.trigger_day,
+      events: af.events,
+      is_active: true,
+    }
+    const { data } = await supabase.from('autoflows').insert(payload).select('*, profiles(id, full_name, email)').single() as any
+    if (data) {
+      setAutoflows((prev) => [{
+        ...data,
+        events: data.events ?? [],
+        client: data.profiles ? { ...data.profiles, name: data.profiles.full_name } as unknown as Profile : af.client,
+      }, ...prev])
+    }
     setShowAddModal(false)
   }
 

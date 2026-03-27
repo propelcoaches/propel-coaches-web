@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { toast } from '@/lib/toast';
 
 interface Client {
   id: string;
@@ -220,7 +221,7 @@ export default function BulkClientActions({ clients, selectedIds, onSelectionCha
       setSelectedProgram('');
     } catch (err) {
       console.error('Bulk action error:', err);
-      alert('Some actions failed. Please check and try again.');
+      toast.error('Some actions failed. Please check and try again.');
     } finally {
       setExecuting(false);
     }

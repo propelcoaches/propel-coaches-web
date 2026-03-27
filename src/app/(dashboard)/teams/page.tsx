@@ -1,36 +1,13 @@
 'use client'
 
-import { useState } from 'react'
-import { Shield, Plus, X, Users, ChevronRight, Trash2 } from 'lucide-react'
-import { useIsDemo } from '@/lib/demo/useDemoMode'
-import { DEMO_CLIENTS } from '@/lib/demo/mockData'
+import { useState, useEffect } from 'react'
+import { Shield, Plus, X, ChevronRight, Trash2 } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 import clsx from 'clsx'
 
 type TeamMember = { id: string; name: string; email: string }
-type Team = { id: string; name: string; description: string; members: TeamMember[]; lastActivity: string }
+type Team = { id: string; name: string; description: string; members: TeamMember[]; created_at: string }
 
-const DEMO_TEAMS: Team[] = [
-  {
-    id: 'team-1',
-    name: 'Morning Crew',
-    description: 'Early risers who train 5–7am. Shared programming and weekly challenges.',
-    members: [
-      { id: 'demo-client-1', name: 'Liam Carter', email: 'liam.carter@example.com' },
-      { id: 'demo-client-3', name: 'Jake Wilson', email: 'jake.wilson@example.com' },
-    ],
-    lastActivity: '2026-03-09',
-  },
-  {
-    id: 'team-2',
-    name: 'Competition Prep',
-    description: 'Clients preparing for physique or performance competitions. High accountability group.',
-    members: [
-      { id: 'demo-client-2', name: 'Sophie Nguyen', email: 'sophie.nguyen@example.com' },
-      { id: 'demo-client-3', name: 'Jake Wilson', email: 'jake.wilson@example.com' },
-    ],
-    lastActivity: '2026-03-08',
-  },
-]
 
 function NewTeamModal({
   onClose,
@@ -44,21 +21,35 @@ function NewTeamModal({
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [selected, setSelected] = useState<string[]>([])
+  const [saving, setSaving] = useState(false)
 
   function toggleClient(id: string) {
     setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
   }
 
-  function handleSave() {
-    if (!name.trim()) return
+  async function handleSave() {
+    if (!name.trim() || saving) return
+    setSaving(true)
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setSaving(false); return }
+
+    const { data: group, error } = await supabase
+      .from('client_groups')
+      .insert({ coach_id: user.id, name: name.trim(), description: description.trim() })
+      .select('id, name, description, created_at')
+      .single()
+
+    if (error || !group) { setSaving(false); return }
+
+    if (selected.length > 0) {
+      await supabase.from('client_group_members').insert(
+        selected.map(client_id => ({ group_id: group.id, client_id }))
+      )
+    }
+
     const members = allClients.filter(c => selected.includes(c.id))
-    onSave({
-      id: 'team-' + Date.now(),
-      name: name.trim(),
-      description: description.trim(),
-      members,
-      lastActivity: new Date().toISOString().slice(0, 10),
-    })
+    onSave({ id: group.id, name: group.name, description: group.description ?? '', members, created_at: group.created_at })
   }
 
   return (
@@ -100,9 +91,9 @@ function NewTeamModal({
         </div>
         <div className="flex items-center justify-end gap-3 p-5 border-t border-cb-border">
           <button onClick={onClose} className="px-4 py-2 text-sm text-cb-secondary border border-cb-border rounded-lg hover:bg-surface-light transition-colors">Cancel</button>
-          <button onClick={handleSave} disabled={!name.trim()}
+          <button onClick={handleSave} disabled={!name.trim() || saving}
             className="px-4 py-2 text-sm bg-brand hover:bg-brand-light disabled:opacity-50 text-white rounded-lg font-medium">
-            Create Team
+            {saving ? 'Creating…' : 'Create Team'}
           </button>
         </div>
       </div>
@@ -111,20 +102,69 @@ function NewTeamModal({
 }
 
 export default function TeamsPage() {
-  const isDemo = useIsDemo()
-  const [teams, setTeams] = useState<Team[]>(isDemo ? DEMO_TEAMS : [])
+  const [teams, setTeams] = useState<Team[]>([])
+  const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [viewTeam, setViewTeam] = useState<Team | null>(null)
+  const [allClients, setAllClients] = useState<TeamMember[]>([])
 
-  const allClients: TeamMember[] = isDemo
-    ? DEMO_CLIENTS.map(c => ({ id: c.id, name: c.name, email: c.email }))
-    : []
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) { setLoading(false); return }
+
+      const [{ data: clients }, { data: groups }] = await Promise.all([
+        supabase.from('profiles').select('id, full_name, email').eq('coach_id', user.id).eq('role', 'client'),
+        supabase.from('client_groups').select('id, name, description, created_at').eq('coach_id', user.id).order('created_at', { ascending: false }),
+      ])
+
+      setAllClients((clients ?? []).map((c: { id: string; full_name: string | null; email: string }) => ({
+        id: c.id,
+        name: c.full_name ?? '',
+        email: c.email,
+      })))
+
+      if (!groups) { setLoading(false); return }
+
+      // Load members for each group
+      const clientMap = new Map((clients ?? []).map((c: { id: string; full_name: string | null; email: string }) => [
+        c.id,
+        { id: c.id, name: c.full_name ?? '', email: c.email },
+      ]))
+
+      const { data: memberRows } = await supabase
+        .from('client_group_members')
+        .select('group_id, client_id')
+        .in('group_id', groups.map(g => g.id))
+
+      const membersByGroup = new Map<string, TeamMember[]>()
+      for (const row of memberRows ?? []) {
+        const member = clientMap.get(row.client_id)
+        if (member) {
+          const arr = membersByGroup.get(row.group_id) ?? []
+          arr.push(member)
+          membersByGroup.set(row.group_id, arr)
+        }
+      }
+
+      setTeams(groups.map(g => ({
+        id: g.id,
+        name: g.name,
+        description: g.description ?? '',
+        members: membersByGroup.get(g.id) ?? [],
+        created_at: g.created_at,
+      })))
+      setLoading(false)
+    })
+  }, [])
 
   function formatDate(d: string) {
     return new Date(d).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })
   }
 
-  function removeMember(teamId: string, memberId: string) {
+  async function removeMember(teamId: string, memberId: string) {
+    const supabase = createClient()
+    await supabase.from('client_group_members').delete().eq('group_id', teamId).eq('client_id', memberId)
     setTeams(prev => prev.map(t =>
       t.id === teamId ? { ...t, members: t.members.filter(m => m.id !== memberId) } : t
     ))
@@ -133,7 +173,9 @@ export default function TeamsPage() {
     }
   }
 
-  function deleteTeam(id: string) {
+  async function deleteTeam(id: string) {
+    const supabase = createClient()
+    await supabase.from('client_groups').delete().eq('id', id)
     setTeams(prev => prev.filter(t => t.id !== id))
     if (viewTeam?.id === id) setViewTeam(null)
   }
@@ -196,7 +238,11 @@ export default function TeamsPage() {
         </button>
       </div>
 
-      {teams.length === 0 ? (
+      {loading ? (
+        <div className="bg-surface border border-cb-border rounded-lg p-16 text-center">
+          <p className="text-sm text-cb-muted">Loading teams…</p>
+        </div>
+      ) : teams.length === 0 ? (
         <div className="bg-surface border border-cb-border rounded-lg p-16 text-center">
           <Shield size={48} className="mx-auto text-cb-muted mb-4" />
           <h2 className="text-lg font-semibold text-cb-secondary mb-2">No teams yet</h2>
@@ -214,7 +260,7 @@ export default function TeamsPage() {
             <div key={team.id} className="bg-surface border border-cb-border rounded-xl p-5">
               <div className="flex items-start justify-between mb-2">
                 <h3 className="font-semibold text-cb-text">{team.name}</h3>
-                <span className="text-xs text-cb-muted">{formatDate(team.lastActivity)}</span>
+                <span className="text-xs text-cb-muted">{formatDate(team.created_at)}</span>
               </div>
               <p className="text-sm text-cb-secondary mb-4">{team.description}</p>
               <div className="flex items-center gap-1 mb-4">
@@ -243,7 +289,7 @@ export default function TeamsPage() {
       {showModal && (
         <NewTeamModal
           onClose={() => setShowModal(false)}
-          onSave={t => { setTeams(prev => [...prev, t]); setShowModal(false) }}
+          onSave={t => { setTeams(prev => [t, ...prev]); setShowModal(false) }}
           allClients={allClients}
         />
       )}

@@ -1,103 +1,33 @@
 'use client'
 
-import { useState } from 'react'
-import { Plus, BookOpen, Search, ChevronRight, Sparkles, X, MoreHorizontal, Clock, Flame, Beef, Wheat, Droplets, Users } from 'lucide-react'
+import { useState, useEffect, useMemo } from 'react'
+import { Plus, BookOpen, Search, ChevronRight, Sparkles, X, MoreHorizontal, Clock, Flame, Users } from 'lucide-react'
 import clsx from 'clsx'
+import { createClient } from '@/lib/supabase/client'
 
 type Recipe = {
   id: string
   name: string
   description: string
-  prepTime: number
+  prep_time: number
   calories: number
-  protein: number
-  carbs: number
-  fats: number
+  protein_g: number
+  carbs_g: number
+  fats_g: number
   ingredients: string[]
   steps: string[]
   tags: string[]
-  image?: string
 }
 
 type RecipeBook = {
   id: string
   name: string
   description: string
+  diet_type: string
+  created_at: string
   recipes: Recipe[]
-  assignedTo: string[]
-  createdAt: string
-  dietType: string
 }
 
-const MOCK_BOOKS: RecipeBook[] = [
-  {
-    id: '1',
-    name: 'High Protein Meals',
-    description: 'Lean, high-protein recipes perfect for muscle building and fat loss phases.',
-    dietType: 'High Protein',
-    assignedTo: ['Liam Carter', 'Jake Wilson'],
-    createdAt: '2026-01-20',
-    recipes: [
-      {
-        id: 'r1', name: 'Chicken & Rice Power Bowl', description: 'A simple, filling meal with lean protein and complex carbs.',
-        prepTime: 25, calories: 520, protein: 48, carbs: 52, fats: 9,
-        ingredients: ['200g chicken breast', '150g jasmine rice (dry)', '1 cup broccoli', '1 tbsp olive oil', 'Salt, pepper, garlic powder'],
-        steps: ['Cook rice as per packet instructions.', 'Season chicken and cook in pan with olive oil for 6–7 mins per side.', 'Steam broccoli until tender.', 'Slice chicken and assemble bowl.'],
-        tags: ['meal prep', 'high protein', 'gluten-free'],
-      },
-      {
-        id: 'r2', name: 'Tuna Avocado Salad', description: 'Quick no-cook meal with healthy fats and lean protein.',
-        prepTime: 10, calories: 380, protein: 36, carbs: 12, fats: 22,
-        ingredients: ['1 can tuna in water', '1/2 avocado', '1/4 red onion', 'Lemon juice', 'Mixed leaves', 'Salt & pepper'],
-        steps: ['Drain tuna and place in bowl.', 'Dice avocado and red onion.', 'Mix together with lemon juice.', 'Serve over mixed leaves.'],
-        tags: ['quick', 'no-cook', 'keto-friendly'],
-      },
-    ],
-  },
-  {
-    id: '2',
-    name: 'Healthy Breakfast Ideas',
-    description: 'Nutrient-dense breakfast options to fuel your morning training sessions.',
-    dietType: 'Balanced',
-    assignedTo: ['Sophie Nguyen', 'Emma Thompson'],
-    createdAt: '2026-02-05',
-    recipes: [
-      {
-        id: 'r3', name: 'Greek Yogurt Parfait', description: 'Layered protein-rich breakfast ready in minutes.',
-        prepTime: 5, calories: 310, protein: 24, carbs: 38, fats: 6,
-        ingredients: ['200g Greek yogurt (0% fat)', '80g mixed berries', '30g granola', '1 tsp honey'],
-        steps: ['Layer yogurt in a glass or bowl.', 'Add berries and granola.', 'Drizzle honey on top.'],
-        tags: ['quick', 'no-cook', 'vegetarian'],
-      },
-      {
-        id: 'r4', name: 'Protein Oats', description: 'Classic oats boosted with protein powder for a satisfying start.',
-        prepTime: 8, calories: 420, protein: 32, carbs: 55, fats: 7,
-        ingredients: ['80g rolled oats', '1 scoop vanilla protein powder', '250ml almond milk', '1 banana', 'Cinnamon'],
-        steps: ['Combine oats and almond milk in a saucepan.', 'Cook over medium heat, stirring, for 5 mins.', 'Remove from heat, stir in protein powder.', 'Top with sliced banana and cinnamon.'],
-        tags: ['meal prep', 'high protein', 'vegetarian'],
-      },
-    ],
-  },
-  {
-    id: '3',
-    name: 'Cutting Phase Meals',
-    description: 'Low-calorie, high-volume meals to stay full during a calorie deficit.',
-    dietType: 'Low Calorie',
-    assignedTo: [],
-    createdAt: '2026-02-28',
-    recipes: [
-      {
-        id: 'r5', name: 'Zucchini Noodle Bolognese', description: 'All the satisfaction of pasta with a fraction of the carbs.',
-        prepTime: 30, calories: 290, protein: 28, carbs: 14, fats: 12,
-        ingredients: ['2 large zucchinis', '250g lean beef mince', '1 can crushed tomatoes', '1 onion', '2 garlic cloves', 'Italian herbs'],
-        steps: ['Spiralise zucchinis and set aside.', 'Brown mince with onion and garlic.', 'Add tomatoes and herbs, simmer 15 mins.', 'Serve bolognese over zucchini noodles.'],
-        tags: ['low carb', 'high protein', 'gluten-free'],
-      },
-    ],
-  },
-]
-
-const MOCK_CLIENTS = ['Liam Carter', 'Sophie Nguyen', 'Jake Wilson', 'Emma Thompson']
 const DIET_TYPES = ['All', 'High Protein', 'Balanced', 'Low Calorie', 'Keto', 'Vegan']
 
 function MacroBadge({ value, label, color }: { value: number; label: string; color: string }) {
@@ -124,7 +54,6 @@ function RecipeCard({ recipe, onDelete }: { recipe: Recipe; onDelete: () => void
             </button>
             {showMenu && (
               <div className="absolute right-0 top-6 z-20 bg-surface border border-cb-border rounded-xl shadow-2xl w-36 py-1">
-                <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-cb-text hover:bg-surface-light transition-colors">Edit</button>
                 <div className="h-px bg-cb-border mx-2 my-1" />
                 <button onClick={() => { onDelete(); setShowMenu(false) }} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-surface-light transition-colors">
                   <X size={12} /> Delete
@@ -136,16 +65,16 @@ function RecipeCard({ recipe, onDelete }: { recipe: Recipe; onDelete: () => void
         <p className="text-xs text-cb-secondary mb-3">{recipe.description}</p>
         <div className="flex items-center gap-3 mb-3">
           <div className="flex items-center gap-1 text-xs text-cb-muted">
-            <Clock size={12} /> {recipe.prepTime} min
+            <Clock size={12} /> {recipe.prep_time} min
           </div>
           <div className="flex items-center gap-1 text-xs text-cb-muted">
             <Flame size={12} /> {recipe.calories} kcal
           </div>
         </div>
         <div className="flex flex-wrap gap-1.5 mb-3">
-          <MacroBadge value={recipe.protein} label="P" color="bg-brand/10 text-brand" />
-          <MacroBadge value={recipe.carbs} label="C" color="bg-amber-500/10 text-amber-400" />
-          <MacroBadge value={recipe.fats} label="F" color="bg-red-500/10 text-red-400" />
+          <MacroBadge value={Math.round(recipe.protein_g)} label="P" color="bg-brand/10 text-brand" />
+          <MacroBadge value={Math.round(recipe.carbs_g)} label="C" color="bg-amber-500/10 text-amber-400" />
+          <MacroBadge value={Math.round(recipe.fats_g)} label="F" color="bg-red-500/10 text-red-400" />
         </div>
         <button onClick={() => setExpanded(!expanded)} className="flex items-center gap-1 text-xs text-brand hover:underline">
           {expanded ? 'Hide details' : 'View recipe'}
@@ -187,16 +116,17 @@ function RecipeCard({ recipe, onDelete }: { recipe: Recipe; onDelete: () => void
   )
 }
 
-type NewBookModalProps = { onClose: () => void; onAdd: (b: Partial<RecipeBook>) => void }
+type NewBookModalProps = { onClose: () => void; onAdd: (name: string, description: string, dietType: string) => Promise<void> }
 function NewBookModal({ onClose, onAdd }: NewBookModalProps) {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [dietType, setDietType] = useState('Balanced')
-  const [selectedClients, setSelectedClients] = useState<string[]>([])
+  const [saving, setSaving] = useState(false)
 
-  function submit() {
+  async function submit() {
     if (!name.trim()) return
-    onAdd({ name, description, dietType, assignedTo: selectedClients, recipes: [] })
+    setSaving(true)
+    await onAdd(name.trim(), description.trim(), dietType)
     onClose()
   }
 
@@ -222,51 +152,44 @@ function NewBookModal({ onClose, onAdd }: NewBookModalProps) {
               {['High Protein', 'Balanced', 'Low Calorie', 'Keto', 'Vegan'].map(t => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-cb-secondary mb-2">Assign to Clients</label>
-            <div className="flex flex-wrap gap-2">
-              {MOCK_CLIENTS.map(c => (
-                <button key={c} onClick={() => setSelectedClients(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c])} className={clsx('px-3 py-1 rounded-full text-xs font-medium border transition-colors', selectedClients.includes(c) ? 'bg-brand text-white border-brand' : 'bg-surface-light border-cb-border text-cb-secondary hover:border-brand')}>
-                  {c}
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
         <div className="flex justify-end gap-3 p-6 pt-0">
           <button onClick={onClose} className="px-4 py-2 text-sm text-cb-secondary hover:text-cb-text transition-colors">Cancel</button>
-          <button onClick={submit} disabled={!name.trim()} className="px-4 py-2 bg-brand text-white rounded-xl text-sm font-medium hover:bg-brand-light transition-colors disabled:opacity-50">Create Book</button>
+          <button onClick={submit} disabled={!name.trim() || saving} className="px-4 py-2 bg-brand text-white rounded-xl text-sm font-medium hover:bg-brand-light transition-colors disabled:opacity-50">
+            {saving ? 'Creating…' : 'Create Book'}
+          </button>
         </div>
       </div>
     </div>
   )
 }
 
-type AIRecipeModalProps = { bookId: string; onClose: () => void; onAdd: (bookId: string, recipe: Recipe) => void }
-function AIRecipeModal({ bookId, onClose, onAdd }: AIRecipeModalProps) {
+type AIRecipeModalProps = { bookId: string; onClose: () => void; onAdded: (recipe: Recipe) => void }
+function AIRecipeModal({ bookId, onClose, onAdded }: AIRecipeModalProps) {
+  const supabase = useMemo(() => createClient(), [])
   const [prompt, setPrompt] = useState('')
   const [generating, setGenerating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function generate() {
     if (!prompt.trim()) return
     setGenerating(true)
-    await new Promise(r => setTimeout(r, 1800))
-    const mockRecipe: Recipe = {
-      id: Date.now().toString(),
-      name: 'AI-Generated: ' + prompt.split(' ').slice(0, 4).join(' '),
-      description: `A nutritious recipe generated based on: "${prompt}"`,
-      prepTime: 20,
-      calories: 440,
-      protein: 40,
-      carbs: 45,
-      fats: 10,
-      ingredients: ['200g lean protein', '1 cup vegetables of choice', '1 cup complex carbs', '1 tbsp healthy oil', 'Seasoning to taste'],
-      steps: ['Prepare all ingredients.', 'Cook protein in pan with oil until cooked through.', 'Add vegetables and cook 3–4 mins.', 'Serve with carbs.'],
-      tags: ['ai-generated'],
+    setError(null)
+    try {
+      const res = await fetch('/api/ai/generate-recipe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: prompt.trim(), book_id: bookId }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Failed to generate recipe')
+      onAdded(data.recipe)
+      onClose()
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Generation failed')
+    } finally {
+      setGenerating(false)
     }
-    onAdd(bookId, mockRecipe)
-    setGenerating(false)
-    onClose()
   }
 
   return (
@@ -280,13 +203,14 @@ function AIRecipeModal({ bookId, onClose, onAdd }: AIRecipeModalProps) {
           <button onClick={onClose} className="text-cb-muted hover:text-cb-text transition-colors"><X size={20} /></button>
         </div>
         <div className="p-6">
-          <p className="text-sm text-cb-secondary mb-4">Describe what you want and Claude will generate a recipe with macro breakdown.</p>
+          <p className="text-sm text-cb-secondary mb-4">Describe what you want and AI will generate a recipe with macro breakdown.</p>
           <textarea
             className="w-full bg-surface-light border border-cb-border rounded-xl px-3 py-3 text-cb-text text-sm focus:outline-none focus:border-brand resize-none h-24"
             placeholder='e.g. "High protein lunch under 500 calories, no dairy, suitable for meal prep..."'
             value={prompt}
             onChange={e => setPrompt(e.target.value)}
           />
+          {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
         </div>
         <div className="flex justify-end gap-3 p-6 pt-0">
           <button onClick={onClose} className="px-4 py-2 text-sm text-cb-secondary hover:text-cb-text transition-colors">Cancel</button>
@@ -304,34 +228,75 @@ function AIRecipeModal({ bookId, onClose, onAdd }: AIRecipeModalProps) {
 }
 
 export default function RecipeBooksPage() {
-  const [books, setBooks] = useState<RecipeBook[]>(MOCK_BOOKS)
+  const supabase = useMemo(() => createClient(), [])
+  const [books, setBooks] = useState<RecipeBook[]>([])
+  const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [dietFilter, setDietFilter] = useState('All')
-  const [selectedBook, setSelectedBook] = useState<string | null>(books[0]?.id ?? null)
+  const [selectedBookId, setSelectedBookId] = useState<string | null>(null)
   const [showNewModal, setShowNewModal] = useState(false)
   const [aiBookId, setAiBookId] = useState<string | null>(null)
-  const [openMenu, setOpenMenu] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function load() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { setLoading(false); return }
+      const { data } = await supabase
+        .from('recipe_books')
+        .select(`
+          id, name, description, diet_type, created_at,
+          recipes(id, name, description, prep_time, calories, protein_g, carbs_g, fats_g, ingredients, steps, tags)
+        `)
+        .eq('coach_id', user.id)
+        .order('created_at', { ascending: false })
+      const loaded = (data ?? []).map((b: any) => ({
+        id: b.id, name: b.name, description: b.description, diet_type: b.diet_type, created_at: b.created_at,
+        recipes: b.recipes ?? [],
+      }))
+      setBooks(loaded)
+      if (loaded.length > 0) setSelectedBookId(loaded[0].id)
+      setLoading(false)
+    }
+    load()
+  }, [supabase])
 
   const filteredBooks = books.filter(b => {
     const matchSearch = b.name.toLowerCase().includes(search.toLowerCase())
-    const matchDiet = dietFilter === 'All' || b.dietType === dietFilter
+    const matchDiet = dietFilter === 'All' || b.diet_type === dietFilter
     return matchSearch && matchDiet
   })
 
-  const activeBook = books.find(b => b.id === selectedBook)
+  const activeBook = books.find(b => b.id === selectedBookId)
 
-  function handleAddBook(data: Partial<RecipeBook>) {
-    const newBook: RecipeBook = { id: Date.now().toString(), name: data.name!, description: data.description || '', dietType: data.dietType || 'Balanced', assignedTo: data.assignedTo || [], recipes: [], createdAt: new Date().toISOString().split('T')[0] }
-    setBooks(prev => [...prev, newBook])
-    setSelectedBook(newBook.id)
+  async function handleAddBook(name: string, description: string, dietType: string) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const { data, error } = await supabase
+      .from('recipe_books')
+      .insert({ coach_id: user.id, name, description, diet_type: dietType })
+      .select()
+      .single()
+    if (error || !data) return
+    const newBook: RecipeBook = { id: data.id, name: data.name, description: data.description, diet_type: data.diet_type, created_at: data.created_at, recipes: [] }
+    setBooks(prev => [newBook, ...prev])
+    setSelectedBookId(newBook.id)
   }
 
-  function handleAddRecipe(bookId: string, recipe: Recipe) {
-    setBooks(prev => prev.map(b => b.id === bookId ? { ...b, recipes: [...b.recipes, recipe] } : b))
+  function handleRecipeAdded(recipe: Recipe) {
+    setBooks(prev => prev.map(b => b.id === aiBookId ? { ...b, recipes: [...b.recipes, recipe] } : b))
   }
 
-  function handleDeleteRecipe(bookId: string, recipeId: string) {
+  async function handleDeleteRecipe(bookId: string, recipeId: string) {
+    await supabase.from('recipes').delete().eq('id', recipeId)
     setBooks(prev => prev.map(b => b.id === bookId ? { ...b, recipes: b.recipes.filter(r => r.id !== recipeId) } : b))
+  }
+
+  if (loading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <p className="text-cb-muted text-sm">Loading recipe books…</p>
+      </div>
+    )
   }
 
   return (
@@ -358,26 +323,23 @@ export default function RecipeBooksPage() {
           </div>
         </div>
         <div className="flex-1 p-2">
-          {filteredBooks.map(b => (
-            <button
-              key={b.id}
-              onClick={() => setSelectedBook(b.id)}
-              className={clsx('w-full text-left p-3 rounded-xl mb-1 transition-colors', selectedBook === b.id ? 'bg-brand/10 border border-brand/30' : 'hover:bg-surface-light border border-transparent')}
-            >
-              <div className="flex items-center gap-2 mb-1">
-                <BookOpen size={14} className={selectedBook === b.id ? 'text-brand' : 'text-cb-muted'} />
-                <span className={clsx('text-sm font-medium truncate', selectedBook === b.id ? 'text-brand' : 'text-cb-text')}>{b.name}</span>
-              </div>
-              <div className="flex items-center justify-between">
+          {filteredBooks.length === 0 ? (
+            <p className="text-xs text-cb-muted px-2 py-4">{books.length === 0 ? 'No recipe books yet' : 'No books match'}</p>
+          ) : (
+            filteredBooks.map(b => (
+              <button
+                key={b.id}
+                onClick={() => setSelectedBookId(b.id)}
+                className={clsx('w-full text-left p-3 rounded-xl mb-1 transition-colors', selectedBookId === b.id ? 'bg-brand/10 border border-brand/30' : 'hover:bg-surface-light border border-transparent')}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <BookOpen size={14} className={selectedBookId === b.id ? 'text-brand' : 'text-cb-muted'} />
+                  <span className={clsx('text-sm font-medium truncate', selectedBookId === b.id ? 'text-brand' : 'text-cb-text')}>{b.name}</span>
+                </div>
                 <span className="text-xs text-cb-muted">{b.recipes.length} recipe{b.recipes.length !== 1 ? 's' : ''}</span>
-                {b.assignedTo.length > 0 && (
-                  <div className="flex items-center gap-1 text-xs text-cb-muted">
-                    <Users size={10} /> {b.assignedTo.length}
-                  </div>
-                )}
-              </div>
-            </button>
-          ))}
+              </button>
+            ))
+          )}
         </div>
       </div>
 
@@ -389,33 +351,20 @@ export default function RecipeBooksPage() {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <h2 className="text-xl font-bold text-cb-text">{activeBook.name}</h2>
-                  <span className="px-2 py-0.5 rounded-full bg-surface-light border border-cb-border text-cb-secondary text-xs">{activeBook.dietType}</span>
+                  <span className="px-2 py-0.5 rounded-full bg-surface-light border border-cb-border text-cb-secondary text-xs">{activeBook.diet_type}</span>
                 </div>
                 <p className="text-cb-secondary text-sm">{activeBook.description}</p>
-                {activeBook.assignedTo.length > 0 && (
-                  <div className="flex items-center gap-1.5 mt-2">
-                    <Users size={13} className="text-cb-muted" />
-                    <div className="flex flex-wrap gap-1">
-                      {activeBook.assignedTo.map(n => <span key={n} className="px-2 py-0.5 rounded-full bg-brand/10 text-brand text-xs">{n}</span>)}
-                    </div>
-                  </div>
-                )}
               </div>
-              <div className="flex items-center gap-2">
-                <button onClick={() => setAiBookId(activeBook.id)} className="flex items-center gap-2 px-3 py-2 bg-surface border border-cb-border rounded-xl text-sm text-cb-secondary hover:text-brand hover:border-brand transition-colors">
-                  <Sparkles size={14} /> AI Generate
-                </button>
-                <button className="flex items-center gap-2 px-3 py-2 bg-brand text-white rounded-xl text-sm font-medium hover:bg-brand-light transition-colors">
-                  <Plus size={14} /> Add Recipe
-                </button>
-              </div>
+              <button onClick={() => setAiBookId(activeBook.id)} className="flex items-center gap-2 px-3 py-2 bg-surface border border-cb-border rounded-xl text-sm text-cb-secondary hover:text-brand hover:border-brand transition-colors">
+                <Sparkles size={14} /> AI Generate
+              </button>
             </div>
 
             {activeBook.recipes.length === 0 ? (
               <div className="text-center py-16 text-cb-muted">
                 <BookOpen size={40} className="mx-auto mb-3 opacity-40" />
                 <p className="font-medium">No recipes yet</p>
-                <p className="text-sm mt-1">Add recipes manually or use AI to generate them</p>
+                <p className="text-sm mt-1">Use AI to generate recipes for this book</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -429,14 +378,14 @@ export default function RecipeBooksPage() {
           <div className="flex items-center justify-center h-full text-cb-muted">
             <div className="text-center">
               <BookOpen size={40} className="mx-auto mb-3 opacity-40" />
-              <p>Select a recipe book</p>
+              <p>{books.length === 0 ? 'Create your first recipe book' : 'Select a recipe book'}</p>
             </div>
           </div>
         )}
       </div>
 
       {showNewModal && <NewBookModal onClose={() => setShowNewModal(false)} onAdd={handleAddBook} />}
-      {aiBookId && <AIRecipeModal bookId={aiBookId} onClose={() => setAiBookId(null)} onAdd={handleAddRecipe} />}
+      {aiBookId && <AIRecipeModal bookId={aiBookId} onClose={() => setAiBookId(null)} onAdded={handleRecipeAdded} />}
     </div>
   )
 }

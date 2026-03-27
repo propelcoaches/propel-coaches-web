@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { toast } from '@/lib/toast';
 
 interface ExerciseVideo {
   id: string;
@@ -101,7 +102,7 @@ export default function VideoLibraryPage() {
       setVideoFile(null);
       setForm({ exercise_name: '', muscle_group: 'Chest', category: 'strength', description: '', form_cues: [''], common_mistakes: [''], is_public: false });
     } catch (err: any) {
-      alert(err.message || 'Upload failed');
+      toast.error(err.message || 'Upload failed');
     } finally {
       setUploading(false);
     }

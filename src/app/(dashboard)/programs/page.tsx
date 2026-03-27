@@ -1,71 +1,9 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useIsDemo } from '@/lib/demo/useDemoMode'
 import { Plus, Dumbbell, Loader2 } from 'lucide-react'
 import clsx from 'clsx'
-
-const DEMO_PROGRAMS = [
-  {
-    id: 'prog-1',
-    name: 'Fat Loss Foundation',
-    weeks: 8,
-    daysPerWeek: 4,
-    totalExercises: 28,
-    assignedClients: ['demo-client-1', 'demo-client-4'],
-    isTemplate: true,
-    description: 'Progressive overload program focused on fat loss. Combines compound lifts with metabolic finishers.',
-    tags: ['Fat Loss', 'Intermediate'],
-    lastModified: '2026-03-10',
-    createdAt: '2026-01-15',
-  },
-  {
-    id: 'prog-2',
-    name: 'Hypertrophy Block A',
-    weeks: 6,
-    daysPerWeek: 5,
-    totalExercises: 35,
-    assignedClients: ['demo-client-3'],
-    isTemplate: true,
-    description: 'Upper/lower split designed for maximum muscle gain. High volume, moderate intensity.',
-    tags: ['Muscle Gain', 'Advanced'],
-    lastModified: '2026-02-28',
-    createdAt: '2025-11-20',
-  },
-  {
-    id: 'prog-3',
-    name: 'Beginner Full Body',
-    weeks: 12,
-    daysPerWeek: 3,
-    totalExercises: 18,
-    assignedClients: ['demo-client-2', 'demo-client-4'],
-    isTemplate: false,
-    description: 'Perfect for new clients. 3-day full body routine with emphasis on learning movement patterns.',
-    tags: ['Beginner', 'General Fitness'],
-    lastModified: '2026-03-05',
-    createdAt: '2025-10-01',
-  },
-  {
-    id: 'prog-4',
-    name: 'Strength Peaking',
-    weeks: 4,
-    daysPerWeek: 4,
-    totalExercises: 20,
-    assignedClients: ['demo-client-3'],
-    isTemplate: true,
-    description: 'Powerlifting-focused peaking block. Squat, bench, and deadlift specialisation.',
-    tags: ['Strength', 'Advanced'],
-    lastModified: '2026-03-18',
-    createdAt: '2026-02-01',
-  },
-]
-
-const DEMO_CLIENTS_BRIEF = [
-  { id: 'demo-client-1', name: 'Liam Carter', initials: 'LC', color: '#7B68EE' },
-  { id: 'demo-client-2', name: 'Sophie Nguyen', initials: 'SN', color: '#34C759' },
-  { id: 'demo-client-3', name: 'Jake Wilson', initials: 'JW', color: '#E8A838' },
-  { id: 'demo-client-4', name: 'Emma Thompson', initials: 'ET', color: '#E05454' },
-]
+import { createClient } from '@/lib/supabase/client'
 
 type FilterTab = 'all' | 'templates' | 'assigned'
 
@@ -84,20 +22,19 @@ type RealProgram = {
 }
 
 export default function ProgramsPage() {
-  const isDemo = useIsDemo()
   const [filterTab, setFilterTab] = useState<FilterTab>('all')
   const [searchTerm, setSearchTerm] = useState('')
   const [expandedProgram, setExpandedProgram] = useState<string | null>(null)
-  const [loading, setLoading] = useState(!isDemo)
+  const [loading, setLoading] = useState(true)
   const [realPrograms, setRealPrograms] = useState<RealProgram[]>([])
   const [showNewProgramModal, setShowNewProgramModal] = useState(false)
   const [newProgramName, setNewProgramName] = useState('')
   const [newProgramWeeks, setNewProgramWeeks] = useState('8')
   const [newProgramDays, setNewProgramDays] = useState('4')
   const [saving, setSaving] = useState(false)
+  const [clients, setClients] = useState<{ id: string; full_name: string | null }[]>([])
 
   const fetchPrograms = useCallback(async () => {
-    if (isDemo) return
     setLoading(true)
     try {
       const res = await fetch('/api/program-templates')
@@ -108,9 +45,21 @@ export default function ProgramsPage() {
     } finally {
       setLoading(false)
     }
-  }, [isDemo])
+  }, [])
 
-  useEffect(() => { fetchPrograms() }, [fetchPrograms])
+  const fetchClients = useCallback(async () => {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, full_name')
+      .eq('coach_id', user.id)
+      .eq('role', 'client')
+    setClients(data ?? [])
+  }, [])
+
+  useEffect(() => { fetchPrograms(); fetchClients() }, [fetchPrograms, fetchClients])
 
   const handleCreateProgram = async () => {
     if (!newProgramName.trim()) return
@@ -152,8 +101,7 @@ export default function ProgramsPage() {
     createdAt: p.created_at?.slice(0, 10) ?? '',
   }))
 
-  const programs = isDemo ? DEMO_PROGRAMS : normalizedRealPrograms
-  const clients = isDemo ? DEMO_CLIENTS_BRIEF : []
+  const programs = normalizedRealPrograms
 
   // Filter programs
   const filteredPrograms = programs.filter(prog => {
@@ -393,25 +341,6 @@ export default function ProgramsPage() {
                       <p className="text-sm text-cb-secondary">{program.description}</p>
                     </div>
 
-                    {/* Week-by-week breakdown */}
-                    <div>
-                      <p className="text-xs font-semibold text-cb-muted mb-2 uppercase tracking-wide">Week-by-Week</p>
-                      <div className="space-y-2">
-                        <div className="p-3 bg-surface-light rounded-lg border border-cb-border">
-                          <p className="text-xs font-semibold text-cb-text">Week 1-2: Foundation</p>
-                          <p className="text-xs text-cb-muted mt-1">Movement pattern learning and base conditioning</p>
-                        </div>
-                        <div className="p-3 bg-surface-light rounded-lg border border-cb-border">
-                          <p className="text-xs font-semibold text-cb-text">Week 3-5: Build</p>
-                          <p className="text-xs text-cb-muted mt-1">Progressive overload and intensity increase</p>
-                        </div>
-                        <div className="p-3 bg-surface-light rounded-lg border border-cb-border">
-                          <p className="text-xs font-semibold text-cb-text">Week 6-8: Peak</p>
-                          <p className="text-xs text-cb-muted mt-1">Maximum effort phase with deload finisher</p>
-                        </div>
-                      </div>
-                    </div>
-
                     {/* Assign dropdown */}
                     <div>
                       <label className="text-xs font-semibold text-cb-muted mb-2 block uppercase tracking-wide">
@@ -421,7 +350,7 @@ export default function ProgramsPage() {
                         <option value="">Select a client...</option>
                         {clients.map(client => (
                           <option key={client.id} value={client.id}>
-                            {client.name}
+                            {client.full_name ?? 'Unknown'}
                           </option>
                         ))}
                       </select>
