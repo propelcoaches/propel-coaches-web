@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import clsx from 'clsx'
 import { createClient } from '@/lib/supabase/client'
+import { toast } from '@/lib/toast'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -387,9 +388,13 @@ export default function AIMealPlanWizard({
         }),
       })
       const data = await res.json()
-      if (data.plan) setResult(data.plan)
+      if (data.plan) {
+        setResult(data.plan)
+      } else {
+        toast.error(data.error ?? 'Failed to generate meal plan')
+      }
     } catch {
-      // fall through — mock handles it
+      toast.error('Failed to generate meal plan — please try again')
     } finally {
       clearInterval(interval)
       setLoadingStepIdx(LOADING_STEPS.length - 1)

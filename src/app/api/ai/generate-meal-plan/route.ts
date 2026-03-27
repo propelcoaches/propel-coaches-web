@@ -91,19 +91,21 @@ Return ONLY valid JSON — no markdown — in this exact format:
   "plan_name": "Descriptive plan name",
   "description": "2–3 sentence description of the plan approach and expected outcomes",
   "dietitian_notes": "Key bullet points of nutrition guidance, separated by \\n",
-  "daily_calories": ${calories},
-  "daily_protein": ${protein},
-  "daily_carbs": ${carbs},
-  "daily_fats": ${fats},
+  "calories_target": ${calories},
+  "protein_target": ${protein},
+  "carbs_target": ${carbs},
+  "fat_target": ${fats},
+  "fibre_target": 30,
   "days": [
     {
       "day_number": 1,
       "day_name": "Monday",
       "meals": [
         {
-          "meal_name": "Breakfast",
+          "name": "Breakfast",
           "time": "07:30",
-          "meal_notes": "Preparation tips for this meal",
+          "notes": "Preparation tips for this meal",
+          "tags": [],
           "foods": [
             {
               "name": "Food item name",
@@ -140,7 +142,7 @@ CRITICAL RULES:
   try {
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 10000,
+      max_tokens: 16000,
       messages: [{ role: 'user', content: prompt }],
     })
 
