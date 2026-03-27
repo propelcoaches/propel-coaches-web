@@ -3,12 +3,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+// Lazy initialization — only evaluated at request time, not during build.
+function getSupabaseAdmin() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url || !key) throw new Error("Missing Supabase env vars")
+  return createClient(url, key)
+}
 
-const admin = createClient(supabaseUrl, supabaseKey)
 
 export async function POST(req: NextRequest) {
+  const supabaseAdmin = getSupabaseAdmin()
   // Verify authenticated coach session
   const serverClient = createServerClient()
   const { data: { user }, error: authError } = await serverClient.auth.getUser()
