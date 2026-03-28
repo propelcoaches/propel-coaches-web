@@ -275,7 +275,28 @@ export default function PaymentsPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
 
-      const [invoicesRes, promoRes, clientsRes, profileRes] = await Promise.all([
+      // Step 1: check profile + Stripe connection
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('payment_currency, payment_tax_rate, payment_terms_days, stripe_account_id')
+        .eq('id', user.id)
+        .single()
+
+      if (profileData) {
+        setSettings({
+          payment_currency: profileData.payment_currency ?? 'AUD',
+          payment_tax_rate: profileData.payment_tax_rate ?? 0,
+          payment_terms_days: profileData.payment_terms_days ?? 30,
+        })
+      }
+
+      const hasStripe = !!(profileData as any)?.stripe_account_id
+      setStripeConnected(hasStripe)
+
+      // Step 2: only fetch payments data if Stripe is connected
+      if (!hasStripe) return
+
+      const [invoicesRes, promoRes, clientsRes] = await Promise.all([
         supabase
           .from('invoices')
           .select('*, client:profiles!invoices_client_id_fkey(full_name)')
@@ -291,11 +312,6 @@ export default function PaymentsPage() {
           .select('id, full_name, email')
           .eq('role', 'client')
           .eq('coach_id', user.id),
-        supabase
-          .from('profiles')
-          .select('payment_currency, payment_tax_rate, payment_terms_days, stripe_account_id')
-          .eq('id', user.id)
-          .single(),
       ])
 
       if (invoicesRes.error) throw invoicesRes.error
@@ -305,16 +321,6 @@ export default function PaymentsPage() {
       setInvoices(invoicesRes.data ?? [])
       setPromoCodes(promoRes.data ?? [])
       setClients(clientsRes.data ?? [])
-      if (!profileRes.error && profileRes.data) {
-        setSettings({
-          payment_currency: profileRes.data.payment_currency ?? 'AUD',
-          payment_tax_rate: profileRes.data.payment_tax_rate ?? 0,
-          payment_terms_days: profileRes.data.payment_terms_days ?? 30,
-        })
-        setStripeConnected(!!(profileRes.data as any).stripe_account_id)
-      } else {
-        setStripeConnected(false)
-      }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to load payments data')
     } finally {
@@ -515,7 +521,7 @@ export default function PaymentsPage() {
   }
 
   // ── Stripe not connected ─────────────────────────────────────────────────────
-  if (!loading && stripeConnected === false && invoices.length === 0) {
+  if (!loading && stripeConnected === false) {
     return (
       <div className="p-6 max-w-7xl mx-auto">
         <div className="mb-6">
