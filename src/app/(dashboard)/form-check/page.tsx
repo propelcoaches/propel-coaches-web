@@ -147,7 +147,7 @@ export default function FormCheckPage() {
             <div className="bg-black rounded-xl overflow-hidden aspect-video mb-4">
               <video src={selectedCheck.video_url} controls className="w-full h-full object-contain" />
             </div>
-            <div className="bg-white rounded-xl border p-4">
+            <div className="bg-surface border border-cb-border rounded-xl p-4">
               <h2 className="font-semibold text-gray-900 text-lg">{selectedCheck.exercise_name}</h2>
               <div className="flex gap-4 mt-2 text-sm text-gray-500">
                 {selectedCheck.weight_used && <span>Weight: {selectedCheck.weight_used}</span>}
@@ -180,7 +180,7 @@ export default function FormCheckPage() {
             {analysis ? (
               <>
                 {/* Score */}
-                <div className="bg-white rounded-xl border p-4 flex items-center gap-4">
+                <div className="bg-surface border border-cb-border rounded-xl p-4 flex items-center gap-4">
                   <div className={`text-3xl font-bold rounded-xl w-16 h-16 flex items-center justify-center ${scoreColor(analysis.overall_score)}`}>
                     {analysis.overall_score}
                   </div>
@@ -197,7 +197,7 @@ export default function FormCheckPage() {
                 )}
 
                 {/* Coaching cues */}
-                <div className="bg-white rounded-xl border p-4">
+                <div className="bg-surface border border-cb-border rounded-xl p-4">
                   <h3 className="font-semibold text-gray-900 mb-3">Quick Coaching Cues</h3>
                   <div className="flex flex-wrap gap-2">
                     {analysis.coaching_cues.map((cue, i) => (
@@ -210,7 +210,7 @@ export default function FormCheckPage() {
 
                 {/* Strengths */}
                 {analysis.strengths.length > 0 && (
-                  <div className="bg-white rounded-xl border p-4">
+                  <div className="bg-surface border border-cb-border rounded-xl p-4">
                     <h3 className="font-semibold text-green-700 mb-3">Strengths</h3>
                     <div className="space-y-3">
                       {analysis.strengths.map((s, i) => (
@@ -225,7 +225,7 @@ export default function FormCheckPage() {
 
                 {/* Improvements */}
                 {analysis.improvements.length > 0 && (
-                  <div className="bg-white rounded-xl border p-4">
+                  <div className="bg-surface border border-cb-border rounded-xl p-4">
                     <h3 className="font-semibold text-amber-700 mb-3">Areas for Improvement</h3>
                     <div className="space-y-3">
                       {analysis.improvements.map((imp, i) => (
@@ -264,7 +264,7 @@ export default function FormCheckPage() {
                 )}
 
                 {/* Coach notes */}
-                <div className="bg-white rounded-xl border p-4">
+                <div className="bg-surface border border-cb-border rounded-xl p-4">
                   <h3 className="font-semibold text-gray-900 mb-3">Coach Notes</h3>
                   <textarea
                     value={coachNotes}
@@ -330,7 +330,7 @@ export default function FormCheckPage() {
         <div className="grid gap-3">
           {filtered.map((fc) => (
             <div key={fc.id} onClick={() => { setSelectedCheck(fc); setCoachNotes(fc.coach_notes || ''); }}
-              className="bg-white rounded-xl border p-4 hover:shadow-md transition-shadow cursor-pointer flex items-center gap-4">
+              className="bg-surface border border-cb-border rounded-xl p-4 hover:shadow-md hover:border-brand/20 transition-all duration-200 cursor-pointer flex items-center gap-4">
               <div className="w-20 h-14 bg-gray-200 rounded-lg overflow-hidden shrink-0">
                 {fc.thumbnail_url ? (
                   <img src={fc.thumbnail_url} alt="" className="w-full h-full object-cover" />

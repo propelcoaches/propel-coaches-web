@@ -242,7 +242,7 @@ export default function MealPlansPage() {
           </button>
         </div>
 
-        <div className="space-y-6 bg-white rounded-xl shadow-sm border p-6">
+        <div className="space-y-6 bg-surface border border-cb-border rounded-xl shadow-sm p-6">
           {/* Client selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Client</label>
@@ -535,7 +535,7 @@ export default function MealPlansPage() {
             <div
               key={plan.id}
               onClick={() => viewPlan(plan)}
-              className="bg-white rounded-xl border p-4 hover:shadow-md transition-shadow cursor-pointer flex items-center justify-between"
+              className="bg-surface border border-cb-border rounded-xl p-4 hover:shadow-md hover:border-brand/20 transition-all duration-200 cursor-pointer flex items-center justify-between"
             >
               <div>
                 <div className="flex items-center gap-2">

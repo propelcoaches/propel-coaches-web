@@ -213,7 +213,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
+    <div className="p-8 max-w-5xl mx-auto animate-fade-in-up">
       {/* Page greeting */}
       <div className="mb-6">
         <h1 className="text-xl font-bold text-cb-text">

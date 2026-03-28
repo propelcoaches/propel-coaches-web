@@ -183,7 +183,7 @@ export default function WorkoutProgramsPage() {
           <button onClick={() => setShowGenerator(false)} className="text-gray-500 hover:text-gray-700">Cancel</button>
         </div>
 
-        <div className="space-y-6 bg-white rounded-xl shadow-sm border p-6">
+        <div className="space-y-6 bg-surface border border-cb-border rounded-xl shadow-sm p-6">
           {/* Client */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Client</label>
@@ -436,7 +436,7 @@ export default function WorkoutProgramsPage() {
         <div className="grid gap-4">
           {programs.map((prog) => (
             <div key={prog.id} onClick={() => viewProgram(prog)}
-              className="bg-white rounded-xl border p-4 hover:shadow-md transition-shadow cursor-pointer flex items-center justify-between">
+              className="bg-surface border border-cb-border rounded-xl p-4 hover:shadow-md hover:border-brand/20 transition-all duration-200 cursor-pointer flex items-center justify-between">
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="font-semibold text-gray-900">{prog.title}</h3>
