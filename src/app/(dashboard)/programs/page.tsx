@@ -147,6 +147,7 @@ export default function ProgramsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-cb-text">Programs</h1>
+          <div className="h-0.5 w-12 bg-gradient-to-r from-brand to-brand/40 rounded-full mt-1.5 mb-1" />
           <p className="text-sm text-cb-muted mt-0.5">Build and manage training templates</p>
         </div>
         <button

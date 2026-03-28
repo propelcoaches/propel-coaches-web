@@ -162,7 +162,7 @@ export default function Sidebar({ userEmail, userName }: { userEmail?: string | 
                         className={clsx(
                           'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                           active
-                            ? 'bg-brand/10 text-brand border-l-2 border-brand'
+                            ? 'bg-brand/5 text-brand font-medium border-l-2 border-brand'
                             : 'text-cb-secondary hover:bg-surface-light hover:text-cb-text border-l-2 border-transparent'
                         )}
                       >
@@ -184,10 +184,19 @@ export default function Sidebar({ userEmail, userName }: { userEmail?: string | 
       {/* User footer */}
       <div className="px-3 py-4 border-t border-cb-border space-y-2">
         <div className="flex items-center gap-2.5 px-3 py-2">
-          <div className="w-7 h-7 rounded-full bg-brand/10 border border-brand/20 flex items-center justify-center flex-shrink-0">
+          <div className="w-8 h-8 rounded-full bg-brand/10 border border-brand/20 flex items-center justify-center flex-shrink-0">
             <span className="text-xs font-semibold text-brand">{initials}</span>
           </div>
-          <span className="text-xs text-cb-secondary truncate flex-1" title={userEmail ?? undefined}>{userName ?? userEmail ?? 'Coach'}</span>
+          <div className="flex-1 min-w-0">
+            {userName ? (
+              <>
+                <p className="text-xs font-medium text-cb-text truncate">{userName}</p>
+                <p className="text-[11px] text-cb-muted truncate" title={userEmail ?? undefined}>{userEmail}</p>
+              </>
+            ) : (
+              <p className="text-xs text-cb-secondary truncate" title={userEmail ?? undefined}>{userEmail ?? 'Coach'}</p>
+            )}
+          </div>
           <button
             onClick={toggleTheme}
             className="flex-shrink-0 p-1.5 rounded-md text-cb-muted hover:text-cb-secondary hover:bg-surface-light transition-colors"

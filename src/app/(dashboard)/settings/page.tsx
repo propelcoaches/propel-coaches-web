@@ -238,6 +238,7 @@ export default function SettingsPage() {
     <div className="p-8 max-w-4xl mx-auto">
       <div className="mb-8">
         <h1 className="text-xl font-bold text-cb-text">Settings</h1>
+        <div className="h-0.5 w-12 bg-gradient-to-r from-brand to-brand/40 rounded-full mt-1.5 mb-1" />
         <p className="text-sm text-cb-muted mt-1">Manage your account and preferences</p>
       </div>
 

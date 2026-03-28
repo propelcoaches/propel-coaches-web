@@ -630,6 +630,10 @@ export default function ClientsPage() {
   return (
     <div className="p-6 max-w-6xl mx-auto">
       {/* Header */}
+      <div className="mb-5">
+        <h1 className="text-xl font-bold text-cb-text">Clients</h1>
+        <div className="h-0.5 w-12 bg-gradient-to-r from-brand to-brand/40 rounded-full mt-1.5" />
+      </div>
       <div className="flex items-center gap-3 mb-5">
         <div className="relative flex-1 max-w-sm">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-cb-muted" />
@@ -701,8 +705,8 @@ export default function ClientsPage() {
       <div className="bg-surface border border-cb-border rounded-lg overflow-hidden">
         {filtered.length === 0 && invitations.length === 0 ? (
           <div className="py-20 text-center">
-            <div className="w-12 h-12 rounded-full bg-surface-light border border-cb-border flex items-center justify-center mx-auto mb-3">
-              <UserPlus size={20} className="text-cb-muted" />
+            <div className="w-16 h-16 rounded-2xl bg-brand/8 flex items-center justify-center mx-auto mb-4">
+              <UserPlus size={28} className="text-brand/60" />
             </div>
             <p className="text-sm font-medium text-cb-secondary mb-1">
               {search || tagFilter ? 'No clients match your filter' : 'No clients yet'}
@@ -754,7 +758,7 @@ export default function ClientsPage() {
                 return (
                   <tr
                     key={client.id}
-                    className="hover:bg-surface-light transition-colors group cursor-pointer"
+                    className="hover:bg-brand/5 transition-colors group cursor-pointer border-l-2 border-transparent hover:border-brand"
                     onClick={() => window.location.href = `/clients/${client.id}`}
                   >
                     <td className="px-4 py-3.5" onClick={e => e.stopPropagation()}>

@@ -576,6 +576,7 @@ export default function PaymentsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-cb-text">Payments</h1>
+          <div className="h-0.5 w-12 bg-gradient-to-r from-brand to-brand/40 rounded-full mt-1.5 mb-0.5" />
           <p className="text-sm text-cb-muted mt-0.5">Track revenue and manage billing</p>
         </div>
         <button

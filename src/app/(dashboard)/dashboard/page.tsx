@@ -258,6 +258,7 @@ export default function DashboardPage() {
         <h1 className="text-xl font-bold text-cb-text">
           Welcome back{firstName ? `, ${firstName}` : ''}
         </h1>
+        <div className="h-0.5 w-12 bg-gradient-to-r from-brand to-brand/40 rounded-full mt-1.5 mb-1" />
         <p className="text-sm text-cb-muted mt-1">Here's what's happening with your clients today.</p>
       </div>
 
@@ -302,7 +303,7 @@ export default function DashboardPage() {
               <Icon size={17} className={iconColor} />
             </div>
             <p className="text-3xl font-bold text-cb-text">{value}</p>
-            <p className="text-sm text-cb-muted mt-1">{label}</p>
+            <p className="text-sm text-cb-secondary font-medium mt-1">{label}</p>
           </div>
         ))}
       </div>
