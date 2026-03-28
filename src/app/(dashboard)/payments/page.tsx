@@ -254,6 +254,7 @@ export default function PaymentsPage() {
   const [settings, setSettings] = useState<PaymentSettings>({ payment_currency: 'AUD', payment_tax_rate: 0, payment_terms_days: 30 })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [stripeConnected, setStripeConnected] = useState<boolean | null>(null)
 
   // UI state
   const [activeTab, setActiveTab] = useState<Tab>('invoices')
@@ -292,7 +293,7 @@ export default function PaymentsPage() {
           .eq('coach_id', user.id),
         supabase
           .from('profiles')
-          .select('payment_currency, payment_tax_rate, payment_terms_days')
+          .select('payment_currency, payment_tax_rate, payment_terms_days, stripe_account_id')
           .eq('id', user.id)
           .single(),
       ])
@@ -310,6 +311,9 @@ export default function PaymentsPage() {
           payment_tax_rate: profileRes.data.payment_tax_rate ?? 0,
           payment_terms_days: profileRes.data.payment_terms_days ?? 30,
         })
+        setStripeConnected(!!(profileRes.data as any).stripe_account_id)
+      } else {
+        setStripeConnected(false)
       }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to load payments data')
@@ -504,6 +508,45 @@ export default function PaymentsPage() {
           </button>
           <p className="text-xs text-cb-muted">
             If this keeps happening, check your Supabase connection and ensure your environment variables are set correctly.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Stripe not connected ─────────────────────────────────────────────────────
+  if (!loading && stripeConnected === false && invoices.length === 0) {
+    return (
+      <div className="p-6 max-w-7xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-cb-text">Payments</h1>
+          <p className="text-sm text-cb-muted mt-0.5">Track revenue and manage billing</p>
+        </div>
+        <div className="bg-surface border border-cb-border rounded-xl p-10 flex flex-col items-center justify-center text-center gap-5 max-w-lg mx-auto mt-8">
+          <div className="w-16 h-16 rounded-2xl bg-brand/10 flex items-center justify-center">
+            <CreditCard size={30} className="text-brand" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-cb-text mb-1.5">Start accepting payments</h2>
+            <p className="text-sm text-cb-muted leading-relaxed">
+              Connect Stripe to send invoices, track revenue, and get paid directly by your clients.
+            </p>
+          </div>
+          <a
+            href="/api/stripe/connect"
+            className="flex items-center gap-2 px-6 py-2.5 bg-brand text-white rounded-lg text-sm font-medium hover:bg-brand/90 transition-colors"
+          >
+            <CreditCard size={15} />
+            Connect Stripe
+          </a>
+          <p className="text-xs text-cb-muted">
+            You can also manage invoices manually without Stripe.{' '}
+            <button
+              onClick={() => setStripeConnected(true)}
+              className="text-brand underline underline-offset-2 hover:no-underline"
+            >
+              Skip for now
+            </button>
           </p>
         </div>
       </div>

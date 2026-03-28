@@ -30,9 +30,9 @@ const FEATURES_DISPLAY = [
 const SECTIONS = [
   {
     id: 'client_access',
-    label: 'Client Access',
+    label: 'Default Client Access',
     icon: Shield,
-    description: 'Control which features your clients can access',
+    description: 'These defaults apply to newly invited clients. You can customize access for each client in their profile.',
   },
   {
     id: 'profile',

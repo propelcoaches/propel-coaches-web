@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import {
   Users, Dumbbell, UtensilsCrossed, ArrowRight,
   TrendingUp, Clock, CheckCircle2, AlertCircle, Bell,
-  Layers, DollarSign, BarChart2,
+  Layers, DollarSign, BarChart2, UserPlus,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import clsx from 'clsx'
@@ -112,7 +112,7 @@ export default function DashboardPage() {
   const router = useRouter()
   const [firstName, setFirstName] = useState<string | null>(null)
   const [activePrograms, setActivePrograms] = useState<ActiveEntry[]>([])
-  type ActivityItem = { id: string; type: string; clientName: string; detail: string; timeLabel: string; icon: React.ComponentType<any> }
+  type ActivityItem = { id: string; type: string; clientName: string; detail: string; timeLabel: string; sortDate: string; icon: React.ComponentType<any> }
   const [activity, setActivity] = useState<ActivityItem[]>([])
   const [nudgeClients, setNudgeClients] = useState<ClientRow[]>([])
   const [sendingNudge, setSendingNudge] = useState(false)
@@ -149,45 +149,75 @@ export default function DashboardPage() {
       const totalClients = clients.length + (inviteData?.length ?? 0)
       const monthRevenue = (paidInvoices ?? []).reduce((s: number, inv: any) => s + (inv.amount_cents ?? 0), 0) / 100
 
-      // Fetch recent check-ins for activity feed + nudge detection
+      // Fetch recent activity from multiple sources + nudge detection
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+
+      const [{ data: checkInData }, { data: recentInvitations }, { data: recentPrograms }] = await Promise.all([
+        clients.length > 0
+          ? supabase.from('check_ins').select('id, client_id, created_at, date')
+              .in('client_id', clients.map((c) => c.id))
+              .order('created_at', { ascending: false }).limit(8)
+          : Promise.resolve({ data: [] }),
+        supabase.from('client_invitations').select('id, client_name, client_email, created_at')
+          .eq('coach_id', user.id).order('created_at', { ascending: false }).limit(5),
+        supabase.from('workout_programs').select('id, name, client_id, created_at')
+          .eq('coach_id', user.id).order('created_at', { ascending: false }).limit(5),
+      ])
+
+      const checkinActivity = (checkInData ?? []).map((ci) => {
+        const client = clients.find((c) => c.id === ci.client_id)
+        return {
+          id: `ci-${ci.id}`,
+          type: 'checkin_submitted',
+          clientName: client?.name ?? client?.email ?? 'Client',
+          detail: 'Weekly check-in submitted',
+          timeLabel: formatTimeAgo(ci.created_at ?? ci.date),
+          sortDate: ci.created_at ?? ci.date,
+          icon: CheckCircle2,
+        }
+      })
+
+      const inviteActivity = (recentInvitations ?? []).map((inv) => ({
+        id: `inv-${inv.id}`,
+        type: 'invitation_sent',
+        clientName: inv.client_name ?? inv.client_email ?? 'Client',
+        detail: 'Client invitation sent',
+        timeLabel: formatTimeAgo(inv.created_at),
+        sortDate: inv.created_at,
+        icon: UserPlus,
+      }))
+
+      const programActivity = (recentPrograms ?? []).map((prog) => {
+        const client = clients.find((c) => c.id === prog.client_id)
+        return {
+          id: `prog-${prog.id}`,
+          type: 'program_created',
+          clientName: client?.name ?? client?.email ?? 'Client',
+          detail: `Program "${prog.name}" created`,
+          timeLabel: formatTimeAgo(prog.created_at),
+          sortDate: prog.created_at,
+          icon: Layers,
+        }
+      })
+
+      const allActivity = [...checkinActivity, ...inviteActivity, ...programActivity]
+        .sort((a, b) => new Date(b.sortDate).getTime() - new Date(a.sortDate).getTime())
+        .slice(0, 5)
+      setActivity(allActivity)
+
       if (clients.length > 0) {
-        const clientIds = clients.map((c) => c.id)
-        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-
-        const { data: checkInData } = await supabase
-          .from('check_ins')
-          .select('id, client_id, created_at, date')
-          .in('client_id', clientIds)
-          .order('created_at', { ascending: false })
-          .limit(8)
-
-        const recentActivity = (checkInData ?? []).map((ci) => {
-          const client = clients.find((c) => c.id === ci.client_id)
-          return {
-            id: ci.id,
-            type: 'checkin_submitted' as const,
-            clientName: client?.name ?? client?.email ?? 'Client',
-            detail: 'Weekly check-in submitted',
-            timeLabel: formatTimeAgo(ci.created_at ?? ci.date),
-            icon: CheckCircle2,
-          }
-        })
-        setActivity(recentActivity)
-
         // Find clients with no check-in in last 7 days
         const { data: recentCheckIns } = await supabase
           .from('check_ins')
           .select('client_id')
-          .in('client_id', clientIds)
+          .in('client_id', clients.map((c) => c.id))
           .gte('created_at', sevenDaysAgo)
 
         const recentClientIds = new Set((recentCheckIns ?? []).map((ci) => ci.client_id))
         const needNudge = clients.filter((c) => !recentClientIds.has(c.id))
         setNudgeClients(needNudge)
 
-        const checkinRate = clients.length > 0
-          ? Math.round((recentClientIds.size / clients.length) * 100)
-          : 0
+        const checkinRate = Math.round((recentClientIds.size / clients.length) * 100)
         setStats({ totalClients, activePrograms: programs.length, checkinRate, revenue: monthRevenue })
       } else {
         setStats({ totalClients, activePrograms: programs.length, checkinRate: 0, revenue: monthRevenue })
@@ -198,10 +228,19 @@ export default function DashboardPage() {
     load()
   }, [])
 
-  const activityIcons: Record<string, React.ReactNode> = {
-    workout_logged:      <Dumbbell size={13} className="text-brand" />,
-    checkin_submitted:   <CheckCircle2 size={13} className="text-brand" />,
-    program_started:     <TrendingUp size={13} className="text-brand" />,
+  const activityIconColors: Record<string, string> = {
+    checkin_submitted: 'text-emerald-600',
+    invitation_sent:   'text-blue-600',
+    program_created:   'text-brand',
+    workout_logged:    'text-brand',
+    program_started:   'text-brand',
+  }
+  const activityIconBgs: Record<string, string> = {
+    checkin_submitted: 'bg-emerald-500/10',
+    invitation_sent:   'bg-blue-500/10',
+    program_created:   'bg-brand/10',
+    workout_logged:    'bg-brand/10',
+    program_started:   'bg-brand/10',
   }
 
   if (loading) {
@@ -231,6 +270,7 @@ export default function DashboardPage() {
             icon: Users,
             iconColor: 'text-brand',
             iconBg: 'bg-brand/10',
+            accentBorder: 'border-l-[#7CBCB5]',
           },
           {
             label: 'Active Programs',
@@ -238,6 +278,7 @@ export default function DashboardPage() {
             icon: Layers,
             iconColor: 'text-blue-600',
             iconBg: 'bg-blue-50',
+            accentBorder: 'border-l-blue-500',
           },
           {
             label: 'Check-in Rate',
@@ -245,6 +286,7 @@ export default function DashboardPage() {
             icon: BarChart2,
             iconColor: 'text-emerald-600',
             iconBg: 'bg-emerald-50',
+            accentBorder: 'border-l-emerald-500',
           },
           {
             label: "This Month's Revenue",
@@ -252,14 +294,15 @@ export default function DashboardPage() {
             icon: DollarSign,
             iconColor: 'text-amber-600',
             iconBg: 'bg-amber-50',
+            accentBorder: 'border-l-amber-500',
           },
-        ].map(({ label, value, icon: Icon, iconColor, iconBg }) => (
-          <div key={label} className="bg-surface border border-cb-border rounded-xl p-4 shadow-sm">
-            <div className={`w-8 h-8 rounded-lg ${iconBg} flex items-center justify-center mb-3`}>
-              <Icon size={16} className={iconColor} />
+        ].map(({ label, value, icon: Icon, iconColor, iconBg, accentBorder }) => (
+          <div key={label} className={`bg-surface border border-cb-border border-l-4 ${accentBorder} rounded-xl p-5 shadow-sm`}>
+            <div className={`w-9 h-9 rounded-lg ${iconBg} flex items-center justify-center mb-3`}>
+              <Icon size={17} className={iconColor} />
             </div>
-            <p className="text-2xl font-bold text-cb-text">{value}</p>
-            <p className="text-sm text-cb-muted mt-0.5">{label}</p>
+            <p className="text-3xl font-bold text-cb-text">{value}</p>
+            <p className="text-sm text-cb-muted mt-1">{label}</p>
           </div>
         ))}
       </div>
@@ -344,8 +387,8 @@ export default function DashboardPage() {
               <div className="bg-surface border border-cb-border rounded-xl overflow-hidden divide-y divide-cb-border">
                 {activity.map((item) => (
                   <div key={item.id} className="flex items-start gap-3 px-4 py-3">
-                    <div className="w-6 h-6 rounded-md bg-brand/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <item.icon size={12} className="text-brand" />
+                    <div className={`w-7 h-7 rounded-lg ${activityIconBgs[item.type] ?? 'bg-brand/10'} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                      <item.icon size={13} className={activityIconColors[item.type] ?? 'text-brand'} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium text-cb-text truncate">{item.clientName}</p>
@@ -372,10 +415,10 @@ export default function DashboardPage() {
                   <Link
                     key={a.label}
                     href={a.href}
-                    className="flex items-center gap-3 px-4 py-3 bg-surface border border-cb-border rounded-xl hover:border-brand/30 hover:bg-surface-light transition-all group"
+                    className="flex items-center gap-3 px-4 py-3 bg-surface border border-cb-border rounded-xl hover:border-brand/30 hover:bg-surface-light hover:shadow-sm transition-all group"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-brand/10 flex items-center justify-center flex-shrink-0">
-                      <Icon size={15} className="text-brand" />
+                    <div className="w-10 h-10 rounded-xl bg-brand/10 group-hover:bg-brand/15 flex items-center justify-center flex-shrink-0 transition-colors">
+                      <Icon size={18} className="text-brand" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-cb-text">{a.label}</p>

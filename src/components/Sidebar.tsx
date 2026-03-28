@@ -147,7 +147,7 @@ export default function Sidebar({ userEmail, userName }: { userEmail?: string | 
           {NAV_SECTIONS.map((section, idx) => (
             <div key={idx}>
               {section.label && (
-                <div className="section-label">
+                <div className="px-3 mb-1.5 text-[10px] font-semibold tracking-widest text-cb-muted/60 uppercase">
                   {section.label}
                 </div>
               )}
@@ -162,13 +162,13 @@ export default function Sidebar({ userEmail, userName }: { userEmail?: string | 
                         className={clsx(
                           'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                           active
-                            ? 'bg-brand text-white'
-                            : 'text-cb-secondary hover:bg-surface-light hover:text-cb-text'
+                            ? 'bg-brand/10 text-brand border-l-2 border-brand'
+                            : 'text-cb-secondary hover:bg-surface-light hover:text-cb-text border-l-2 border-transparent'
                         )}
                       >
                         <Icon
                           size={16}
-                          className="flex-shrink-0"
+                          className={clsx('flex-shrink-0', active ? 'text-brand' : 'text-cb-muted')}
                         />
                         <span className="truncate">{item.label}</span>
                       </Link>
