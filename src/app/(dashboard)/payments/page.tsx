@@ -485,7 +485,13 @@ export default function PaymentsPage() {
   if (error) {
     return (
       <div className="p-6 max-w-7xl mx-auto">
-        <div className="flex flex-col items-center justify-center py-24 gap-4 max-w-md mx-auto text-center">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-cb-text">Payments</h1>
+            <p className="text-sm text-cb-muted mt-0.5">Track revenue and manage billing</p>
+          </div>
+        </div>
+        <div className="flex flex-col items-center justify-center py-16 gap-4 max-w-md mx-auto text-center">
           <div className="w-14 h-14 rounded-full bg-cb-danger/10 flex items-center justify-center">
             <AlertCircle size={28} className="text-cb-danger" />
           </div>
@@ -521,7 +527,7 @@ export default function PaymentsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-cb-text">Payments</h1>
-          <p className="text-sm text-cb-muted mt-0.5">Revenue &amp; invoices</p>
+          <p className="text-sm text-cb-muted mt-0.5">Track revenue and manage billing</p>
         </div>
         <button
           onClick={() => setShowNewInvoice(true)}

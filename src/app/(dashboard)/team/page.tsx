@@ -160,8 +160,8 @@ export default function TeamPage() {
 
   if (!team) {
     return (
-      <div className="p-8 max-w-lg">
-        <div className="bg-surface-light border border-cb-border rounded-xl p-10 text-center">
+      <div className="p-8 max-w-xl mx-auto">
+        <div className="bg-surface border border-cb-border rounded-xl shadow-sm p-12 text-center">
           <div className="w-16 h-16 rounded-2xl bg-brand/10 flex items-center justify-center mx-auto mb-4">
             <Users className="w-8 h-8 text-brand" />
           </div>

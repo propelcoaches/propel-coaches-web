@@ -736,11 +736,11 @@ export default function ClientsPage() {
                     {selected.size === filtered.length && filtered.length > 0 && <Check size={10} className="text-white" />}
                   </div>
                 </th>
-                <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-3 py-3">Client</th>
-                <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-3 py-3">Tag</th>
-                <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-3 py-3">Last Check-In</th>
-                <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-3 py-3">Last Active</th>
-                <th className="text-left text-xs font-semibold text-cb-muted uppercase tracking-wider px-3 py-3">Duration</th>
+                <th className="text-left text-xs font-semibold text-cb-muted px-3 py-3">Client</th>
+                <th className="text-left text-xs font-semibold text-cb-muted px-3 py-3">Tag</th>
+                <th className="text-left text-xs font-semibold text-cb-muted px-3 py-3">Last Check-In</th>
+                <th className="text-left text-xs font-semibold text-cb-muted px-3 py-3">Last Active</th>
+                <th className="text-left text-xs font-semibold text-cb-muted px-3 py-3">Duration</th>
                 <th className="w-10 px-3 py-3" />
               </tr>
             </thead>
@@ -770,7 +770,7 @@ export default function ClientsPage() {
                     </td>
                     <td className="px-3 py-3.5">
                       <div className="flex items-center gap-3">
-                        <div className={clsx('w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold', avatarColor(client.id))}>
+                        <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold bg-brand/10 text-brand">
                           {getInitials(client.name, client.email)}
                         </div>
                         <span className="text-sm font-medium text-cb-text">{client.name ?? client.email ?? '—'}</span>
