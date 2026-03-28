@@ -1,11 +1,35 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Plus, Dumbbell, Loader2, Layers, FileText, Calendar, Users } from 'lucide-react'
+import { Plus, Dumbbell, Loader2, Layers, FileText, Calendar, Users, Sparkles, ArrowLeft, Hammer } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import clsx from 'clsx'
 import { createClient } from '@/lib/supabase/client'
 import EmptyState from '@/components/EmptyState'
+import WorkoutDayBuilder from '@/components/programs/WorkoutDayBuilder'
+import { Workout } from '@/types/workout'
+
+// ─── AI Generator Config ─────────────────────────────────────────────────────
+const AI_GOALS = [
+  { value: 'hypertrophy', label: 'Hypertrophy (Muscle Growth)' },
+  { value: 'strength', label: 'Strength' },
+  { value: 'fat_loss', label: 'Fat Loss' },
+  { value: 'athletic_performance', label: 'Athletic Performance' },
+  { value: 'general_fitness', label: 'General Fitness' },
+]
+const EXPERIENCE_LEVELS = ['beginner', 'intermediate', 'advanced']
+const EQUIPMENT_OPTIONS = [
+  'Barbell', 'Dumbbells', 'Cables', 'Machines', 'Kettlebells',
+  'Pull-up Bar', 'Resistance Bands', 'Bodyweight Only',
+]
+const SPLITS = [
+  { value: 'auto', label: 'Auto (AI chooses best)' },
+  { value: 'push_pull_legs', label: 'Push / Pull / Legs' },
+  { value: 'upper_lower', label: 'Upper / Lower' },
+  { value: 'full_body', label: 'Full Body' },
+]
+
+type AiClient = { id: string; full_name: string; isPending?: boolean }
 
 type FilterTab = 'all' | 'templates' | 'assigned'
 
@@ -36,6 +60,30 @@ export default function ProgramsPage() {
   const [saving, setSaving] = useState(false)
   const [clients, setClients] = useState<{ id: string; full_name: string | null }[]>([])
 
+  // Workout builder state
+  const [showWorkoutBuilder, setShowWorkoutBuilder] = useState(false)
+  const [builderProgramId, setBuilderProgramId] = useState<string | null>(null)
+  const [builderSaving, setBuilderSaving] = useState(false)
+
+  // AI Generator state
+  const [showAiGenerator, setShowAiGenerator] = useState(false)
+  const [generating, setGenerating] = useState(false)
+  const [aiClients, setAiClients] = useState<AiClient[]>([])
+  const [aiFormErrors, setAiFormErrors] = useState<Record<string, string>>({})
+  const [aiForm, setAiForm] = useState({
+    client_id: '',
+    title: '',
+    goal: 'hypertrophy',
+    experience_level: 'intermediate',
+    days_per_week: 4,
+    session_duration_minutes: 60,
+    equipment_available: ['Barbell', 'Dumbbells', 'Cables', 'Machines'],
+    injuries_limitations: '',
+    preferred_split: 'auto',
+    notes: '',
+    program_length_weeks: 4,
+  })
+
   const fetchPrograms = useCallback(async () => {
     setLoading(true)
     try {
@@ -53,13 +101,56 @@ export default function ProgramsPage() {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
-    const { data } = await supabase
-      .from('profiles')
-      .select('id, full_name')
-      .eq('coach_id', user.id)
-      .eq('role', 'client')
-    setClients(data ?? [])
+    const [activeRes, pendingRes] = await Promise.all([
+      supabase.from('profiles').select('id, full_name').eq('coach_id', user.id).eq('role', 'client'),
+      supabase.from('client_invitations').select('id, client_name').eq('coach_id', user.id).eq('status', 'pending'),
+    ])
+    setClients(activeRes.data ?? [])
+    const active = (activeRes.data ?? []).map(c => ({ id: c.id, full_name: c.full_name ?? '', isPending: false }))
+    const pending = (pendingRes.data ?? []).map(i => ({ id: i.id, full_name: `${i.client_name} (Pending)`, isPending: true }))
+    setAiClients([...active, ...pending])
   }, [])
+
+  const handleAiGenerate = async () => {
+    const errors: Record<string, string> = {}
+    if (!aiForm.client_id) errors.client_id = 'Please select a client'
+    if (!aiForm.title.trim()) errors.title = 'Program title is required'
+    if (Object.keys(errors).length > 0) {
+      setAiFormErrors(errors)
+      toast.error('Please fill in all required fields')
+      return
+    }
+    setAiFormErrors({})
+    setGenerating(true)
+    try {
+      const res = await fetch('/api/ai/workout-program', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(aiForm),
+      })
+      const data = await res.json()
+      if (data.program) {
+        setShowAiGenerator(false)
+        toast.info('AI workout program generated!')
+        fetchPrograms()
+      } else {
+        toast.error(data.error || 'Failed to generate program')
+      }
+    } catch {
+      toast.error('Something went wrong. Please try again.')
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  const toggleAiEquipment = (item: string) => {
+    setAiForm(f => ({
+      ...f,
+      equipment_available: f.equipment_available.includes(item)
+        ? f.equipment_available.filter(e => e !== item)
+        : [...f.equipment_available, item],
+    }))
+  }
 
   useEffect(() => { fetchPrograms(); fetchClients() }, [fetchPrograms, fetchClients])
 
@@ -79,7 +170,11 @@ export default function ProgramsPage() {
       if (res.ok) {
         setShowNewProgramModal(false)
         setNewProgramName('')
+        toast.info('Program created!')
         fetchPrograms()
+      } else {
+        const json = await res.json().catch(() => ({}))
+        toast.error(json.error || 'Failed to create program')
       }
     } catch (e) {
       toast.error('Failed to create program')
@@ -141,6 +236,206 @@ export default function ProgramsPage() {
     return lineArray.join('\n') + (text.split('\n').length > lines ? '...' : '')
   }
 
+  // ─── Save sport workout ──────────────────────────────────────────────────────
+  async function handleSaveWorkout(workout: Workout) {
+    setBuilderSaving(true)
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      // Upsert into program_workouts with sport_category + format of first section
+      const { error } = await supabase.from('program_workouts').upsert({
+        id: workout.id,
+        program_id: builderProgramId ?? workout.id,
+        week_number: 1,
+        day_number: 1,
+        name: workout.title || 'Workout',
+        notes: workout.coachNotes ?? null,
+        sport_category: workout.sportCategory,
+        format: workout.sections[0]?.format ?? 'custom',
+      })
+      if (error) throw error
+
+      toast.info('Workout saved!')
+      setShowWorkoutBuilder(false)
+      setBuilderProgramId(null)
+    } catch (e) {
+      toast.error('Failed to save workout')
+    } finally {
+      setBuilderSaving(false)
+    }
+  }
+
+  // ─── Workout Builder View ────────────────────────────────────────────────────
+  if (showWorkoutBuilder) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <button
+            onClick={() => { setShowWorkoutBuilder(false); setBuilderProgramId(null) }}
+            className="flex items-center gap-1.5 text-sm text-cb-secondary hover:text-cb-text transition-colors"
+          >
+            <ArrowLeft size={16} /> Back to Programs
+          </button>
+        </div>
+        <h1 className="text-xl font-bold text-cb-text mb-1">Build Workout</h1>
+        <div className="h-0.5 w-12 bg-gradient-to-r from-brand to-brand/40 rounded-full mb-6" />
+        <WorkoutDayBuilder
+          onSave={handleSaveWorkout}
+          onCancel={() => { setShowWorkoutBuilder(false); setBuilderProgramId(null) }}
+          saving={builderSaving}
+        />
+      </div>
+    )
+  }
+
+  // ─── AI Generator View ──────────────────────────────────────────────────────
+  if (showAiGenerator) {
+    return (
+      <div className="max-w-3xl mx-auto p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <button onClick={() => setShowAiGenerator(false)} className="flex items-center gap-1.5 text-sm text-cb-secondary hover:text-cb-text transition-colors">
+            <ArrowLeft size={16} /> Back to Programs
+          </button>
+        </div>
+        <h1 className="text-xl font-bold text-cb-text mb-1">AI Generate Workout Program</h1>
+        <div className="h-0.5 w-12 bg-gradient-to-r from-brand to-brand/40 rounded-full mb-6" />
+
+        <div className="space-y-6 bg-surface border border-cb-border rounded-xl p-6">
+          {/* Client */}
+          <div>
+            <label className="block text-sm font-medium text-cb-secondary mb-1">
+              Client <span className="text-red-500 ml-0.5">*</span>
+            </label>
+            <select
+              value={aiForm.client_id}
+              onChange={e => { setAiForm(f => ({ ...f, client_id: e.target.value })); setAiFormErrors(p => ({ ...p, client_id: '' })) }}
+              className={`w-full border border-cb-border rounded-lg px-3 py-2 bg-surface text-cb-text focus:outline-none focus:ring-2 focus:ring-brand/40 ${aiFormErrors.client_id ? 'border-red-500' : ''}`}
+            >
+              <option value="">Select a client...</option>
+              {aiClients.map(c => <option key={c.id} value={c.id} disabled={c.isPending}>{c.full_name}</option>)}
+            </select>
+            {aiFormErrors.client_id && <p className="text-red-500 text-xs mt-1">{aiFormErrors.client_id}</p>}
+          </div>
+
+          {/* Title */}
+          <div>
+            <label className="block text-sm font-medium text-cb-secondary mb-1">
+              Program Title <span className="text-red-500 ml-0.5">*</span>
+            </label>
+            <input
+              type="text"
+              value={aiForm.title}
+              onChange={e => { setAiForm(f => ({ ...f, title: e.target.value })); setAiFormErrors(p => ({ ...p, title: '' })) }}
+              placeholder="e.g. 12-Week Hypertrophy Block"
+              className={`w-full border border-cb-border rounded-lg px-3 py-2 bg-surface text-cb-text focus:outline-none focus:ring-2 focus:ring-brand/40 ${aiFormErrors.title ? 'border-red-500' : ''}`}
+            />
+            {aiFormErrors.title && <p className="text-red-500 text-xs mt-1">{aiFormErrors.title}</p>}
+          </div>
+
+          {/* Goal */}
+          <div>
+            <label className="block text-sm font-medium text-cb-secondary mb-1">Training Goal</label>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              {AI_GOALS.map(g => (
+                <button key={g.value} type="button" onClick={() => setAiForm(f => ({ ...f, goal: g.value }))}
+                  className={clsx('px-3 py-2 rounded-lg border text-sm text-left transition-colors', aiForm.goal === g.value ? 'bg-brand/10 border-brand/40 text-brand' : 'bg-surface border-cb-border text-cb-secondary hover:border-cb-secondary')}>
+                  {g.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Experience Level */}
+          <div>
+            <label className="block text-sm font-medium text-cb-secondary mb-1">Experience Level</label>
+            <div className="flex gap-2">
+              {EXPERIENCE_LEVELS.map(lvl => (
+                <button key={lvl} type="button" onClick={() => setAiForm(f => ({ ...f, experience_level: lvl }))}
+                  className={clsx('px-4 py-2 rounded-lg border text-sm font-medium capitalize transition-colors', aiForm.experience_level === lvl ? 'bg-brand text-white border-brand' : 'bg-surface text-cb-secondary border-cb-border hover:border-cb-secondary')}>
+                  {lvl}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Days/week + duration + length */}
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-cb-secondary mb-1">Days/Week</label>
+              <div className="flex gap-1">
+                {[2, 3, 4, 5, 6].map(n => (
+                  <button key={n} type="button" onClick={() => setAiForm(f => ({ ...f, days_per_week: n }))}
+                    className={clsx('flex-1 py-2 rounded-lg border text-sm font-medium transition-colors', aiForm.days_per_week === n ? 'bg-brand text-white border-brand' : 'bg-surface text-cb-secondary border-cb-border')}>
+                    {n}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-cb-secondary mb-1">Session (min)</label>
+              <input type="number" value={aiForm.session_duration_minutes}
+                onChange={e => setAiForm(f => ({ ...f, session_duration_minutes: parseInt(e.target.value) || 60 }))}
+                className="w-full border border-cb-border rounded-lg px-3 py-2 bg-surface text-cb-text focus:outline-none focus:ring-2 focus:ring-brand/40" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-cb-secondary mb-1">Length (weeks)</label>
+              <input type="number" value={aiForm.program_length_weeks} min={1} max={16}
+                onChange={e => setAiForm(f => ({ ...f, program_length_weeks: parseInt(e.target.value) || 4 }))}
+                className="w-full border border-cb-border rounded-lg px-3 py-2 bg-surface text-cb-text focus:outline-none focus:ring-2 focus:ring-brand/40" />
+            </div>
+          </div>
+
+          {/* Split */}
+          <div>
+            <label className="block text-sm font-medium text-cb-secondary mb-1">Training Split</label>
+            <div className="flex flex-wrap gap-2">
+              {SPLITS.map(s => (
+                <button key={s.value} type="button" onClick={() => setAiForm(f => ({ ...f, preferred_split: s.value }))}
+                  className={clsx('px-3 py-1.5 rounded-full text-sm border transition-colors', aiForm.preferred_split === s.value ? 'bg-brand/10 border-brand/40 text-brand' : 'bg-surface border-cb-border text-cb-secondary hover:border-cb-secondary')}>
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Equipment */}
+          <div>
+            <label className="block text-sm font-medium text-cb-secondary mb-2">Equipment Available</label>
+            <div className="flex flex-wrap gap-2">
+              {EQUIPMENT_OPTIONS.map(eq => (
+                <button key={eq} type="button" onClick={() => toggleAiEquipment(eq)}
+                  className={clsx('px-3 py-1 rounded-full text-sm border transition-colors', aiForm.equipment_available.includes(eq) ? 'bg-brand/10 border-brand/40 text-brand' : 'bg-surface border-cb-border text-cb-secondary hover:border-cb-secondary')}>
+                  {eq}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Injuries */}
+          <div>
+            <label className="block text-sm font-medium text-cb-secondary mb-1">Injuries / Limitations</label>
+            <textarea value={aiForm.injuries_limitations} rows={2}
+              onChange={e => setAiForm(f => ({ ...f, injuries_limitations: e.target.value }))}
+              placeholder="e.g. Previous ACL tear, avoid overhead pressing"
+              className="w-full border border-cb-border rounded-lg px-3 py-2 bg-surface text-cb-text placeholder-cb-muted resize-none focus:outline-none focus:ring-2 focus:ring-brand/40" />
+          </div>
+
+          {/* Generate button */}
+          <button onClick={handleAiGenerate} disabled={generating}
+            className="w-full py-3 bg-brand text-white rounded-lg font-semibold hover:bg-brand/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+            {generating ? (
+              <><Loader2 size={18} className="animate-spin" /> Generating program...</>
+            ) : (
+              <><Sparkles size={17} /> Generate Workout Program</>
+            )}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="p-6 max-w-7xl mx-auto animate-fade-in-up">
       {/* Header */}
@@ -150,13 +445,29 @@ export default function ProgramsPage() {
           <div className="h-0.5 w-12 bg-gradient-to-r from-brand to-brand/40 rounded-full mt-1.5 mb-1" />
           <p className="text-sm text-cb-muted mt-0.5">Build and manage training templates</p>
         </div>
-        <button
-          onClick={() => setShowNewProgramModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand/90 transition-colors font-medium text-sm"
-        >
-          <Plus size={16} />
-          New Program
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowAiGenerator(true)}
+            className="flex items-center gap-2 px-4 py-2 border border-brand text-brand rounded-lg hover:bg-brand/5 transition-colors font-medium text-sm"
+          >
+            <Sparkles size={15} />
+            AI Generate
+          </button>
+          <button
+            onClick={() => { setBuilderProgramId(null); setShowWorkoutBuilder(true) }}
+            className="flex items-center gap-2 px-4 py-2 border border-cb-border text-cb-secondary rounded-lg hover:border-brand/40 hover:text-brand transition-colors font-medium text-sm"
+          >
+            <Hammer size={15} />
+            Build Workout
+          </button>
+          <button
+            onClick={() => setShowNewProgramModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand/90 transition-colors font-medium text-sm"
+          >
+            <Plus size={16} />
+            New Program
+          </button>
+        </div>
       </div>
 
       {/* Stats row */}
@@ -307,12 +618,11 @@ export default function ProgramsPage() {
                     {assignedClients.slice(0, 3).map(client => (
                       <div
                         key={client.id}
-                        className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 border border-cb-border"
-                        style={{ backgroundColor: client.color + '20' }}
-                        title={client.name}
+                        className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 border border-cb-border bg-brand/10"
+                        title={client.full_name ?? undefined}
                       >
-                        <span className="text-[10px] font-semibold" style={{ color: client.color }}>
-                          {client.initials}
+                        <span className="text-[10px] font-semibold text-brand">
+                          {(client.full_name ?? '?')[0].toUpperCase()}
                         </span>
                       </div>
                     ))}
