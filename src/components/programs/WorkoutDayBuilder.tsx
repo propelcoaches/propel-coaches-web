@@ -1,13 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, ChevronDown, ChevronUp, Trash2, GripVertical } from 'lucide-react'
+import { Plus, ChevronDown, ChevronUp, Trash2, GripVertical, Eye, EyeOff } from 'lucide-react'
 import clsx from 'clsx'
 import { Workout, WorkoutSection, SportCategory, WorkoutFormat } from '@/types/workout'
 import { getSportConfig, getFormatConfig, SPORT_ACCENT_COLORS, SPORT_ACCENT_BG } from '@/constants/workoutConfigs'
 import SportCategoryPicker from './SportCategoryPicker'
 import WorkoutFormatPicker from './WorkoutFormatPicker'
 import SectionBuilder from './sections/SectionBuilder'
+import WorkoutPreview from './WorkoutPreview'
 
 interface Props {
   initial?: Partial<Workout>
@@ -29,6 +30,7 @@ export default function WorkoutDayBuilder({ initial, onSave, onCancel, saving }:
   }))
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
   const [showFormatPicker, setShowFormatPicker] = useState(false)
+  const [showPreview, setShowPreview] = useState(false)
   const [newSectionFormat, setNewSectionFormat] = useState<WorkoutFormat>(() =>
     getSportConfig(workout.sportCategory).defaultFormat
   )
@@ -147,7 +149,9 @@ export default function WorkoutDayBuilder({ initial, onSave, onCancel, saving }:
   const sportCfg = getSportConfig(workout.sportCategory)
 
   return (
-    <div className="max-w-3xl mx-auto space-y-5">
+    <div className={clsx('flex gap-6', showPreview ? 'items-start' : '')}>
+    {/* ── Builder column ─────────────────────────────────────────────────── */}
+    <div className={clsx('space-y-5', showPreview ? 'flex-1 min-w-0' : 'max-w-3xl mx-auto w-full')}>
       {/* Workout metadata header */}
       <div className={clsx('rounded-xl border-t-4 border bg-surface p-4 space-y-3', accentBorder, 'border-cb-border')}>
         <div className="flex items-center gap-3 flex-wrap">
@@ -163,6 +167,17 @@ export default function WorkoutDayBuilder({ initial, onSave, onCancel, saving }:
             className="text-xs text-cb-muted hover:text-cb-secondary transition-colors underline underline-offset-2 ml-auto"
           >
             Change sport
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowPreview(p => !p)}
+            className={clsx(
+              'flex items-center gap-1.5 text-xs transition-colors',
+              showPreview ? 'text-brand' : 'text-cb-muted hover:text-cb-secondary'
+            )}
+          >
+            {showPreview ? <EyeOff size={13} /> : <Eye size={13} />}
+            {showPreview ? 'Hide preview' : 'Preview'}
           </button>
         </div>
         <input
@@ -287,6 +302,15 @@ export default function WorkoutDayBuilder({ initial, onSave, onCancel, saving }:
           </button>
         )}
       </div>
+    </div>
+
+    {/* ── Preview column (visible when toggled on wide screens) ─────────── */}
+    {showPreview && (
+      <div className="w-80 flex-shrink-0 sticky top-4">
+        <p className="text-xs font-semibold text-cb-muted uppercase tracking-wide mb-3">Client Preview</p>
+        <WorkoutPreview workout={workout} compact />
+      </div>
+    )}
     </div>
   )
 }
