@@ -7,6 +7,7 @@ import {
   Users, Dumbbell, ArrowRight,
   Clock, CheckCircle2, Bell,
   Layers, DollarSign, BarChart2, UserPlus, MessageSquare,
+  BrainCircuit, AlertTriangle, UtensilsCrossed,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import clsx from 'clsx'
@@ -118,6 +119,7 @@ export default function DashboardPage() {
   const [sendingNudge, setSendingNudge] = useState(false)
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState({ totalClients: 0, activePrograms: 0, checkinRate: 0, revenue: 0 })
+  const [intelligenceSummary, setIntelligenceSummary] = useState<{ red: number; amber: number } | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -224,6 +226,14 @@ export default function DashboardPage() {
       }
 
       setLoading(false)
+
+      // Load intelligence summary in the background (non-blocking)
+      fetch('/api/intelligence')
+        .then(r => r.json())
+        .then(d => {
+          if (d.summary) setIntelligenceSummary({ red: d.summary.red, amber: d.summary.amber })
+        })
+        .catch(() => {})
     }
     load()
   }, [])
@@ -368,6 +378,40 @@ export default function DashboardPage() {
             {sendingNudge ? 'Sending…' : 'Send Reminder'}
           </button>
         </div>
+      )}
+
+      {/* ── Intelligence banner ── */}
+      {intelligenceSummary && (intelligenceSummary.red > 0 || intelligenceSummary.amber > 0) && (
+        <Link href="/intelligence" className="block mb-6 group">
+          <div className="flex items-center justify-between px-4 py-3 bg-surface border border-cb-border rounded-xl hover:border-brand/40 hover:shadow-md transition-all">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-brand/10 flex items-center justify-center flex-shrink-0">
+                <BrainCircuit size={15} className="text-brand" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-cb-text">Client Intelligence</p>
+                <p className="text-xs text-cb-muted">
+                  {intelligenceSummary.red > 0 && (
+                    <span className="text-red-500 font-medium">{intelligenceSummary.red} at risk</span>
+                  )}
+                  {intelligenceSummary.red > 0 && intelligenceSummary.amber > 0 && ' · '}
+                  {intelligenceSummary.amber > 0 && (
+                    <span className="text-amber-500 font-medium">{intelligenceSummary.amber} need attention</span>
+                  )}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {intelligenceSummary.red > 0 && (
+                <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20">
+                  <AlertTriangle size={10} />
+                  {intelligenceSummary.red}
+                </span>
+              )}
+              <ArrowRight size={15} className="text-cb-muted group-hover:text-brand transition-colors" />
+            </div>
+          </div>
+        </Link>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

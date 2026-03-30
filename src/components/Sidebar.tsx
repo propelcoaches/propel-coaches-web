@@ -35,6 +35,7 @@ import {
   UsersRound,
   CalendarClock,
   Bot,
+  BrainCircuit,
 } from 'lucide-react'
 
 type NavSection = {
@@ -55,6 +56,7 @@ const NAV_SECTIONS: NavSection[] = [
       { href: '/messages', label: 'Messages', icon: MessageSquare },
       { href: '/check-ins', label: 'Check-ins', icon: ClipboardCheck },
       { href: '/ai-reviews', label: 'AI Reviews', icon: Bot },
+      { href: '/intelligence', label: 'Intelligence', icon: BrainCircuit },
     ],
   },
   {

@@ -11,6 +11,12 @@ function getSupabaseAdmin() {
   return createClient(url, key)
 }
 
+// Module-level alias used by helper functions called from the POST handler
+const supabase = {
+  from: (...args: Parameters<ReturnType<typeof getSupabaseAdmin>['from']>) =>
+    getSupabaseAdmin().from(...args),
+}
+
 
 // This endpoint is called by a cron job every Sunday at 8am
 // Configure in vercel.json: { "crons": [{ "path": "/api/emails/weekly-summary", "schedule": "0 8 * * 0" }] }

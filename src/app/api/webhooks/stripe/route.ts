@@ -18,6 +18,21 @@ function getSupabaseAdmin() {
   return createClient(url, key)
 }
 
+// Module-level aliases used throughout the handler
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const stripe = {
+  webhooks: {
+    constructEvent(body: string, sig: string, secret: string) {
+      return getStripeClient().webhooks.constructEvent(body, sig, secret)
+    },
+  },
+  subscriptions: {
+    retrieve(id: string) { return getStripeClient().subscriptions.retrieve(id) },
+  },
+} as any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const supabase = { from: (table: string) => getSupabaseAdmin().from(table) } as any
+
 export async function POST(req: NextRequest) {
   const body = await req.text()
   const sig = req.headers.get('stripe-signature') || ''

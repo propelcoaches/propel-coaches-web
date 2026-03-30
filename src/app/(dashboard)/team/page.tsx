@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Users, Mail, Shield, Plus, RotateCw, Trash2 } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { Users, Mail, Shield, Plus, Trash2, BarChart2, ClipboardCheck, Dumbbell } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { format } from 'date-fns'
 
@@ -26,6 +26,13 @@ type TeamData = {
   plan: string
 }
 
+type TeamAnalytics = {
+  total_clients: number
+  active_programs: number
+  checkins_7d: number
+  per_coach: Array<{ coach_id: string; name: string; avatar_url: string | null; client_count: number }>
+}
+
 const getRoleBadgeColor = (role: string) => {
   switch (role) {
     case 'owner': return 'bg-warning/20 text-warning'
@@ -40,6 +47,8 @@ export default function TeamPage() {
   const [invitations, setInvitations] = useState<PendingInvitation[]>([])
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
+
+  const [analytics, setAnalytics] = useState<TeamAnalytics | null>(null)
 
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState('coach')
@@ -101,6 +110,12 @@ export default function TeamPage() {
       )
 
       setLoading(false)
+
+      // Load team analytics non-blocking
+      fetch('/api/team/analytics')
+        .then(r => r.ok ? r.json() : null)
+        .then(data => { if (data) setAnalytics(data) })
+        .catch(() => {})
     })
   }, [])
 
@@ -337,25 +352,64 @@ export default function TeamPage() {
           )}
         </div>
 
-        {/* Right Column: Stats */}
+        {/* Right Column: Analytics */}
         <div className="space-y-6">
-          <div className="bg-surface-light rounded-xl border border-cb-border p-6 space-y-4">
-            <h3 className="font-bold text-cb-text">Team Stats</h3>
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between">
-                <span className="text-cb-muted">Total Coaches</span>
-                <span className="font-semibold text-cb-text">{members.length}</span>
+          {/* Summary stats */}
+          <div className="bg-surface-light rounded-xl border border-cb-border p-5 space-y-3">
+            <div className="flex items-center gap-2 mb-1">
+              <BarChart2 size={15} className="text-brand" />
+              <h3 className="font-bold text-cb-text text-sm">Team Analytics</h3>
+            </div>
+            {([
+              ['Coaches', String(members.length), Users],
+              ['Total Clients', analytics ? String(analytics.total_clients) : '—', Users],
+              ['Active Programs', analytics ? String(analytics.active_programs) : '—', Dumbbell],
+              ['Check-ins (7d)', analytics ? String(analytics.checkins_7d) : '—', ClipboardCheck],
+              ['Pending Invites', String(invitations.length), Mail],
+            ] as [string, string, React.ComponentType<any>][]).map(([label, value, Icon]) => (
+              <div key={label} className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-1.5 text-cb-muted">
+                  <Icon size={13} className="shrink-0" />
+                  {label}
+                </div>
+                <span className="font-semibold text-cb-text">{value}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-cb-muted">Pending Invites</span>
-                <span className="font-semibold text-cb-text">{invitations.length}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-cb-muted">Plan</span>
-                <span className="font-semibold text-teal capitalize">{team.plan}</span>
-              </div>
+            ))}
+            <div className="flex items-center justify-between text-sm pt-1 border-t border-cb-border">
+              <span className="text-cb-muted">Plan</span>
+              <span className="font-semibold text-brand capitalize">{team.plan}</span>
             </div>
           </div>
+
+          {/* Per-coach breakdown */}
+          {analytics && analytics.per_coach.length > 0 && (
+            <div className="bg-surface-light rounded-xl border border-cb-border p-5">
+              <p className="text-xs font-semibold text-cb-muted uppercase tracking-wide mb-3">Clients per Coach</p>
+              <div className="space-y-2">
+                {analytics.per_coach.map(coach => (
+                  <div key={coach.coach_id} className="flex items-center gap-2.5">
+                    <div className="w-6 h-6 rounded-full bg-brand/10 border border-brand/20 flex items-center justify-center flex-shrink-0">
+                      <span className="text-[10px] font-bold text-brand">
+                        {coach.name.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between text-xs mb-0.5">
+                        <span className="text-cb-secondary truncate">{coach.name}</span>
+                        <span className="text-cb-text font-medium shrink-0 ml-1">{coach.client_count}</span>
+                      </div>
+                      <div className="h-1 bg-cb-border rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-brand rounded-full transition-all"
+                          style={{ width: `${analytics.total_clients > 0 ? Math.round((coach.client_count / analytics.total_clients) * 100) : 0}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

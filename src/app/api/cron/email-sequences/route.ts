@@ -27,7 +27,8 @@ function daysAgo(n: number): { start: string; end: string } {
 }
 
 async function alreadySent(
-  supabase: ReturnType<typeof createClient>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any,
   email: string,
   emailType: string
 ): Promise<boolean> {

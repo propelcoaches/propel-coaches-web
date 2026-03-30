@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
   // Own + public (RLS handles this via OR policy)
   let query = supabase
     .from('program_templates')
-    .select('id, name, description, duration_weeks, days_per_week, goal, difficulty, is_public, coach_id, created_at, updated_at')
+    .select('id, name, description, duration_weeks, days_per_week, goal, difficulty, is_public, coach_id, ai_generated, created_at, updated_at')
     .order('name')
 
   if (goal)       query = query.eq('goal', goal)

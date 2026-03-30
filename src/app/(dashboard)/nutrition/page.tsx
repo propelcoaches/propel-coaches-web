@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   ChevronLeft, Plus, X, Save, Sparkles, Printer,
   MoreHorizontal, Copy, Trash2, Edit2, CheckCircle,
-  ChevronDown, Search, Tag, Clock, FileText
+  ChevronDown, Search, Tag, Clock, FileText, RefreshCw, ArrowRight, Zap
 } from 'lucide-react'
 import clsx from 'clsx'
 import { createClient } from '@/lib/supabase/client'
@@ -1099,6 +1099,144 @@ function WeekGridView({ plan, onSelectDay }: { plan: NutritionPlan; onSelectDay:
   )
 }
 
+// ── SyncMacrosModal ───────────────────────────────────────────────────────────
+
+type SyncMacrosData = {
+  program: { id: string; name: string; goal: string; goal_label: string; days_per_week: number; duration_weeks: number }
+  current: { calories: number; protein_g: number; carbs_g: number; fat_g: number; fibre_g: number }
+  recommended: { calories: number; protein_g: number; carbs_g: number; fat_g: number; fibre_g: number }
+  delta: { calories: number; protein_g: number; carbs_g: number; fat_g: number }
+  body_weight_kg: number
+  sync_notes: string | null
+}
+
+function SyncMacrosModal({ data, planId, onClose, onApplied }: {
+  data: SyncMacrosData
+  planId: string
+  onClose: () => void
+  onApplied: (updated: { calories: number; protein_g: number; carbs_g: number; fat_g: number; fibre_g: number }) => void
+}) {
+  const [applying, setApplying] = useState(false)
+
+  async function handleApply() {
+    setApplying(true)
+    try {
+      const res = await fetch('/api/nutrition/sync-macros', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nutrition_plan_id: planId,
+          program_id: data.program.id,
+          calories:   data.recommended.calories,
+          protein_g:  data.recommended.protein_g,
+          carbs_g:    data.recommended.carbs_g,
+          fat_g:      data.recommended.fat_g,
+          fibre_g:    data.recommended.fibre_g,
+          sync_notes: data.sync_notes,
+        }),
+      })
+      if (!res.ok) throw new Error('Failed to apply')
+      onApplied(data.recommended)
+    } catch {
+      // silent — parent handles feedback
+    } finally {
+      setApplying(false)
+    }
+  }
+
+  function deltaLabel(val: number, unit = '') {
+    if (val === 0) return <span className="text-cb-muted text-xs">no change</span>
+    return (
+      <span className={clsx('text-xs font-semibold', val > 0 ? 'text-cb-success' : 'text-red-500')}>
+        {val > 0 ? '+' : ''}{val}{unit}
+      </span>
+    )
+  }
+
+  const rows: Array<{ label: string; current: number; recommended: number; delta: number; unit: string; color: string }> = [
+    { label: 'Calories',  current: data.current.calories,  recommended: data.recommended.calories,  delta: data.delta.calories,  unit: ' kcal', color: 'bg-brand' },
+    { label: 'Protein',   current: data.current.protein_g, recommended: data.recommended.protein_g, delta: data.delta.protein_g, unit: 'g',     color: 'bg-teal-400' },
+    { label: 'Carbs',     current: data.current.carbs_g,   recommended: data.recommended.carbs_g,   delta: data.delta.carbs_g,   unit: 'g',     color: 'bg-amber-400' },
+    { label: 'Fat',       current: data.current.fat_g,     recommended: data.recommended.fat_g,     delta: data.delta.fat_g,     unit: 'g',     color: 'bg-red-400' },
+    { label: 'Fibre',     current: data.current.fibre_g,   recommended: data.recommended.fibre_g,   delta: 0,                    unit: 'g',     color: 'bg-purple-400' },
+  ]
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="bg-surface border border-cb-border rounded-2xl w-full max-w-lg shadow-2xl">
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-cb-border">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-brand/10 border border-brand/20 flex items-center justify-center">
+              <Zap size={16} className="text-brand" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-cb-text">Sync Macros to Training</p>
+              <p className="text-xs text-cb-muted">{data.program.goal_label} · {data.program.days_per_week}d/wk · {data.program.duration_weeks}wk</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1.5 text-cb-muted hover:text-cb-text transition-colors">
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Macro comparison table */}
+        <div className="px-5 py-4 space-y-2.5">
+          <div className="grid grid-cols-4 gap-2 mb-1">
+            <span className="text-[11px] font-semibold text-cb-muted uppercase tracking-wide col-span-1">Macro</span>
+            <span className="text-[11px] font-semibold text-cb-muted uppercase tracking-wide text-right">Current</span>
+            <span className="text-[11px] font-semibold text-cb-muted uppercase tracking-wide text-right">Recommended</span>
+            <span className="text-[11px] font-semibold text-cb-muted uppercase tracking-wide text-right">Change</span>
+          </div>
+          {rows.map(row => (
+            <div key={row.label} className="grid grid-cols-4 gap-2 items-center py-1.5 border-b border-cb-border/50 last:border-0">
+              <div className="flex items-center gap-1.5 col-span-1">
+                <div className={clsx('w-2 h-2 rounded-full flex-shrink-0', row.color)} />
+                <span className="text-xs text-cb-secondary">{row.label}</span>
+              </div>
+              <span className="text-xs text-cb-secondary text-right">{row.current}{row.unit}</span>
+              <span className="text-xs font-semibold text-cb-text text-right">{row.recommended}{row.unit}</span>
+              <div className="text-right">{deltaLabel(row.delta, row.label === 'Calories' ? '' : 'g')}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* AI insight */}
+        {data.sync_notes && (
+          <div className="mx-5 mb-4 bg-brand/5 border border-brand/20 rounded-xl p-3 flex gap-2.5">
+            <Sparkles size={14} className="text-brand flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-cb-secondary leading-relaxed">{data.sync_notes}</p>
+          </div>
+        )}
+
+        {/* Body weight note */}
+        <p className="text-center text-xs text-cb-muted px-5 mb-4">
+          Based on {data.body_weight_kg} kg bodyweight · Evidence-based ISSN guidelines
+        </p>
+
+        {/* Actions */}
+        <div className="flex gap-2.5 px-5 pb-5">
+          <button onClick={onClose} className="flex-1 border border-cb-border text-cb-secondary text-sm py-2 rounded-xl hover:bg-surface-light transition-colors">
+            Keep Current
+          </button>
+          <button
+            onClick={handleApply}
+            disabled={applying}
+            className="flex-1 flex items-center justify-center gap-2 bg-brand text-white text-sm font-medium py-2 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-60"
+          >
+            {applying ? (
+              <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Applying…</>
+            ) : (
+              <><ArrowRight size={14} /> Apply Recommendation</>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── PlanBuilder ───────────────────────────────────────────────────────────────
 
 function PlanBuilder({ plan, onBack, onChange, onSave, clients }: {
@@ -1117,6 +1255,8 @@ function PlanBuilder({ plan, onBack, onChange, onSave, clients }: {
   const [newMealName, setNewMealName] = useState('Breakfast')
   const [newMealTime, setNewMealTime] = useState('08:00')
   const [editingPlanName, setEditingPlanName] = useState(false)
+  const [syncData, setSyncData] = useState<SyncMacrosData | null>(null)
+  const [syncLoading, setSyncLoading] = useState(false)
 
   const day = plan.days[activeDay]
   const dayMacros = day ? sumDayMacros(day) : { cal: 0, pro: 0, carb: 0, fat: 0, fibre: 0, sodium: 0 }
@@ -1185,6 +1325,44 @@ function PlanBuilder({ plan, onBack, onChange, onSave, clients }: {
     if (next === 'published') { setJustPublished(true); setTimeout(() => setJustPublished(false), 2500) }
   }
 
+  async function handleSyncCheck() {
+    if (!plan.clientId) return
+    setSyncLoading(true)
+    try {
+      const res = await fetch('/api/nutrition/sync-macros', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nutrition_plan_id: plan.id, client_id: plan.clientId }),
+      })
+      if (!res.ok) {
+        const { error } = await res.json()
+        toast.error(error ?? 'Could not load training sync data')
+        return
+      }
+      const data: SyncMacrosData = await res.json()
+      setSyncData(data)
+    } catch {
+      toast.error('Failed to check training sync')
+    } finally {
+      setSyncLoading(false)
+    }
+  }
+
+  function handleSyncApplied(updated: { calories: number; protein_g: number; carbs_g: number; fat_g: number; fibre_g: number }) {
+    const next: NutritionPlan = {
+      ...plan,
+      caloriesTarget: updated.calories,
+      proteinTarget:  updated.protein_g,
+      carbsTarget:    updated.carbs_g,
+      fatTarget:      updated.fat_g,
+      fibreTarget:    updated.fibre_g,
+    }
+    onChange(next)
+    onSave?.(next)
+    setSyncData(null)
+    toast.success('Macros synced to training goal')
+  }
+
   function handleSelectDay(dayIdx: number) {
     setActiveDay(dayIdx)
     setViewMode('day')
@@ -1238,6 +1416,21 @@ function PlanBuilder({ plan, onBack, onChange, onSave, clients }: {
         <button onClick={() => exportPDF(plan)} className="flex items-center gap-1.5 text-sm text-cb-secondary hover:text-cb-text border border-cb-border rounded-lg px-3 py-1.5 shrink-0 transition-colors" title="Export PDF">
           <Printer size={14} /> Export PDF
         </button>
+
+        {/* Sync to Training Goal */}
+        {plan.clientId && (
+          <button
+            onClick={handleSyncCheck}
+            disabled={syncLoading}
+            className="flex items-center gap-1.5 text-sm text-brand border border-brand/30 bg-brand/5 hover:bg-brand/10 rounded-lg px-3 py-1.5 shrink-0 transition-colors disabled:opacity-60"
+            title="Sync macros to client's active training program"
+          >
+            {syncLoading
+              ? <><div className="w-3.5 h-3.5 border-2 border-brand border-t-transparent rounded-full animate-spin" /> Checking…</>
+              : <><RefreshCw size={13} /> Sync to Training</>
+            }
+          </button>
+        )}
 
         {/* Save Draft */}
         <button
@@ -1450,6 +1643,15 @@ function PlanBuilder({ plan, onBack, onChange, onSave, clients }: {
             </div>
           </aside>
         </div>
+      )}
+
+      {syncData && (
+        <SyncMacrosModal
+          data={syncData}
+          planId={plan.id}
+          onClose={() => setSyncData(null)}
+          onApplied={handleSyncApplied}
+        />
       )}
     </div>
   )

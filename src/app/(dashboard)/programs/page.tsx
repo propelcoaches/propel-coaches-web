@@ -51,6 +51,7 @@ type RealProgram = {
   difficulty: string | null
   is_public: boolean
   coach_id: string
+  ai_generated: boolean
   created_at: string
   updated_at: string
 }
@@ -271,6 +272,7 @@ export default function ProgramsPage() {
     totalExercises: 0,
     assignedClients: [] as string[],
     isTemplate: p.is_public,
+    isAiGenerated: p.ai_generated ?? false,
     description: p.description ?? '',
     tags: [p.goal, p.difficulty].filter(Boolean) as string[],
     lastModified: p.updated_at?.slice(0, 10) ?? '',
@@ -680,14 +682,22 @@ export default function ProgramsPage() {
                   onClick={() => setExpandedProgram(isExpanded ? null : program.id)}
                   className="w-full px-5 py-4 text-left hover:bg-surface-light transition-colors"
                 >
-                  {/* Program name and template badge */}
+                  {/* Program name and badges */}
                   <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-bold text-cb-text text-lg">{program.name}</h3>
-                    {program.isTemplate && (
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
-                        Template
-                      </span>
-                    )}
+                    <h3 className="font-bold text-cb-text text-lg leading-snug">{program.name}</h3>
+                    <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
+                      {program.isAiGenerated && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-brand/10 text-brand border border-brand/20">
+                          <Sparkles size={10} />
+                          AI
+                        </span>
+                      )}
+                      {program.isTemplate && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
+                          Public
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Description */}

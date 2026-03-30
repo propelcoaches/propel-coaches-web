@@ -93,6 +93,7 @@ export async function POST(req: NextRequest) {
     });
 
     // Call OpenAI
+    const openai = getOpenAIClient()
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [

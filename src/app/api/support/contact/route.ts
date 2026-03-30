@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Store in Supabase
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('support_tickets')
       .insert([
         {

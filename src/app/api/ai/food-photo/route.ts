@@ -54,6 +54,7 @@ async function verifyAuth(token: string): Promise<string | null> {
     }
 
     // Verify token is valid in Supabase
+    const supabase = getSupabaseAdmin()
     const { data } = await supabase.auth.getUser(jwtToken);
     if (!data.user) {
       return null;

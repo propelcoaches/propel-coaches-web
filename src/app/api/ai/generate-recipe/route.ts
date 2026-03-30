@@ -19,6 +19,7 @@ export async function POST(req: NextRequest) {
     const { prompt, book_id } = await req.json()
     if (!prompt || !book_id) return NextResponse.json({ error: 'Missing prompt or book_id' }, { status: 400 })
 
+    const openai = getOpenAIClient()
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [
