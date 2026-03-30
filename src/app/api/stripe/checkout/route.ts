@@ -19,10 +19,12 @@ function getSupabaseAdmin() {
 }
 
 function getPlanToPriceId(): Record<string, string> {
+  const team = process.env.STRIPE_PRICE_TEAM ?? process.env.STRIPE_PRICE_CLINIC ?? ''
   return {
-    starter: process.env.STRIPE_PRICE_STARTER!,
-    pro: process.env.STRIPE_PRICE_PRO!,
-    clinic: process.env.STRIPE_PRICE_CLINIC!,
+    starter: process.env.STRIPE_PRICE_STARTER ?? '',
+    pro: process.env.STRIPE_PRICE_PRO ?? '',
+    team,
+    clinic: team, // backwards-compatible alias
   }
 }
 export async function POST(request: NextRequest) {
