@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { PricingSection } from './pricing-section'
 
 export const metadata: Metadata = {
   title: 'Propel Coaches — The All-in-One Coaching Platform',
@@ -74,20 +75,17 @@ export default function LandingPage() {
                 <span className="text-brand">Start coaching more.</span>
               </h1>
               <p className="mt-6 text-lg text-gray-500 leading-relaxed max-w-lg">
-                One platform for PTs, dietitians, and exercise physiologists.
-                Programs, nutrition, check-ins, messaging, and an AI coach that handles clients 24/7 — so you can focus on what you do best.
+                The all-in-one platform for fitness coaches — and AI-powered personal coaching for everyone else.
+                Programs, nutrition, check-ins, messaging, and an AI coach that works 24/7.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link href="/register" className="btn-primary">
-                  Start free — 14 days
+                  Start free — coaches
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </Link>
-                <a href="#demo" className="inline-flex items-center justify-center gap-2.5 border border-gray-200 text-gray-700 font-semibold px-7 py-3.5 rounded-2xl text-base transition-all hover:border-brand/30 hover:bg-brand-bg cursor-pointer">
-                  <span className="w-6 h-6 rounded-full bg-brand flex items-center justify-center flex-shrink-0">
-                    <svg width="8" height="9" viewBox="0 0 8 9" fill="white" aria-hidden="true"><path d="M1 1l6 3.5L1 8V1z"/></svg>
-                  </span>
-                  Watch demo
-                </a>
+                <Link href="/register" className="inline-flex items-center justify-center gap-2.5 border border-gray-200 text-gray-700 font-semibold px-7 py-3.5 rounded-2xl text-base transition-all hover:border-brand/30 hover:bg-brand-bg">
+                  Try AI Coach
+                </Link>
               </div>
               <div className="mt-10 flex items-center gap-6 text-sm text-gray-400">
                 <div className="flex items-center gap-2.5">
@@ -716,7 +714,7 @@ export default function LandingPage() {
             </div>
             <div className="space-y-3">
               {[
-                {path:'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',title:'14-day free trial',desc:'Try every feature with no credit card required until your trial ends.'},
+                {path:'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',title:'Free trial on every plan',desc:'Try every feature with no credit card required until your trial ends.'},
                 {path:'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',title:'30-day money-back guarantee',desc:'If you\'re not happy, we refund you that day. No questions, no forms.'},
                 {path:'M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z',title:'No lock-in contracts',desc:'Month-to-month. Cancel any time, instantly, with no cancellation fees.'},
                 {path:'M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z',title:'Onboarding support included',desc:'Every new coach gets a walkthrough call to get set up the right way.'},
@@ -768,50 +766,7 @@ export default function LandingPage() {
       </section>
 
       {/* ─── Pricing ─── */}
-      <section id="pricing" className="py-24 px-6 bg-white">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">Simple, transparent pricing</h2>
-            <p className="mt-4 text-gray-500">Start free for 14 days. No credit card required during trial. Cancel anytime.</p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              {name:'Starter',desc:'Perfect for coaches just getting started',price:'0',clientLimit:'5 active clients',features:['Up to 5 active clients','Training program builder','Nutrition & macro tracking','Habit tracking','Client messaging','Check-in forms'],popular:false,cta:'Start free trial'},
-              {name:'Pro',desc:'For coaches scaling their business',price:'29',clientLimit:'30 active clients',features:['Up to 30 active clients','Everything in Starter','AI Coach Assistant','Custom branding','Stripe payments','Autoflow scheduling','Priority support'],popular:true,cta:'Start free trial'},
-              {name:'Team',desc:'For multi-practitioner clinics and teams',price:'79',clientLimit:'Unlimited clients',features:['Unlimited active clients','Up to 5 coach accounts','Everything in Pro','Team dashboard','Revenue analytics','Marketplace access','Phone support'],popular:false,cta:'Start free trial'},
-            ].map((plan, i) => (
-              <div key={i} className={`rounded-2xl p-6 border relative flex flex-col ${plan.popular ? 'border-brand ring-1 ring-brand/20' : 'border-gray-200'}`}>
-                {plan.popular && (
-                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-brand text-white text-[11px] font-bold px-3 py-1 rounded-full whitespace-nowrap">Most popular</div>
-                )}
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900">{plan.name}</h3>
-                  <p className="text-sm text-gray-500 mt-1 mb-1">{plan.desc}</p>
-                  <p className="text-xs font-semibold text-brand mb-4">{plan.clientLimit}</p>
-                  <div className="mb-6">
-                    <span className="text-4xl font-extrabold text-gray-900">{plan.price === '0' ? 'Free' : `$${plan.price}`}</span>
-                    {plan.price !== '0' && <span className="text-gray-400 text-sm"> AUD/month</span>}
-                  </div>
-                  <Link href="/register" className={`block text-center font-bold py-3 px-6 rounded-xl text-sm transition-colors mb-6 ${plan.popular ? 'bg-brand text-white hover:bg-brand-light' : 'bg-gray-900 text-white hover:bg-gray-800'}`}>
-                    {plan.cta}
-                  </Link>
-                  <ul className="space-y-2.5 flex-1">
-                    {plan.features.map((f, j) => (
-                      <li key={j} className="flex items-center gap-2 text-sm text-gray-600">
-                        <svg className="w-4 h-4 text-brand flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            ))}
-          </div>
-          <p className="text-center text-xs text-gray-400 mt-6">All prices in AUD. Annual billing available at 20% off.</p>
-        </div>
-      </section>
+      <PricingSection />
 
       {/* ─── Final CTA ─── */}
       <section className="py-24 px-6 bg-gradient-to-br from-brand to-[#0a5a68]">
@@ -822,13 +777,13 @@ export default function LandingPage() {
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             <Link href="/register" className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-brand font-bold px-10 py-4 rounded-2xl text-base transition-colors shadow-lg">
-              Start free — 14 days <span aria-hidden="true">→</span>
+              Start free trial <span aria-hidden="true">→</span>
             </Link>
             <a href="#demo" className="inline-flex items-center gap-2 border border-white/30 text-white hover:bg-white/10 font-semibold px-8 py-4 rounded-2xl text-base transition-colors">
               Watch the demo
             </a>
           </div>
-          <p className="mt-5 text-white/50 text-sm">14-day free trial · 30-day money-back guarantee · Cancel anytime</p>
+          <p className="mt-5 text-white/50 text-sm">Free trial on every plan · 30-day money-back guarantee · Cancel anytime</p>
         </div>
       </section>
 

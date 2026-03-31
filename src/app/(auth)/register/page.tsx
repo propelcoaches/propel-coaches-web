@@ -3,8 +3,131 @@
 import { useState } from 'react';
 import Link from 'next/link';
 
+type UserType = 'coach' | 'ai_coach' | null;
+
+const coachPlans = [
+  {
+    id: 'coach_starter',
+    name: 'Starter',
+    price: '49.99',
+    per: 'month',
+    trial: '14-day free trial',
+    description: 'Perfect for coaches getting started',
+    features: [
+      'Up to 10 active clients',
+      'Training program builder',
+      'Nutrition & macro tracking',
+      'Habit tracking',
+      'Client messaging',
+      'Check-in forms',
+    ],
+    highlighted: false,
+  },
+  {
+    id: 'coach_pro',
+    name: 'Pro',
+    price: '99.99',
+    per: 'month',
+    trial: '14-day free trial',
+    description: 'For coaches scaling their business',
+    features: [
+      'Up to 50 active clients',
+      'All Starter features',
+      'AI Coach Assistant',
+      'Custom branding & logo',
+      'Stripe payments',
+      'Marketplace access',
+      'Priority support',
+    ],
+    highlighted: true,
+  },
+  {
+    id: 'coach_scale',
+    name: 'Scale',
+    price: '199.99',
+    per: 'month',
+    trial: '14-day free trial',
+    description: 'For clinics & large teams',
+    features: [
+      'Unlimited clients',
+      'All Pro features',
+      'Up to 5 coach accounts',
+      'Team dashboard',
+      'Revenue analytics',
+      'White label app',
+      'Phone support',
+    ],
+    highlighted: false,
+  },
+];
+
+const aiPlans = [
+  {
+    id: 'ai_starter',
+    name: 'Starter',
+    price: '9.99',
+    per: 'week',
+    trial: '7-day free trial',
+    description: 'Start your AI coaching journey',
+    features: [
+      'AI coach available 24/7',
+      'Personalised workout plans',
+      'Nutrition & macro tracking',
+      'Progress insights',
+      'Habit coaching',
+    ],
+    highlighted: false,
+  },
+  {
+    id: 'ai_pro',
+    name: 'Pro',
+    price: '19.99',
+    per: 'week',
+    trial: '7-day free trial',
+    description: 'Accelerate your results',
+    features: [
+      'Everything in Starter',
+      'AI meal plan generator',
+      'Form check analysis',
+      'Weekly AI check-ins',
+      'Unlimited AI messages',
+      'Priority AI responses',
+    ],
+    highlighted: true,
+  },
+  {
+    id: 'ai_elite',
+    name: 'Elite',
+    price: '29.99',
+    per: 'week',
+    trial: '7-day free trial',
+    description: 'Maximum AI coaching support',
+    features: [
+      'Everything in Pro',
+      'Dedicated AI model',
+      'Advanced body composition tracking',
+      'Supplement recommendations',
+      'Live coaching integrations',
+      'Weekly AI strategy review',
+    ],
+    highlighted: false,
+  },
+];
+
+const professions = [
+  'Personal Trainer',
+  'Dietitian',
+  'Nutritionist',
+  'Exercise Physiologist',
+  'Strength Coach',
+  'Physiotherapist',
+  'Online Fitness Coach',
+  'Other',
+];
+
 export default function RegisterPage() {
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [userType, setUserType] = useState<UserType>(null);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -16,66 +139,9 @@ export default function RegisterPage() {
     profession: '',
   });
 
-  const plans = [
-    {
-      id: 'starter',
-      name: 'Starter',
-      price: 0,
-      description: 'Perfect for getting started',
-      features: [
-        'Up to 5 active clients',
-        'Training program builder',
-        'Weekly check-ins',
-        'Nutrition & macro tracking',
-        'Habit tracking',
-        'Client messaging',
-      ],
-      highlighted: false,
-    },
-    {
-      id: 'pro',
-      name: 'Pro',
-      price: 29,
-      description: 'Most popular for growing coaches',
-      features: [
-        'Unlimited clients',
-        'All Starter features',
-        'AI Coach Assistant (24/7)',
-        'Custom brand colours & logo',
-        'Priority support',
-        'Early access to new features',
-      ],
-      highlighted: true,
-    },
-    {
-      id: 'team',
-      name: 'Team',
-      price: 79,
-      description: 'For multi-practitioner clinics',
-      features: [
-        'Unlimited clients',
-        'Up to 5 coaches',
-        'All Pro features',
-        'Team dashboard',
-        'Dedicated onboarding',
-        'Phone support',
-      ],
-      highlighted: false,
-    },
-  ];
+  const plans = userType === 'coach' ? coachPlans : aiPlans;
 
-  const professions = [
-    'Personal Trainer',
-    'Dietitian',
-    'Nutritionist',
-    'Exercise Physiologist',
-    'Strength Coach',
-    'Physiotherapist',
-    'Online Fitness Coach',
-    'Other',
-  ];
-
-  const validateStep1 = (): boolean => {
+  const validateStep2 = (): boolean => {
     const errors: Record<string, string> = {};
     if (!formData.name.trim()) errors.name = 'Name is required';
     if (!formData.email.trim()) {
@@ -88,15 +154,17 @@ export default function RegisterPage() {
     } else if (formData.password.length < 8) {
       errors.password = 'Password must be at least 8 characters';
     }
-    if (!formData.profession) errors.profession = 'Please select your profession';
+    if (userType === 'coach' && !formData.profession) {
+      errors.profession = 'Please select your profession';
+    }
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
-  const handleStep1Submit = (e: React.FormEvent) => {
+  const handleStep2Submit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateStep1()) {
-      setStep(2);
+    if (validateStep2()) {
+      setStep(3);
       setFormErrors({});
     }
   };
@@ -112,7 +180,8 @@ export default function RegisterPage() {
           email: formData.email,
           name: formData.name,
           plan: planId,
-          profession: formData.profession,
+          profession: formData.profession || undefined,
+          password: formData.password,
         }),
       });
       if (!res.ok) throw new Error('Failed to create checkout session');
@@ -124,6 +193,18 @@ export default function RegisterPage() {
       setIsLoading(false);
     }
   };
+
+  const checkIcon = (
+    <svg className="w-4 h-4 text-brand flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+    </svg>
+  );
+
+  const errorIcon = (
+    <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
+    </svg>
+  );
 
   return (
     <div className="min-h-screen bg-surface-light flex flex-col">
@@ -149,7 +230,7 @@ export default function RegisterPage() {
       {/* Step indicator */}
       <div className="bg-surface border-b border-border">
         <div className="max-w-lg mx-auto px-6 py-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {/* Step 1 */}
             <div className={`step-dot ${step >= 1 ? (step > 1 ? 'done' : 'active') : 'inactive'}`}>
               {step > 1 ? (
@@ -159,15 +240,25 @@ export default function RegisterPage() {
               ) : '1'}
             </div>
             <div className="flex-1">
-              <p className={`text-xs font-semibold ${step === 1 ? 'text-brand' : step > 1 ? 'text-cb-muted' : 'text-cb-muted'}`}>Your details</p>
+              <p className={`text-xs font-semibold ${step === 1 ? 'text-brand' : 'text-cb-muted'}`}>Who are you?</p>
             </div>
             <div className={`step-connector ${step > 1 ? 'done' : ''}`} />
             {/* Step 2 */}
-            <div className={`step-dot ${step === 2 ? 'active' : 'inactive'}`}>
-              2
+            <div className={`step-dot ${step >= 2 ? (step > 2 ? 'done' : 'active') : 'inactive'}`}>
+              {step > 2 ? (
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
+                </svg>
+              ) : '2'}
             </div>
             <div className="flex-1">
-              <p className={`text-xs font-semibold ${step === 2 ? 'text-brand' : 'text-cb-muted'}`}>Choose plan</p>
+              <p className={`text-xs font-semibold ${step === 2 ? 'text-brand' : 'text-cb-muted'}`}>Your details</p>
+            </div>
+            <div className={`step-connector ${step > 2 ? 'done' : ''}`} />
+            {/* Step 3 */}
+            <div className={`step-dot ${step === 3 ? 'active' : 'inactive'}`}>3</div>
+            <div className="flex-1">
+              <p className={`text-xs font-semibold ${step === 3 ? 'text-brand' : 'text-cb-muted'}`}>Choose plan</p>
             </div>
           </div>
         </div>
@@ -176,23 +267,93 @@ export default function RegisterPage() {
       {/* Main content */}
       <div className="flex-1 flex items-start justify-center px-4 py-10 sm:px-6">
         <div className="w-full max-w-2xl">
-          {step === 1 ? (
+
+          {/* ── Step 1: Type selection ── */}
+          {step === 1 && (
             <div className="bg-surface rounded-2xl border border-border shadow-md p-8 sm:p-10">
               <div className="mb-8">
+                <h1 className="font-display text-3xl font-bold text-cb-text mb-2">
+                  Welcome to Propel
+                </h1>
+                <p className="text-cb-secondary text-sm">
+                  Tell us how you&apos;d like to use Propel so we can show you the right plans.
+                </p>
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-4">
+                {/* Coach option */}
+                <button
+                  onClick={() => { setUserType('coach'); setStep(2); }}
+                  className="group relative flex flex-col items-start p-6 rounded-2xl border-2 border-border hover:border-brand hover:shadow-md hover:shadow-brand/10 transition-all text-left cursor-pointer"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-brand/8 flex items-center justify-center mb-4 group-hover:bg-brand/15 transition-colors">
+                    <svg className="w-6 h-6 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75} aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                  </div>
+                  <h3 className="font-display text-lg font-bold text-cb-text mb-1">I&apos;m a coach</h3>
+                  <p className="text-sm text-cb-secondary leading-relaxed">
+                    I run a coaching business and want to manage clients, programs, and nutrition.
+                  </p>
+                  <div className="mt-4 text-xs font-semibold text-brand">From A$49.99/month →</div>
+                </button>
+
+                {/* AI Coach option */}
+                <button
+                  onClick={() => { setUserType('ai_coach'); setStep(2); }}
+                  className="group relative flex flex-col items-start p-6 rounded-2xl border-2 border-border hover:border-brand hover:shadow-md hover:shadow-brand/10 transition-all text-left cursor-pointer"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-brand/8 flex items-center justify-center mb-4 group-hover:bg-brand/15 transition-colors">
+                    <svg className="w-6 h-6 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75} aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                    </svg>
+                  </div>
+                  <h3 className="font-display text-lg font-bold text-cb-text mb-1">I want an AI coach</h3>
+                  <p className="text-sm text-cb-secondary leading-relaxed">
+                    I want personalised AI-powered coaching for my own fitness and nutrition goals.
+                  </p>
+                  <div className="mt-4 text-xs font-semibold text-brand">From A$9.99/week →</div>
+                </button>
+              </div>
+
+              <div className="mt-6 text-center">
+                <p className="text-sm text-cb-secondary">
+                  Already have an account?{' '}
+                  <Link href="/login" className="text-brand font-semibold hover:underline">
+                    Sign in
+                  </Link>
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* ── Step 2: Details ── */}
+          {step === 2 && (
+            <div className="bg-surface rounded-2xl border border-border shadow-md p-8 sm:p-10">
+              <div className="mb-8">
+                <button
+                  onClick={() => setStep(1)}
+                  className="inline-flex items-center gap-1.5 text-sm text-brand font-semibold hover:underline mb-4 cursor-pointer"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/>
+                  </svg>
+                  Back
+                </button>
                 <h1 className="font-display text-3xl font-bold text-cb-text mb-2">
                   Create your account
                 </h1>
                 <p className="text-cb-secondary text-sm">
-                  Join health professionals running their practice on Propel.
+                  {userType === 'coach'
+                    ? 'Set up your coaching account on Propel.'
+                    : 'Set up your AI coaching account on Propel.'}
                 </p>
               </div>
 
-              <form onSubmit={handleStep1Submit} className="space-y-5">
+              <form onSubmit={handleStep2Submit} className="space-y-5">
                 {/* Name */}
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-cb-text mb-1.5">
-                    Full Name
-                  </label>
+                  <label htmlFor="name" className="block text-sm font-medium text-cb-text mb-1.5">Full Name</label>
                   <input
                     id="name"
                     type="text"
@@ -203,18 +364,13 @@ export default function RegisterPage() {
                     autoComplete="name"
                   />
                   {formErrors.name && (
-                    <p className="mt-1.5 text-xs text-cb-danger flex items-center gap-1">
-                      <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"/></svg>
-                      {formErrors.name}
-                    </p>
+                    <p className="mt-1.5 text-xs text-cb-danger flex items-center gap-1">{errorIcon}{formErrors.name}</p>
                   )}
                 </div>
 
                 {/* Email */}
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-cb-text mb-1.5">
-                    Email Address
-                  </label>
+                  <label htmlFor="email" className="block text-sm font-medium text-cb-text mb-1.5">Email Address</label>
                   <input
                     id="email"
                     type="email"
@@ -225,18 +381,13 @@ export default function RegisterPage() {
                     autoComplete="email"
                   />
                   {formErrors.email && (
-                    <p className="mt-1.5 text-xs text-cb-danger flex items-center gap-1">
-                      <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"/></svg>
-                      {formErrors.email}
-                    </p>
+                    <p className="mt-1.5 text-xs text-cb-danger flex items-center gap-1">{errorIcon}{formErrors.email}</p>
                   )}
                 </div>
 
                 {/* Password */}
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-cb-text mb-1.5">
-                    Password
-                  </label>
+                  <label htmlFor="password" className="block text-sm font-medium text-cb-text mb-1.5">Password</label>
                   <input
                     id="password"
                     type="password"
@@ -247,65 +398,49 @@ export default function RegisterPage() {
                     autoComplete="new-password"
                   />
                   {formErrors.password ? (
-                    <p className="mt-1.5 text-xs text-cb-danger flex items-center gap-1">
-                      <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"/></svg>
-                      {formErrors.password}
-                    </p>
+                    <p className="mt-1.5 text-xs text-cb-danger flex items-center gap-1">{errorIcon}{formErrors.password}</p>
                   ) : (
                     <p className="mt-1.5 text-xs text-cb-muted">At least 8 characters</p>
                   )}
                 </div>
 
-                {/* Profession */}
-                <div>
-                  <label htmlFor="profession" className="block text-sm font-medium text-cb-text mb-1.5">
-                    Profession
-                  </label>
-                  <select
-                    id="profession"
-                    value={formData.profession}
-                    onChange={(e) => setFormData({ ...formData, profession: e.target.value })}
-                    className={`field ${formErrors.profession ? 'error' : ''}`}
-                  >
-                    <option value="">Select your profession</option>
-                    {professions.map((p) => (
-                      <option key={p} value={p}>{p}</option>
-                    ))}
-                  </select>
-                  {formErrors.profession && (
-                    <p className="mt-1.5 text-xs text-cb-danger flex items-center gap-1">
-                      <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"/></svg>
-                      {formErrors.profession}
-                    </p>
-                  )}
-                </div>
+                {/* Profession — coaches only */}
+                {userType === 'coach' && (
+                  <div>
+                    <label htmlFor="profession" className="block text-sm font-medium text-cb-text mb-1.5">Profession</label>
+                    <select
+                      id="profession"
+                      value={formData.profession}
+                      onChange={(e) => setFormData({ ...formData, profession: e.target.value })}
+                      className={`field ${formErrors.profession ? 'error' : ''}`}
+                    >
+                      <option value="">Select your profession</option>
+                      {professions.map((p) => (
+                        <option key={p} value={p}>{p}</option>
+                      ))}
+                    </select>
+                    {formErrors.profession && (
+                      <p className="mt-1.5 text-xs text-cb-danger flex items-center gap-1">{errorIcon}{formErrors.profession}</p>
+                    )}
+                  </div>
+                )}
 
-                <button
-                  type="submit"
-                  className="w-full btn-primary mt-2"
-                >
+                <button type="submit" className="w-full btn-primary mt-2">
                   Continue to plan selection
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                     <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </button>
               </form>
-
-              <div className="mt-6 text-center">
-                <p className="text-sm text-cb-secondary">
-                  Already have an account?{' '}
-                  <Link href="/login" className="text-brand font-semibold hover:underline">
-                    Coach login
-                  </Link>
-                </p>
-              </div>
             </div>
+          )}
 
-          ) : (
+          {/* ── Step 3: Plan selection ── */}
+          {step === 3 && (
             <div>
               <div className="mb-8">
                 <button
-                  onClick={() => setStep(1)}
+                  onClick={() => setStep(2)}
                   className="inline-flex items-center gap-1.5 text-sm text-brand font-semibold hover:underline mb-4 cursor-pointer"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
@@ -317,7 +452,9 @@ export default function RegisterPage() {
                   Choose your plan
                 </h1>
                 <p className="text-sm text-cb-secondary">
-                  14-day free trial on every plan. No credit card required.
+                  {userType === 'coach'
+                    ? '14-day free trial on every plan. No credit card required.'
+                    : '7-day free trial on every plan. No credit card required.'}
                 </p>
               </div>
 
@@ -351,21 +488,16 @@ export default function RegisterPage() {
 
                     <div className="p-7 flex flex-col flex-1">
                       <div className="mb-5">
-                        <h3 className="font-display text-xl font-bold text-cb-text mb-1">
-                          {plan.name}
-                        </h3>
+                        <h3 className="font-display text-xl font-bold text-cb-text mb-1">{plan.name}</h3>
                         <p className="text-xs text-cb-muted">{plan.description}</p>
                       </div>
 
                       <div className="mb-6">
                         <div className="flex items-baseline gap-1">
-                          <span className="font-display text-4xl font-extrabold text-cb-text">
-                            {plan.price === 0 ? 'Free' : `$${plan.price}`}
-                          </span>
-                          {plan.price > 0 && (
-                            <span className="text-sm text-cb-muted">AUD/mo</span>
-                          )}
+                          <span className="font-display text-4xl font-extrabold text-cb-text">A${plan.price}</span>
+                          <span className="text-sm text-cb-muted">/{plan.per}</span>
                         </div>
+                        <p className="text-xs text-brand font-medium mt-1">{plan.trial}</p>
                       </div>
 
                       <button
@@ -382,15 +514,13 @@ export default function RegisterPage() {
                             <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
                             Processing…
                           </span>
-                        ) : plan.price === 0 ? 'Start for free' : 'Start free trial'}
+                        ) : 'Start free trial'}
                       </button>
 
                       <ul className="space-y-3 flex-1">
                         {plan.features.map((feature, idx) => (
                           <li key={idx} className="flex items-start gap-2.5">
-                            <svg className="w-4 h-4 text-brand flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
-                            </svg>
+                            {checkIcon}
                             <span className="text-sm text-cb-secondary">{feature}</span>
                           </li>
                         ))}
@@ -408,6 +538,7 @@ export default function RegisterPage() {
               </div>
             </div>
           )}
+
         </div>
       </div>
     </div>

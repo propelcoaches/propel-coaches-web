@@ -56,15 +56,19 @@ export async function POST(request: NextRequest) {
       const session = event.data.object as Stripe.Checkout.Session;
       const supabaseUserId = session.metadata?.supabase_user_id;
       const plan = session.metadata?.plan;
+      const role = session.metadata?.role;
 
       if (supabaseUserId && session.customer) {
+        const profileUpdate: Record<string, unknown> = {
+          stripe_customer_id: session.customer,
+          subscription_status: 'trialing',
+          plan: plan || null,
+        };
+        if (role) profileUpdate.role = role;
+
         const { error: updateError } = await supabaseAdmin
           .from('profiles')
-          .update({
-            stripe_customer_id: session.customer,
-            subscription_status: 'trialing',
-            plan: plan || null,
-          })
+          .update(profileUpdate)
           .eq('id', supabaseUserId);
 
         if (updateError) {

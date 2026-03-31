@@ -16,11 +16,14 @@ function getSupabaseAdmin() {
   return createClient(supabaseUrl, supabaseServiceRoleKey);
 }
 
-// Plan pricing map (in cents)
+// Plan pricing map (in AUD cents)
 const planPricing: Record<string, number> = {
-  starter: 4900, // $49.00
-  pro: 9900, // $99.00
-  clinic: 19900, // $199.00
+  ai_starter:    999,   // A$9.99/week
+  ai_pro:        1999,  // A$19.99/week
+  ai_elite:      2999,  // A$29.99/week
+  coach_starter: 4999,  // A$49.99/month
+  coach_pro:     9999,  // A$99.99/month
+  coach_scale:   19999, // A$199.99/month
 };
 
 interface CoachData {
@@ -135,8 +138,8 @@ export async function GET(request: NextRequest) {
     const mrr = coachesWithClients
       .filter((c) => c.subscription_status === 'active' || c.subscription_status === 'trialing')
       .reduce((sum, coach) => {
-        const plan = coach.plan?.toLowerCase() || 'starter';
-        const monthlyPrice = planPricing[plan] || planPricing['starter'];
+        const plan = coach.plan?.toLowerCase() || 'coach_starter';
+        const monthlyPrice = planPricing[plan] || planPricing['coach_starter'];
         return sum + monthlyPrice / 100; // Convert cents to dollars
       }, 0);
 

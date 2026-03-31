@@ -19,20 +19,25 @@ function getSupabaseAdmin() {
 }
 
 function getPlanToPriceId(): Record<string, string> {
-  const team = process.env.STRIPE_PRICE_TEAM ?? process.env.STRIPE_PRICE_CLINIC ?? ''
   return {
-    starter: process.env.STRIPE_PRICE_STARTER ?? '',
-    pro: process.env.STRIPE_PRICE_PRO ?? '',
-    team,
-    clinic: team, // backwards-compatible alias
+    ai_starter:    process.env.STRIPE_PRICE_AI_STARTER    ?? '',
+    ai_pro:        process.env.STRIPE_PRICE_AI_PRO        ?? '',
+    ai_elite:      process.env.STRIPE_PRICE_AI_ELITE      ?? '',
+    coach_starter: process.env.STRIPE_PRICE_COACH_STARTER ?? '',
+    coach_pro:     process.env.STRIPE_PRICE_COACH_PRO     ?? '',
+    coach_scale:   process.env.STRIPE_PRICE_COACH_SCALE   ?? '',
   }
+}
+
+function isAIPlan(plan: string): boolean {
+  return plan.startsWith('ai_')
 }
 export async function POST(request: NextRequest) {
   const stripe = getStripeClient()
   const supabaseAdmin = getSupabaseAdmin()
   const planToPriceId = getPlanToPriceId()
   try {
-    const { email, name, plan, profession } = await request.json();
+    const { email, name, plan, profession, password } = await request.json();
 
     if (!email || !name || !plan) {
       return NextResponse.json(
@@ -55,8 +60,12 @@ export async function POST(request: NextRequest) {
     if (profession !== undefined && (typeof profession !== 'string' || profession.length > 100)) {
       return NextResponse.json({ error: 'profession must be a string under 100 characters' }, { status: 400 });
     }
+    if (typeof password !== 'string' || password.length < 8 || password.length > 128) {
+      return NextResponse.json({ error: 'password must be between 8 and 128 characters' }, { status: 400 });
+    }
 
-    const priceId = planToPriceId[plan.toLowerCase()];
+    const normalizedPlan = plan.toLowerCase();
+    const priceId = planToPriceId[normalizedPlan];
     if (!priceId) {
       return NextResponse.json(
         { error: `Invalid plan: ${plan}` },
@@ -64,8 +73,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const aiPlan = isAIPlan(normalizedPlan);
+    const role = aiPlan ? 'client' : 'coach';
+    const trialDays = aiPlan ? 7 : 14;
+
     // Get or create Supabase user
-    const { data: existingUser, error: getUserError } = await supabaseAdmin
+    const { data: existingUser } = await supabaseAdmin
       .from('profiles')
       .select('id')
       .eq('email', email)
@@ -79,6 +92,7 @@ export async function POST(request: NextRequest) {
       // Create a new user in Supabase
       const { data: authUser, error: createAuthError } = await supabaseAdmin.auth.admin.createUser({
         email,
+        password,
         email_confirm: true,
       });
 
@@ -99,6 +113,7 @@ export async function POST(request: NextRequest) {
           id: supabaseUserId,
           email,
           name,
+          role,
           profession: profession || null,
         });
 
@@ -121,7 +136,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Create Checkout Session with 14-day trial
+    // Create Checkout Session with trial days based on plan type
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       customer: customer.id,
@@ -132,14 +147,15 @@ export async function POST(request: NextRequest) {
         },
       ],
       subscription_data: {
-        trial_period_days: 14,
+        trial_period_days: trialDays,
       },
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?setup=complete`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/register?cancelled=true`,
       metadata: {
         supabase_user_id: supabaseUserId,
         profession: profession || 'not_provided',
-        plan,
+        plan: normalizedPlan,
+        role,
       },
     });
 

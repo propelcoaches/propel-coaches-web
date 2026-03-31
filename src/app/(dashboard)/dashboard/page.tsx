@@ -2,12 +2,12 @@
 
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   Users, Dumbbell, ArrowRight,
   Clock, CheckCircle2, Bell,
   Layers, DollarSign, BarChart2, UserPlus, MessageSquare,
-  BrainCircuit, AlertTriangle, UtensilsCrossed,
+  BrainCircuit, AlertTriangle, UtensilsCrossed, X, Sparkles,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import clsx from 'clsx'
@@ -111,6 +111,8 @@ function ActiveProgramCard({ entry, onClick }: { entry: ActiveEntry; onClick: ()
 
 export default function DashboardPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const [showWelcome, setShowWelcome] = useState(false)
   const [firstName, setFirstName] = useState<string | null>(null)
   const [activePrograms, setActivePrograms] = useState<ActiveEntry[]>([])
   type ActivityItem = { id: string; type: string; clientName: string; detail: string; timeLabel: string; sortDate: string; icon: React.ComponentType<any> }
@@ -120,6 +122,17 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState({ totalClients: 0, activePrograms: 0, checkinRate: 0, revenue: 0 })
   const [intelligenceSummary, setIntelligenceSummary] = useState<{ red: number; amber: number } | null>(null)
+
+  useEffect(() => {
+    if (searchParams.get('setup') === 'complete') {
+      setShowWelcome(true)
+    }
+  }, [searchParams])
+
+  function dismissWelcome() {
+    setShowWelcome(false)
+    router.replace('/dashboard')
+  }
 
   useEffect(() => {
     async function load() {
@@ -261,8 +274,66 @@ export default function DashboardPage() {
     )
   }
 
+  const QUICK_STARTS = [
+    { label: 'Add first client',       href: '/clients',           icon: UserPlus },
+    { label: 'Set up branding',        href: '/branding',          icon: Sparkles },
+    { label: 'Create workout template', href: '/templates',        icon: Dumbbell },
+    { label: 'Explore AI tools',       href: '/workout-programs',  icon: BrainCircuit },
+  ]
+
   return (
     <div className="p-6 lg:p-8 max-w-5xl mx-auto animate-fade-in-up">
+
+      {/* ── Welcome modal ── */}
+      {showWelcome && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-surface border border-cb-border rounded-2xl w-full max-w-lg shadow-2xl">
+            {/* Header */}
+            <div className="relative px-6 pt-6 pb-4 text-center border-b border-cb-border">
+              <div className="w-12 h-12 rounded-2xl bg-brand/10 border border-brand/20 flex items-center justify-center mx-auto mb-3">
+                <CheckCircle2 size={24} className="text-brand" />
+              </div>
+              <h2 className="text-lg font-bold text-cb-text">Welcome to Propel{firstName ? `, ${firstName}` : ''}!</h2>
+              <p className="text-sm text-cb-muted mt-1">Your account is set up. Here are a few things to get you started.</p>
+              <button
+                onClick={dismissWelcome}
+                className="absolute top-4 right-4 p-1.5 text-cb-muted hover:text-cb-text transition-colors"
+                aria-label="Dismiss"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Quick-start cards */}
+            <div className="p-5 grid grid-cols-2 gap-3">
+              {QUICK_STARTS.map(({ label, href, icon: Icon }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={() => setShowWelcome(false)}
+                  className="flex flex-col items-center justify-center gap-2.5 p-4 bg-surface-light border border-cb-border rounded-xl hover:border-brand/40 hover:bg-brand/5 transition-all group"
+                >
+                  <div className="w-9 h-9 rounded-lg bg-brand/10 flex items-center justify-center group-hover:bg-brand/20 transition-colors">
+                    <Icon size={18} className="text-brand" />
+                  </div>
+                  <span className="text-xs font-medium text-cb-secondary text-center leading-tight">{label}</span>
+                </Link>
+              ))}
+            </div>
+
+            {/* Dismiss */}
+            <div className="px-5 pb-5">
+              <button
+                onClick={dismissWelcome}
+                className="w-full py-2.5 border border-cb-border rounded-xl text-sm text-cb-secondary hover:bg-surface-light transition-colors"
+              >
+                I&apos;ll explore on my own
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Page greeting */}
       <div className="mb-5">
         <h1 className="font-display text-2xl font-bold text-cb-text">
