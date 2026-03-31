@@ -146,6 +146,7 @@ export async function POST(request: NextRequest) {
           quantity: 1,
         },
       ],
+      allow_promotion_codes: true,
       subscription_data: {
         trial_period_days: trialDays,
       },
