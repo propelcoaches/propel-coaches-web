@@ -11,7 +11,7 @@ interface EmailPayload {
   sequence?: string
 }
 
-const FROM_EMAIL = 'Propel <noreply@propelcoach.app>'
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'Propel <noreply@propelcoaches.com>'
 
 async function logEmailSend(payload: EmailPayload, success: boolean) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL

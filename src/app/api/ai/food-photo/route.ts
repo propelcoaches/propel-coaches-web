@@ -1,8 +1,7 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
-import { createClient } from '@supabase/supabase-js';
-import { jwtDecode } from 'jwt-decode';
+import { createClient } from '@/lib/supabase/server';
 import { checkRateLimit } from '@/lib/rate-limit';
 
 // Lazy initialization — only evaluated at request time, not during build.
@@ -11,14 +10,6 @@ function getOpenAIClient() {
   if (!key) throw new Error("Missing OPENAI_API_KEY")
   return new OpenAI({ apiKey: key })
 }
-function getSupabaseAdmin() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!url || !key) throw new Error("Missing Supabase env vars")
-  return createClient(url, key)
-}
-
-
 interface FoodItem {
   name: string;
   quantity: number;
@@ -38,34 +29,6 @@ interface FoodPhotoAnalysis {
   confidence_score: number;
   serving_size_notes: string;
   analysis_timestamp: string;
-}
-
-// Verify Supabase JWT token
-async function verifyAuth(token: string): Promise<string | null> {
-  try {
-    if (!token.startsWith('Bearer ')) {
-      return null;
-    }
-
-    const jwtToken = token.slice(7);
-    const decoded = jwtDecode<{ sub: string }>(jwtToken);
-
-    if (!decoded.sub) {
-      return null;
-    }
-
-    // Verify token is valid in Supabase
-    const supabase = getSupabaseAdmin()
-    const { data } = await supabase.auth.getUser(jwtToken);
-    if (!data.user) {
-      return null;
-    }
-
-    return decoded.sub;
-  } catch (error) {
-    console.error('Auth verification error:', error);
-    return null;
-  }
 }
 
 // Parse GPT-4 vision response to structured data
@@ -105,24 +68,16 @@ function parseGPTResponse(content: string): FoodPhotoAnalysis {
 
 export async function POST(request: NextRequest) {
   const openai = getOpenAIClient()
-  const supabaseAdmin = getSupabaseAdmin()
   try {
-    // Verify authentication
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) {
-      return NextResponse.json(
-        { error: 'Missing authorization header' },
-        { status: 401 }
-      );
+    // Verify authentication via Supabase session
+    const supabase = createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userId = await verifyAuth(authHeader);
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Invalid or expired token' },
-        { status: 401 }
-      );
-    }
+    const userId = user.id;
 
     // Rate limit per user
     if (!checkRateLimit(`food-photo:${userId}`)) {
