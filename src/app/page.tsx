@@ -127,9 +127,9 @@ export default function Home() {
           <div className="flex gap-4 items-center">
             <Link href="https://apps.apple.com/app/propel-coaching/id6744426938" target="_blank" className="text-sm text-teal-600 hover:text-teal-800 transition hidden lg:block">Looking for a coach?</Link>
             <Link href="/login" className="text-gray-700 hover:text-teal-700 transition">Log in</Link>
-            <button className="bg-teal-700 text-white px-6 py-2 rounded-lg hover:bg-teal-800 transition">
+            <Link href="/register" className="bg-teal-700 text-white px-6 py-2 rounded-lg hover:bg-teal-800 transition">
               Start free trial
-            </button>
+            </Link>
           </div>
         </div>
       </header>
@@ -146,12 +146,12 @@ export default function Home() {
             Propel gives coaches everything they need: a web dashboard, mobile apps, a branded client app, and an AI assistant that works 24/7 in your voice.
           </p>
           <div className="flex gap-4 justify-center mb-16 flex-wrap">
-            <button className="bg-teal-600 text-white px-8 py-3 rounded-lg hover:bg-teal-700 transition font-semibold">
+            <Link href="/register" className="bg-teal-600 text-white px-8 py-3 rounded-lg hover:bg-teal-700 transition font-semibold">
               Get started free
-            </button>
-            <button className="border-2 border-teal-400 text-teal-400 px-8 py-3 rounded-lg hover:bg-teal-400/10 transition font-semibold">
+            </Link>
+            <Link href="#platform" className="border-2 border-teal-400 text-teal-400 px-8 py-3 rounded-lg hover:bg-teal-400/10 transition font-semibold">
               Watch demo
-            </button>
+            </Link>
           </div>
           <div className="flex justify-around text-center py-8 border-t border-teal-700/30">
             <div className="animate-float" style={{ animationDelay: '0s' }}>
@@ -502,9 +502,9 @@ export default function Home() {
                 <p className="text-gray-600 text-sm mb-6">For new coaches</p>
                 <div className="text-4xl font-bold text-gray-900 mb-1">$29</div>
                 <p className="text-sm text-gray-600 mb-6">/month, up to 10 clients</p>
-                <button className="w-full bg-gray-900 text-white py-2 rounded-lg hover:bg-gray-800 transition mb-8 font-semibold">
+                <Link href="/register" className="block w-full bg-gray-900 text-white py-2 rounded-lg hover:bg-gray-800 transition mb-8 font-semibold text-center">
                   Start free trial
-                </button>
+                </Link>
                 <ul className="space-y-3 text-sm text-gray-700">
                   <li>✓ Web dashboard</li>
                   <li>✓ Coach mobile app</li>
@@ -524,9 +524,9 @@ export default function Home() {
                 <p className="text-gray-600 text-sm mb-6">For scaling coaches</p>
                 <div className="text-4xl font-bold text-gray-900 mb-1">$59</div>
                 <p className="text-sm text-gray-600 mb-6">/month, unlimited clients</p>
-                <button className="w-full bg-teal-600 text-white py-2 rounded-lg hover:bg-teal-700 transition mb-8 font-semibold">
+                <Link href="/register" className="block w-full bg-teal-600 text-white py-2 rounded-lg hover:bg-teal-700 transition mb-8 font-semibold text-center">
                   Start free trial
-                </button>
+                </Link>
                 <ul className="space-y-3 text-sm text-gray-700">
                   <li>✓ Everything in Starter</li>
                   <li>✓ Unlimited clients</li>
@@ -543,9 +543,9 @@ export default function Home() {
                 <p className="text-gray-600 text-sm mb-6">For teams and clinics</p>
                 <div className="text-4xl font-bold text-gray-900 mb-1">$119</div>
                 <p className="text-sm text-gray-600 mb-6">/month, up to 5 practitioners</p>
-                <button className="w-full bg-gray-900 text-white py-2 rounded-lg hover:bg-gray-800 transition mb-8 font-semibold">
+                <Link href="/register" className="block w-full bg-gray-900 text-white py-2 rounded-lg hover:bg-gray-800 transition mb-8 font-semibold text-center">
                   Start free trial
-                </button>
+                </Link>
                 <ul className="space-y-3 text-sm text-gray-700">
                   <li>✓ Everything in Pro</li>
                   <li>✓ Up to 5 team members</li>
@@ -599,9 +599,9 @@ export default function Home() {
             <p className="text-teal-100 text-lg mb-8 max-w-2xl mx-auto">
               Start your free 14-day trial right now. No credit card. No promises. Just a better way to coach.
             </p>
-            <button className="bg-white text-teal-700 px-10 py-4 rounded-lg hover:bg-gray-100 transition font-bold text-lg">
+            <Link href="/register" className="bg-white text-teal-700 px-10 py-4 rounded-lg hover:bg-gray-100 transition font-bold text-lg inline-block">
               Get started free
-            </button>
+            </Link>
           </AnimatedSection>
         </div>
       </section>
