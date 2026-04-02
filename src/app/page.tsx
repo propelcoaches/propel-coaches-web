@@ -67,7 +67,7 @@ export default function Home() {
     { icon: '💬', title: 'Client Messaging', desc: '1-on-1 chat with clients. Pin important messages.' },
     { icon: '📋', title: 'Check-ins & Forms', desc: 'Custom forms. Weekly check-ins. Progress tracking.' },
     { icon: '🎯', title: 'Habit Tracking', desc: 'Track daily habits. Motivate with streaks.' },
-    { icon: '📊', title: 'Progress & Metrics', desc: 'Charts. Stats. Dashboards. Real-time insights.' },
+    { icon: '𓓊', title: 'Progress & Metrics', desc: 'Charts. Stats. Dashboards. Real-time insights.' },
     { icon: '🤖', title: 'AI Coach Assistant', desc: 'Responds to clients 24/7 in your voice.' },
     { icon: '🎨', title: 'White Label & Branding', desc: 'Custom app branding. Your logo. Your colours.' },
     { icon: '🎥', title: 'Video Exercise Library', desc: '1000+ exercise videos. Demo proper form.' },
@@ -125,6 +125,7 @@ export default function Home() {
             <Link href="#faq" className="text-gray-700 hover:text-teal-700 transition">FAQ</Link>
           </nav>
           <div className="flex gap-4 items-center">
+            <Link href="https://apps.apple.com/app/propel-coaching/id6744426938" target="_blank" className="text-sm text-teal-600 hover:text-teal-800 transition hidden lg:block">Looking for a coach?</Link>
             <Link href="/login" className="text-gray-700 hover:text-teal-700 transition">Log in</Link>
             <button className="bg-teal-700 text-white px-6 py-2 rounded-lg hover:bg-teal-800 transition">
               Start free trial
@@ -632,6 +633,7 @@ export default function Home() {
               <h4 className="font-semibold text-white mb-4">Access</h4>
               <ul className="space-y-2 text-sm">
                 <li><Link href="/login" className="hover:text-white transition">Coach Login</Link></li>
+                <li><Link href="https://apps.apple.com/app/propel-coaching/id6744426938" target="_blank" className="hover:text-white transition">Get Coached (Download App)</Link></li>
               </ul>
             </div>
           </div>
