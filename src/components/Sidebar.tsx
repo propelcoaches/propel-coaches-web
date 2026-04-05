@@ -36,6 +36,7 @@ import {
   CalendarClock,
   Bot,
   BrainCircuit,
+  AlertTriangle,
 } from 'lucide-react'
 
 type NavSection = {
@@ -57,6 +58,7 @@ const NAV_SECTIONS: NavSection[] = [
       { href: '/check-ins', label: 'Check-ins', icon: ClipboardCheck },
       { href: '/ai-reviews', label: 'AI Reviews', icon: Bot },
       { href: '/intelligence', label: 'Intelligence', icon: BrainCircuit },
+      { href: '/concerns', label: 'Concerns', icon: AlertTriangle },
     ],
   },
   {

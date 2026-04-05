@@ -122,6 +122,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState({ totalClients: 0, activePrograms: 0, checkinRate: 0, revenue: 0 })
   const [intelligenceSummary, setIntelligenceSummary] = useState<{ red: number; amber: number } | null>(null)
+  const [openConcerns, setOpenConcerns] = useState(0)
 
   useEffect(() => {
     if (searchParams.get('setup') === 'complete') {
@@ -239,6 +240,14 @@ export default function DashboardPage() {
       }
 
       setLoading(false)
+
+      // Load open concerns count (non-blocking)
+      supabase
+        .from('ai_coach_concerns')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'open')
+        .then(({ count }) => setOpenConcerns(count ?? 0))
+        .catch(() => {})
 
       // Load intelligence summary in the background (non-blocking)
       fetch('/api/intelligence')
@@ -402,16 +411,31 @@ export default function DashboardPage() {
             accentBar: 'bg-amber-500',
             trend: null,
           },
-        ].map(({ label, value, icon: Icon, iconColor, iconBg, accentBar }) => (
-          <div key={label} className="bg-surface border border-cb-border rounded-xl p-5 shadow-sm overflow-hidden relative">
-            <div className={`absolute top-0 left-0 w-full h-0.5 ${accentBar}`} />
-            <div className={`w-9 h-9 rounded-xl ${iconBg} flex items-center justify-center mb-3.5`}>
-              <Icon size={17} className={iconColor} />
+          {
+            label: 'Open Concerns',
+            value: openConcerns.toString(),
+            icon: AlertTriangle,
+            iconColor: openConcerns > 0 ? 'text-red-500' : 'text-cb-muted',
+            iconBg: openConcerns > 0 ? 'bg-red-500/10' : 'bg-surface-light',
+            accentBar: openConcerns > 0 ? 'bg-red-500' : 'bg-cb-border',
+            trend: null,
+            href: '/concerns',
+          },
+        ].map(({ label, value, icon: Icon, iconColor, iconBg, accentBar, href }: any) => {
+          const card = (
+            <div className="bg-surface border border-cb-border rounded-xl p-5 shadow-sm overflow-hidden relative">
+              <div className={`absolute top-0 left-0 w-full h-0.5 ${accentBar}`} />
+              <div className={`w-9 h-9 rounded-xl ${iconBg} flex items-center justify-center mb-3.5`}>
+                <Icon size={17} className={iconColor} />
+              </div>
+              <p className="text-2xl font-bold text-cb-text tracking-tight">{value}</p>
+              <p className="text-xs text-cb-muted font-medium mt-1 uppercase tracking-wide">{label}</p>
             </div>
-            <p className="text-2xl font-bold text-cb-text tracking-tight">{value}</p>
-            <p className="text-xs text-cb-muted font-medium mt-1 uppercase tracking-wide">{label}</p>
-          </div>
-        ))}
+          )
+          return href
+            ? <Link key={label} href={href} className="hover:opacity-90 transition-opacity">{card}</Link>
+            : <div key={label}>{card}</div>
+        })}
       </div>
 
       {/* ── Nudges ── */}
