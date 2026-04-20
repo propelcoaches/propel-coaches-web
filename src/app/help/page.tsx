@@ -46,7 +46,7 @@ const faqItems: FAQItem[] = [
     id: 'cancel',
     category: 'Account & Billing',
     question: 'How do I cancel my subscription?',
-    answer: 'Go to Settings > Billing and select "Cancel Subscription". Your account will remain active until the end of your current billing period. You can reactivate anytime.'
+    answer: 'Go to Settings > Billing and select "Cancel Subscription". Your account will remain active until the end of your current billing period. You can reactivate anytime. See our Refund & Cancellation Policy at /refund-policy for full details, including how to cancel subscriptions purchased through the iOS App Store.'
   },
   {
     id: 'ai-coach',
