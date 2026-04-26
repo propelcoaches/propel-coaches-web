@@ -21,14 +21,25 @@ const supabase = {
 // This endpoint is called by a cron job every Sunday at 8am
 // Configure in vercel.json: { "crons": [{ "path": "/api/emails/weekly-summary", "schedule": "0 8 * * 0" }] }
 
-export async function POST(req: NextRequest) {
-  const supabaseAdmin = getSupabaseAdmin()
+function verifyCronAuth(req: NextRequest): NextResponse | null {
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) {
+    console.error('Missing CRON_SECRET for weekly summary cron');
+    return NextResponse.json({ error: 'Missing CRON_SECRET' }, { status: 500 });
+  }
+
+  const authHeader = req.headers.get('authorization');
+  if (authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  return null;
+}
+
+async function handleWeeklySummary(req: NextRequest) {
   try {
-    // Verify cron secret
-    const authHeader = req.headers.get('authorization');
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authError = verifyCronAuth(req);
+    if (authError) return authError;
 
     const now = new Date();
     const weekStart = new Date(now);
@@ -84,6 +95,14 @@ export async function POST(req: NextRequest) {
     console.error('Weekly summary error:', error);
     return NextResponse.json({ error: 'Failed to send summaries' }, { status: 500 });
   }
+}
+
+export async function GET(req: NextRequest) {
+  return handleWeeklySummary(req);
+}
+
+export async function POST(req: NextRequest) {
+  return handleWeeklySummary(req);
 }
 
 interface WeeklySummary {
