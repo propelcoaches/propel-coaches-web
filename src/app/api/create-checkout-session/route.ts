@@ -10,21 +10,22 @@ function getStripeClient() {
   return new Stripe(key)
 }
 
-// Price IDs keyed by plan → billing period
-// Supports both separate monthly/annual env vars and a single fallback per plan
+// Price IDs keyed by public pricing slug → billing period.
+// Keep these on the canonical AU coach env vars; the pre-AU
+// STRIPE_PRICE_{STARTER,PRO,CLINIC} vars are legacy only.
 function getPriceIds(): Record<string, Record<string, string>> {
   return {
     starter: {
-      monthly: process.env.STRIPE_PRICE_STARTER_MONTHLY ?? process.env.STRIPE_PRICE_STARTER ?? '',
-      annual:  process.env.STRIPE_PRICE_STARTER_ANNUAL  ?? process.env.STRIPE_PRICE_STARTER ?? '',
+      monthly: process.env.STRIPE_PRICE_COACH_STARTER ?? '',
+      annual:  process.env.STRIPE_PRICE_COACH_STARTER_ANNUAL ?? '',
     },
     pro: {
-      monthly: process.env.STRIPE_PRICE_PRO_MONTHLY ?? process.env.STRIPE_PRICE_PRO ?? '',
-      annual:  process.env.STRIPE_PRICE_PRO_ANNUAL  ?? process.env.STRIPE_PRICE_PRO ?? '',
+      monthly: process.env.STRIPE_PRICE_COACH_PRO ?? '',
+      annual:  process.env.STRIPE_PRICE_COACH_PRO_ANNUAL ?? '',
     },
-    team: {
-      monthly: process.env.STRIPE_PRICE_TEAM_MONTHLY ?? process.env.STRIPE_PRICE_CLINIC ?? '',
-      annual:  process.env.STRIPE_PRICE_TEAM_ANNUAL  ?? process.env.STRIPE_PRICE_CLINIC ?? '',
+    scale: {
+      monthly: process.env.STRIPE_PRICE_COACH_SCALE ?? '',
+      annual:  process.env.STRIPE_PRICE_COACH_SCALE_ANNUAL ?? '',
     },
   }
 }
@@ -41,9 +42,11 @@ export async function POST(req: NextRequest) {
     const coachId = user.id
 
     const PRICE_IDS = getPriceIds()
-    const priceId = PRICE_IDS[plan]?.[billing]
+    const planSlug = typeof plan === 'string' ? plan.toLowerCase() : ''
+    const billingPeriod = billing === 'annual' ? 'annual' : 'monthly'
+    const priceId = PRICE_IDS[planSlug]?.[billingPeriod]
     if (!priceId) {
-      return NextResponse.json({ error: `No price configured for plan=${plan} billing=${billing}` }, { status: 400 })
+      return NextResponse.json({ error: `No price configured for plan=${planSlug || plan} billing=${billingPeriod}` }, { status: 400 })
     }
 
     const stripe = getStripeClient()
@@ -56,11 +59,11 @@ export async function POST(req: NextRequest) {
       line_items: [{ price: priceId, quantity: 1 }],
       subscription_data: {
         trial_period_days: 14,
-        metadata: { coachId, plan },
+        metadata: { coachId, plan: planSlug, billing: billingPeriod },
       },
       success_url: `${siteUrl}/dashboard?subscription=success`,
       cancel_url:  `${siteUrl}/pricing?cancelled=true`,
-      metadata: { coachId, plan },
+      metadata: { coachId, plan: planSlug, billing: billingPeriod },
     })
 
     return NextResponse.json({ sessionId: session.id, url: session.url })
