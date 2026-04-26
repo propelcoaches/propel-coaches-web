@@ -10,8 +10,14 @@ function getEnvVars() {
   if (!supabaseUrl || !serviceRoleKey) {
     throw new Error('Missing Supabase environment variables')
   }
-  const cronSecret = process.env.CRON_SECRET!
-  const webhookSecret = process.env.AI_WEBHOOK_SECRET!
+  const cronSecret = process.env.CRON_SECRET
+  const webhookSecret = process.env.AI_WEBHOOK_SECRET
+  if (!cronSecret) {
+    throw new Error('Missing CRON_SECRET')
+  }
+  if (!webhookSecret) {
+    throw new Error('Missing AI_WEBHOOK_SECRET')
+  }
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || ''
   return { supabaseUrl, serviceRoleKey, cronSecret, webhookSecret, siteUrl }
 }
@@ -22,7 +28,15 @@ function adminClient() {
 }
 
 export async function GET(request: NextRequest) {
-  const { cronSecret, webhookSecret, siteUrl } = getEnvVars()
+  let envVars: ReturnType<typeof getEnvVars>
+  try {
+    envVars = getEnvVars()
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Missing environment variables'
+    console.error(`[cron/ai-coach-expiry] ${message}`)
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
+  const { cronSecret, webhookSecret, siteUrl } = envVars
 
   // 1. Verify Vercel cron Authorization header
   const authHeader = request.headers.get('authorization')

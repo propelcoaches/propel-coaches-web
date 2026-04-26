@@ -11,10 +11,24 @@ import {
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const cronSecret = process.env.CRON_SECRET;
 
 function adminClient() {
   return createClient(supabaseUrl, serviceRoleKey);
+}
+
+function verifyCronAuth(request: NextRequest): NextResponse | null {
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) {
+    console.error('[email-sequences] Missing CRON_SECRET');
+    return NextResponse.json({ error: 'Missing CRON_SECRET' }, { status: 500 });
+  }
+
+  const authHeader = request.headers.get('authorization');
+  if (authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  return null;
 }
 
 function daysAgo(n: number): { start: string; end: string } {
@@ -43,11 +57,8 @@ async function alreadySent(
 }
 
 export async function GET(request: NextRequest) {
-  // Verify cron secret
-  const authHeader = request.headers.get('authorization');
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const authError = verifyCronAuth(request);
+  if (authError) return authError;
 
   const supabase = adminClient();
   let sent = 0;
