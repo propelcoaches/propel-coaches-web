@@ -1,5 +1,11 @@
 import assert from 'node:assert/strict'
-import { isMissionControlAllowedEmail, missionControlAllowedEmails } from './auth.mjs'
+import {
+  isMissionControlAccessKey,
+  isMissionControlAccessKeyConfigured,
+  isMissionControlAllowedEmail,
+  missionControlAllowedEmails,
+  missionControlOwnerEmail,
+} from './auth.mjs'
 
 {
   delete process.env.MISSION_CONTROL_ALLOWED_EMAILS
@@ -19,4 +25,28 @@ import { isMissionControlAllowedEmail, missionControlAllowedEmails } from './aut
 }
 
 delete process.env.MISSION_CONTROL_ALLOWED_EMAILS
+delete process.env.MISSION_CONTROL_ACCESS_KEY
+delete process.env.MISSION_CONTROL_OWNER_EMAIL
+
+{
+  assert.equal(isMissionControlAccessKeyConfigured(), false)
+  assert.equal(isMissionControlAccessKey('anything'), false)
+}
+
+{
+  process.env.MISSION_CONTROL_ACCESS_KEY = 'secret-key'
+  assert.equal(isMissionControlAccessKeyConfigured(), true)
+  assert.equal(isMissionControlAccessKey('secret-key'), true)
+  assert.equal(isMissionControlAccessKey(' secret-key '), true)
+  assert.equal(isMissionControlAccessKey('wrong-key'), false)
+}
+
+{
+  assert.equal(missionControlOwnerEmail(), 'charlesbettiol@gmail.com')
+  process.env.MISSION_CONTROL_OWNER_EMAIL = ' Owner@Example.com '
+  assert.equal(missionControlOwnerEmail(), 'owner@example.com')
+}
+
+delete process.env.MISSION_CONTROL_ACCESS_KEY
+delete process.env.MISSION_CONTROL_OWNER_EMAIL
 console.log('mission-control auth ok')

@@ -1,11 +1,13 @@
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
-import { isMissionControlAllowedEmail } from '@/lib/mission-control/auth.mjs'
+import {
+  hasMissionControlCookieAccess,
+  missionControlAccessErrorResponse,
+  resolveMissionControlOwner,
+} from '@/lib/mission-control/server'
 import {
   extractTaskIdFromReviewKey,
   validateMissionControlAction,
@@ -13,14 +15,15 @@ import {
 
 export async function POST(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!url || !anonKey || !serviceKey) {
+  if (!url || !serviceKey) {
     return NextResponse.json({ error: 'Mission Control actions unavailable' }, { status: 503 })
   }
 
-  const auth = await getAllowedUser(url, anonKey)
-  if (auth.ok === false) return auth.response
+  if (!hasMissionControlCookieAccess()) return missionControlAccessErrorResponse()
+
+  const ownerResult = await resolveMissionControlOwner(url, serviceKey)
+  if (ownerResult.ok === false) return ownerResult.response
 
   let body: Record<string, unknown>
   try {
@@ -45,7 +48,7 @@ export async function POST(request: NextRequest) {
       .from('tasks')
       .update({ completed: true })
       .eq('id', taskId)
-      .eq('coach_id', auth.user.id)
+      .eq('coach_id', ownerResult.owner.id)
       .select('id')
       .maybeSingle()
 
@@ -56,7 +59,7 @@ export async function POST(request: NextRequest) {
   const { error } = await admin
     .from('mission_control_reviews')
     .upsert({
-      coach_id: auth.user.id,
+      coach_id: ownerResult.owner.id,
       review_key: reviewKey,
       source,
       outcome,
@@ -67,22 +70,4 @@ export async function POST(request: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   return NextResponse.json({ ok: true })
-}
-
-async function getAllowedUser(url: string, anonKey: string): Promise<{ ok: true; user: { id: string; email?: string | null } } | { ok: false; response: NextResponse }> {
-  const cookieStore = cookies()
-  const supabase = createServerClient(
-    url,
-    anonKey,
-    {
-      cookies: {
-        getAll() { return cookieStore.getAll() },
-        setAll() {},
-      },
-    },
-  )
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { ok: false, response: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) }
-  if (!isMissionControlAllowedEmail(user.email)) return { ok: false, response: NextResponse.json({ error: 'Forbidden' }, { status: 403 }) }
-  return { ok: true, user: { id: user.id, email: user.email } }
 }
