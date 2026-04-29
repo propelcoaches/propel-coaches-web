@@ -7,6 +7,7 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get('code')
   const tokenHash = searchParams.get('token_hash')
   const type = searchParams.get('type')
+  const next = searchParams.get('next')
 
   const supabase = createClient()
 
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  if (type === 'recovery') {
+  if (type === 'recovery' || next === '/auth/reset-password') {
     return NextResponse.redirect(`${origin}/auth/reset-password`)
   }
 
