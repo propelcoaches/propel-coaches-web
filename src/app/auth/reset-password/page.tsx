@@ -16,12 +16,28 @@ export default function ResetPasswordPage() {
   useEffect(() => {
     const supabase = createClient()
 
-    supabase.auth.getSession().then(({ data }) => {
+    async function prepareRecoverySession() {
+      const params = new URLSearchParams(window.location.search)
+      const code = params.get('code')
+
+      if (code) {
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+        window.history.replaceState({}, '', '/auth/reset-password')
+        if (exchangeError) {
+          setError('This reset link is invalid or expired. Please request a new password reset email.')
+          setCheckingSession(false)
+          return
+        }
+      }
+
+      const { data } = await supabase.auth.getSession()
       if (!data.session) {
         setError('This reset link is invalid or expired. Please request a new password reset email.')
       }
       setCheckingSession(false)
-    })
+    }
+
+    prepareRecoverySession()
 
     const { data: listener } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') setCheckingSession(false)

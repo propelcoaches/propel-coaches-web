@@ -37,6 +37,16 @@ function AnimatedSection({ children, className = '', style }: { children: ReactN
 export default function Home() {
   const [activeFaq, setActiveFaq] = useState(null);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    if (!code) return;
+
+    const target = new URL('/auth/reset-password', window.location.origin);
+    target.searchParams.set('code', code);
+    window.location.replace(target.toString());
+  }, []);
+
   const faqs = [
     {
       question: 'What is Propel?',
