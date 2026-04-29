@@ -29,6 +29,10 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  if (type === 'recovery') {
+    return NextResponse.redirect(`${origin}/auth/reset-password`)
+  }
+
   // Get the current user (session should now be set)
   const { data: { user } } = await supabase.auth.getUser()
 

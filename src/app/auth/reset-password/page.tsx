@@ -10,16 +10,24 @@ export default function ResetPasswordPage() {
   const [confirm, setConfirm] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [checkingSession, setCheckingSession] = useState(true)
   const [done, setDone] = useState(false)
 
-  // Supabase sets the session from the URL hash automatically
   useEffect(() => {
     const supabase = createClient()
-    supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        // session is now set, form is ready
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session) {
+        setError('This reset link is invalid or expired. Please request a new password reset email.')
       }
+      setCheckingSession(false)
     })
+
+    const { data: listener } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') setCheckingSession(false)
+    })
+
+    return () => listener.subscription.unsubscribe()
   }, [])
 
   async function handleSubmit(e: React.FormEvent) {
@@ -115,10 +123,12 @@ export default function ResetPasswordPage() {
 
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || checkingSession}
                   className="w-full bg-brand hover:bg-brand-light disabled:opacity-50 text-white font-medium py-2 px-4 rounded-md text-sm transition-colors flex items-center justify-center gap-2"
                 >
-                  {loading ? (
+                  {checkingSession ? (
+                    'Checking reset link...'
+                  ) : loading ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                       Updating…
