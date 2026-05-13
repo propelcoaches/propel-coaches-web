@@ -19,7 +19,7 @@ export default function CookieConsent() {
   if (!visible) return null
 
   return (
-    <div className="fixed bottom-3 left-3 z-50 w-[calc(100%-1.5rem)] max-w-xl md:bottom-5 md:left-5">
+    <div className="fixed bottom-3 right-3 z-50 w-[calc(100%-1.5rem)] max-w-sm md:bottom-5 md:right-5">
       <div className="rounded-2xl border border-teal-900/10 bg-white/95 p-3 shadow-2xl shadow-slate-950/12 backdrop-blur-xl">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="flex min-w-0 items-center gap-3">
