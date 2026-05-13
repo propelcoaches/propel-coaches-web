@@ -4,9 +4,28 @@
 
 * { box-sizing: border-box; }
 
+/* ----------------------------------------------------------------------
+ * Keyframes
+ * --------------------------------------------------------------------*/
+
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 @keyframes shimmer {
@@ -14,14 +33,182 @@
   100% { background-position: 200% center; }
 }
 
-.animate-fade-in-up {
-  animation: fadeInUp 0.3s ease-out;
+/* AIOrb — gentle 3s breathing scale */
+@keyframes orbBreathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
 }
 
+/* AIOrb — slow conic-gradient rotation */
+@keyframes orbRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* AIOrb — outer halo that gently breathes opacity */
+@keyframes orbHalo {
+  0%, 100% { opacity: 0.85; transform: scale(1.6); }
+  50% { opacity: 1; transform: scale(1.7); }
+}
+
+/* AIOrb — horizontal shimmer pass over the core */
+@keyframes orbShift {
+  0% { background-position: -100% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* AIOrb speaking-state expanding ring */
+@keyframes pulseRing {
+  0% { transform: scale(1); opacity: 0.7; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+/* Subtle sparkle-icon twinkle */
+@keyframes sparkle {
+  0%, 100% { opacity: 0.65; transform: scale(1) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.15) rotate(8deg); }
+}
+
+/* Calm "alert is breathing" pulse for urgency badges */
+@keyframes breathe {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+/* TypeIn caret */
+@keyframes caret {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+/* Floating panel tile (used on landing + empty states) */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+/* Landing-page hero gradient drift */
+@keyframes gradientDrift {
+  0%, 100% { background-position: left center; }
+  50% { background-position: right center; }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(17,157,147,0.3); }
+  50% { box-shadow: 0 0 40px rgba(17,157,147,0.6); }
+}
+
+/* AI-thinking: three dots cycling opacity */
+@keyframes aiThinkingDot {
+  0%, 80%, 100% { opacity: 0.25; transform: translateY(0); }
+  40% { opacity: 1; transform: translateY(-2px); }
+}
+
+/* ----------------------------------------------------------------------
+ * Animation utilities
+ * --------------------------------------------------------------------*/
+
+.animate-fade-in-up   { animation: fadeInUp 0.3s ease-out both; }
+.animate-fade-in-down { animation: fadeInDown 0.3s ease-out both; }
+.animate-fade-in      { animation: fadeIn 0.25s ease-out both; }
+.animate-scale-in     { animation: scaleIn 0.18s ease-out both; }
+
+.animate-orb-breathe  { animation: orbBreathe 3s ease-in-out infinite; }
+.animate-orb-rotate   { animation: orbRotate 18s linear infinite; }
+.animate-orb-halo     { animation: orbHalo 3.4s ease-in-out infinite; }
+.animate-orb-shift    { animation: orbShift 4s linear infinite; background-size: 200% 100%; }
+.animate-pulse-ring   { animation: pulseRing 1.4s ease-out infinite; }
+
+.animate-sparkle  { animation: sparkle 2.6s ease-in-out infinite; transform-origin: center; }
+.animate-breathe  { animation: breathe 2.4s ease-in-out infinite; }
+.animate-caret    { animation: caret 1s steps(1, end) infinite; }
+.animate-float    { animation: float 3.2s ease-in-out infinite; }
+.animate-gradient { animation: gradientDrift 8s ease-in-out infinite; background-size: 200% 200%; }
+.animate-pulse-glow { animation: pulseGlow 2.4s ease-in-out infinite; }
+
+/* ----------------------------------------------------------------------
+ * AI-surface utility classes
+ * --------------------------------------------------------------------*/
+
+/* Press-down feedback for buttons/pills (not a tap-target sizer) */
+.press {
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.press:active {
+  transform: translateY(1px) scale(0.985);
+}
+
+/* Card lift on hover — borrowed for AIBriefingCard / PriorityQueueCard items */
+.card-lift {
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+.card-lift:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Stagger-children: each direct child starts its animation slightly later */
+.stagger-children > * {
+  animation-delay: calc(var(--stagger-step, 60ms) * var(--stagger-index, 0));
+}
+.stagger-children > *:nth-child(1)  { --stagger-index: 0; }
+.stagger-children > *:nth-child(2)  { --stagger-index: 1; }
+.stagger-children > *:nth-child(3)  { --stagger-index: 2; }
+.stagger-children > *:nth-child(4)  { --stagger-index: 3; }
+.stagger-children > *:nth-child(5)  { --stagger-index: 4; }
+.stagger-children > *:nth-child(6)  { --stagger-index: 5; }
+.stagger-children > *:nth-child(7)  { --stagger-index: 6; }
+.stagger-children > *:nth-child(8)  { --stagger-index: 7; }
+.stagger-children > *:nth-child(9)  { --stagger-index: 8; }
+.stagger-children > *:nth-child(10) { --stagger-index: 9; }
+.stagger-children > *:nth-child(11) { --stagger-index: 10; }
+.stagger-children > *:nth-child(12) { --stagger-index: 11; }
+
+/* AI shimmer — used by skeletons and "Thinking" labels */
+.ai-shimmer-bg {
+  background: linear-gradient(
+    90deg,
+    var(--surface-light) 0%,
+    var(--border-light) 50%,
+    var(--surface-light) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+}
+
+.ai-shimmer-text {
+  background: linear-gradient(
+    90deg,
+    var(--text-secondary) 0%,
+    var(--brand) 50%,
+    var(--text-secondary) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: shimmer 2s linear infinite;
+}
+
+/* Three-dot thinking indicator */
+.ai-thinking-dot {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  margin: 0 1px;
+  border-radius: 9999px;
+  background: var(--brand);
+  animation: aiThinkingDot 1.2s ease-in-out infinite;
+}
+.ai-thinking-dot:nth-child(2) { animation-delay: 0.15s; }
+.ai-thinking-dot:nth-child(3) { animation-delay: 0.3s; }
+.ai-thinking-dot:nth-child(4) { animation-delay: 0.45s; }
+
 :root {
-  --brand: #0F7B8C;
-  --brand-light: #1A95A8;
-  --brand-bg: #E8F6F8;
+  --brand: #119D93;
+  --brand-light: #55DFAF;
+  --brand-bg: #E4F8F3;
   --background: #F5F7FA;
   --surface: #FFFFFF;
   --surface-light: #F0F4F7;
@@ -42,9 +229,9 @@
 }
 
 html.dark {
-  --brand: #3BBDD4;
-  --brand-light: #52C9E0;
-  --brand-bg: rgba(59,189,212,0.10);
+  --brand: #55DFAF;
+  --brand-light: #7AEAC5;
+  --brand-bg: rgba(85,223,175,0.12);
   --background: #0F1117;
   --surface: #1A1D27;
   --surface-light: #222535;
@@ -108,7 +295,7 @@ input:focus, textarea:focus, select:focus {
 
 .field:focus {
   border-color: var(--brand);
-  box-shadow: 0 0 0 3px rgba(15, 123, 140, 0.12);
+  box-shadow: 0 0 0 3px rgba(17, 157, 147, 0.12);
   outline: none;
 }
 
@@ -152,7 +339,7 @@ tr:hover td {
 
 /* Landing page — hero gradient */
 .hero-gradient {
-  background: radial-gradient(ellipse 80% 60% at 60% -10%, rgba(15, 123, 140, 0.08) 0%, transparent 70%),
+  background: radial-gradient(ellipse 80% 60% at 60% -10%, rgba(17, 157, 147, 0.08) 0%, transparent 70%),
               linear-gradient(to bottom, #ffffff 0%, #F5F7FA 100%);
 }
 
@@ -161,8 +348,8 @@ tr:hover td {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: rgba(15, 123, 140, 0.07);
-  border: 1px solid rgba(15, 123, 140, 0.18);
+  background: rgba(17, 157, 147, 0.07);
+  border: 1px solid rgba(17, 157, 147, 0.18);
   border-radius: 9999px;
   padding: 0.375rem 0.875rem;
   font-size: 0.75rem;
@@ -183,13 +370,13 @@ tr:hover td {
   border-radius: 14px;
   font-size: 0.9375rem;
   transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
-  box-shadow: 0 4px 16px rgba(15, 123, 140, 0.28);
+  box-shadow: 0 4px 16px rgba(17, 157, 147, 0.28);
   cursor: pointer;
 }
 
 .btn-primary:hover {
-  background: #0d6b7a;
-  box-shadow: 0 6px 24px rgba(15, 123, 140, 0.38);
+  background: #0D7F78;
+  box-shadow: 0 6px 24px rgba(17, 157, 147, 0.38);
   transform: translateY(-1px);
 }
 
@@ -219,7 +406,7 @@ tr:hover td {
 .step-dot.active {
   background: var(--brand);
   color: #fff;
-  box-shadow: 0 0 0 4px rgba(15, 123, 140, 0.15);
+  box-shadow: 0 0 0 4px rgba(17, 157, 147, 0.15);
 }
 
 .step-dot.done {
@@ -244,9 +431,71 @@ tr:hover td {
   background: var(--brand);
 }
 
+/* ----------------------------------------------------------------------
+ * Public website 3D/living product stage utilities
+ * --------------------------------------------------------------------*/
+
+@keyframes landingFloat {
+  0%, 100% { transform: translate3d(0,0,0) rotateX(0deg) rotateY(0deg); }
+  50% { transform: translate3d(0,-14px,0) rotateX(2deg) rotateY(-3deg); }
+}
+
+@keyframes dashboardFloat {
+  0%, 100% { transform: rotateX(10deg) rotateY(-11deg) translateY(0); }
+  50% { transform: rotateX(12deg) rotateY(-7deg) translateY(-10px); }
+}
+
+@keyframes haloSpin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes cardOrbit {
+  0%, 100% { transform: translateY(0) rotate(var(--tilt, 0deg)); }
+  50% { transform: translateY(-8px) rotate(calc(var(--tilt, 0deg) * -1)); }
+}
+
+@keyframes lineDraw {
+  0% { width: 0; opacity: .35; }
+  55% { width: 100%; opacity: 1; }
+  100% { width: 100%; opacity: .45; }
+}
+
+.perspective-stage { perspective: 1400px; }
+.preserve-3d { transform-style: preserve-3d; }
+.animate-dashboard-float { animation: dashboardFloat 8s ease-in-out infinite; }
+.animate-card-orbit { animation: cardOrbit 5.5s ease-in-out infinite; }
+
+.feature-line::after {
+  content: '';
+  display: block;
+  height: 2px;
+  margin-top: 12px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(15,118,110,0), rgba(15,118,110,.45), rgba(15,118,110,0));
+  animation: lineDraw 3.5s ease-in-out infinite;
+}
+
+.living-halo::before {
+  content: '';
+  position: absolute;
+  inset: -26%;
+  border-radius: 999px;
+  background: conic-gradient(from 120deg, rgba(20,184,166,.05), rgba(20,184,166,.35), rgba(45,212,191,.12), rgba(20,184,166,.05));
+  filter: blur(22px);
+  animation: haloSpin 18s linear infinite;
+  z-index: -1;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .animate-dashboard-float,
+  .animate-card-orbit,
+  .living-halo::before,
+  .feature-line::after {
+    animation: none !important;
   }
 }
