@@ -3,7 +3,9 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import type { CSSProperties, ReactNode, RefObject } from 'react';
-import { COACH_TIERS, formatPrice } from '@/lib/pricing';
+import { AI_TIERS, COACH_TIERS, formatPrice } from '@/lib/pricing';
+
+type Audience = 'ai' | 'coach';
 
 function useInView(options: IntersectionObserverInit = {}): [RefObject<HTMLDivElement>, boolean] {
   const ref = useRef<HTMLDivElement>(null);
@@ -37,32 +39,83 @@ function AnimatedSection({ children, className = '', style }: { children: ReactN
   );
 }
 
-function FeaturePill({ children }: { children: ReactNode }) {
+function CheckItem({ children, dark = false }: { children: ReactNode; dark?: boolean }) {
   return (
-    <span className="rounded-full border border-teal-700/15 bg-white/80 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm backdrop-blur">
-      {children}
-    </span>
-  );
-}
-
-function CheckItem({ children }: { children: ReactNode }) {
-  return (
-    <li className="flex gap-3 text-sm leading-6 text-slate-700">
-      <span className="mt-1 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-teal-50 text-xs font-black text-teal-700">✓</span>
+    <li className={`flex gap-3 text-sm leading-6 ${dark ? 'text-slate-200' : 'text-slate-700'}`}>
+      <span className={`mt-1 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-xs font-black ${dark ? 'bg-teal-300/15 text-teal-200 ring-1 ring-teal-200/20' : 'bg-teal-50 text-teal-700'}`}>✓</span>
       <span>{children}</span>
     </li>
   );
 }
 
-function DashboardMockup() {
+function FeaturePill({ children, dark = false }: { children: ReactNode; dark?: boolean }) {
   return (
-    <div className="preserve-3d relative mx-auto w-full max-w-[760px] animate-dashboard-float rounded-[2rem] border border-white/70 bg-white/90 p-3 shadow-[0_35px_90px_rgba(15,23,42,0.20)] backdrop-blur-xl">
+    <span className={`rounded-full px-4 py-2 text-sm font-bold shadow-sm backdrop-blur ${dark ? 'border border-white/10 bg-white/10 text-slate-100' : 'border border-teal-700/15 bg-white/80 text-slate-700'}`}>
+      {children}
+    </span>
+  );
+}
+
+function PhoneMockup({ className = '' }: { className?: string }) {
+  return (
+    <div className={`phone-3d preserve-3d relative h-[560px] w-[282px] rounded-[2.7rem] border-[10px] border-slate-950 bg-slate-950 shadow-[0_48px_90px_rgba(15,23,42,0.36)] ${className}`}>
+      <div className="absolute left-1/2 top-2 z-20 h-5 w-24 -translate-x-1/2 rounded-full bg-slate-950" />
+      <div className="absolute inset-[-10px] rounded-[2.7rem] bg-gradient-to-br from-white/60 via-transparent to-teal-300/30 opacity-50 blur-sm" />
+      <div className="relative h-full overflow-hidden rounded-[1.9rem] bg-[#f2f7f5]">
+        <div className="bg-gradient-to-b from-white to-[#e8f7f3] px-5 pb-5 pt-10">
+          <div className="text-xs font-black uppercase tracking-[0.2em] text-teal-700">AI Coach</div>
+          <h3 className="mt-2 text-2xl font-black leading-tight tracking-[-0.04em] text-slate-950">Bench day. Add 2.5kg.</h3>
+          <p className="mt-2 text-xs leading-5 text-slate-500">Readiness is green and last top set moved fast. Push load, keep rest strict.</p>
+        </div>
+        <div className="space-y-3 p-4">
+          <div className="rounded-3xl bg-white p-4 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-xs font-bold text-slate-400">Today plan</div>
+                <div className="text-lg font-black text-slate-950">Bench press</div>
+              </div>
+              <span className="rounded-full bg-teal-700 px-3 py-1 text-xs font-black text-white">Start</span>
+            </div>
+            <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+              {['4×6', '82.5kg', '2:30'].map((value) => (
+                <div key={value} className="rounded-2xl bg-slate-50 py-2 text-xs font-black text-slate-800">{value}</div>
+              ))}
+            </div>
+          </div>
+          <div className="rounded-3xl bg-white p-4 shadow-sm">
+            <div className="mb-3 text-xs font-bold text-slate-400">Nutrition directive</div>
+            <div className="flex items-center gap-3">
+              <div className="grid h-14 w-14 place-items-center rounded-full border-[6px] border-teal-600 text-xs font-black text-teal-800">78%</div>
+              <div>
+                <div className="text-sm font-black text-slate-950">Hit protein early</div>
+                <div className="text-xs text-slate-500">42g left before dinner</div>
+              </div>
+            </div>
+          </div>
+          <div className="rounded-3xl bg-slate-950 p-4 text-white shadow-sm">
+            <div className="text-xs font-black uppercase tracking-[0.18em] text-teal-300">Why this?</div>
+            <p className="mt-2 text-sm leading-5 text-slate-200">Performance is trending up. Fatigue risk is low. Progress the main lift only.</p>
+          </div>
+          <div className="grid grid-cols-4 gap-2 rounded-3xl bg-white p-3 shadow-sm">
+            {['Home', 'Train', 'Food', 'Chat'].map((item, index) => (
+              <div key={item} className={`rounded-2xl py-2 text-center text-[10px] font-bold ${index === 0 ? 'bg-teal-50 text-teal-800' : 'text-slate-400'}`}>{item}</div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CoachDashboardMockup({ className = '' }: { className?: string }) {
+  return (
+    <div className={`dashboard-3d preserve-3d relative mx-auto w-full max-w-[770px] rounded-[2rem] border border-white/70 bg-white/90 p-3 shadow-[0_48px_110px_rgba(15,23,42,0.26)] backdrop-blur-xl ${className}`}>
       <div className="rounded-[1.55rem] border border-slate-200 bg-slate-950 p-3">
         <div className="mb-3 flex items-center gap-2 px-2">
           <span className="h-3 w-3 rounded-full bg-red-400" />
           <span className="h-3 w-3 rounded-full bg-amber-300" />
           <span className="h-3 w-3 rounded-full bg-emerald-400" />
-          <span className="ml-auto rounded-full bg-white/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-300">coach command centre</span>
+          <span className="ml-auto rounded-full bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-300">coach command centre</span>
         </div>
         <div className="grid gap-3 rounded-[1.25rem] bg-[#f7faf9] p-4 md:grid-cols-[0.82fr_1.2fr_0.9fr]">
           <div className="space-y-3 rounded-2xl bg-white p-3 shadow-sm">
@@ -73,7 +126,7 @@ function DashboardMockup() {
           </div>
           <div className="space-y-3">
             <div className="rounded-2xl bg-white p-4 shadow-sm">
-              <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-teal-700">Today&apos;s decision</div>
+              <div className="mb-2 text-[10px] font-black uppercase tracking-[0.2em] text-teal-700">Today&apos;s decision</div>
               <div className="text-lg font-black text-slate-950">Reduce Tom&apos;s squat volume by 1 set</div>
               <p className="mt-1 text-xs leading-5 text-slate-500">Sleep 2/5 and RPE drifted above plan. Keep the top set, remove the back-off set, add 8 minutes mobility.</p>
               <div className="mt-4 flex gap-2">
@@ -107,7 +160,7 @@ function DashboardMockup() {
           </div>
           <div className="space-y-3">
             <div className="rounded-2xl bg-slate-950 p-4 text-white shadow-sm">
-              <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-teal-300">AI coach</div>
+              <div className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-300">AI assistant</div>
               <p className="mt-2 text-sm leading-5 text-slate-200">“Hit 140g protein before 8pm. Swap the salmon meal if appetite is low.”</p>
             </div>
             <div className="rounded-2xl bg-white p-4 shadow-sm">
@@ -118,9 +171,9 @@ function DashboardMockup() {
               </div>
             </div>
             <div className="rounded-2xl bg-white p-4 shadow-sm">
-              <div className="mb-2 text-xs font-bold text-slate-500">Nutrition</div>
+              <div className="mb-2 text-xs font-bold text-slate-500">Revenue</div>
               <div className="h-2 rounded-full bg-slate-100"><div className="h-2 w-4/5 rounded-full bg-teal-600" /></div>
-              <div className="mt-2 text-[11px] font-semibold text-slate-500">Protein target 118 / 150g</div>
+              <div className="mt-2 text-[11px] font-semibold text-slate-500">18 active clients · 4 trials</div>
             </div>
           </div>
         </div>
@@ -129,53 +182,43 @@ function DashboardMockup() {
   );
 }
 
-function PhoneMockup({ className = '' }: { className?: string }) {
+function HeroStage() {
   return (
-    <div className={`preserve-3d relative h-[560px] w-[280px] rounded-[2.6rem] border-[10px] border-slate-950 bg-slate-950 shadow-[0_32px_70px_rgba(15,23,42,0.35)] ${className}`}>
-      <div className="absolute left-1/2 top-2 z-10 h-5 w-24 -translate-x-1/2 rounded-full bg-slate-950" />
-      <div className="h-full overflow-hidden rounded-[1.85rem] bg-[#f3f7f5]">
-        <div className="bg-gradient-to-b from-white to-[#edf8f5] px-5 pb-4 pt-10">
-          <div className="text-xs font-bold uppercase tracking-[0.2em] text-teal-700">Today</div>
-          <h3 className="mt-2 text-2xl font-black leading-tight text-slate-950">Bench day. Add 2.5kg.</h3>
-          <p className="mt-2 text-xs leading-5 text-slate-500">Readiness is green. Last top set moved fast, so push the load and keep rest strict.</p>
-        </div>
-        <div className="space-y-3 p-4">
-          <div className="rounded-3xl bg-white p-4 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-xs font-bold text-slate-400">Today plan</div>
-                <div className="text-lg font-black text-slate-950">Bench press</div>
-              </div>
-              <span className="rounded-full bg-teal-700 px-3 py-1 text-xs font-bold text-white">Start</span>
-            </div>
-            <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-              {['4×6', '82.5kg', '2:30'].map((value) => (
-                <div key={value} className="rounded-2xl bg-slate-50 py-2 text-xs font-black text-slate-800">{value}</div>
-              ))}
-            </div>
-          </div>
-          <div className="rounded-3xl bg-white p-4 shadow-sm">
-            <div className="mb-3 text-xs font-bold text-slate-400">Nutrition directive</div>
-            <div className="flex items-center gap-3">
-              <div className="grid h-14 w-14 place-items-center rounded-full border-[6px] border-teal-600 text-xs font-black text-teal-800">78%</div>
-              <div>
-                <div className="text-sm font-black text-slate-950">Hit protein early</div>
-                <div className="text-xs text-slate-500">42g left before dinner</div>
-              </div>
-            </div>
-          </div>
-          <div className="rounded-3xl bg-slate-950 p-4 text-white shadow-sm">
-            <div className="text-xs font-bold uppercase tracking-[0.18em] text-teal-300">Coach note</div>
-            <p className="mt-2 text-sm leading-5 text-slate-200">“Keep reps smooth. Stop if bar speed drops.”</p>
-          </div>
-          <div className="grid grid-cols-4 gap-2 rounded-3xl bg-white p-3 shadow-sm">
-            {['Home', 'Train', 'Food', 'Chat'].map((item, index) => (
-              <div key={item} className={`rounded-2xl py-2 text-center text-[10px] font-bold ${index === 0 ? 'bg-teal-50 text-teal-800' : 'text-slate-400'}`}>{item}</div>
-            ))}
-          </div>
-        </div>
+    <div className="perspective-stage hero-3d-stage relative min-h-[720px] lg:min-h-[660px]">
+      <div className="depth-grid absolute inset-0" />
+      <div className="living-halo absolute left-1/2 top-1/2 z-0 h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full" />
+      <CoachDashboardMockup className="absolute left-0 top-14 z-10 w-[92%] max-w-[720px]" />
+      <PhoneMockup className="absolute -bottom-4 right-2 z-30 lg:right-8" />
+      <div className="floating-card-3d absolute left-3 top-4 z-40 rounded-3xl border border-white/80 bg-white/90 p-4 shadow-2xl shadow-slate-900/15 backdrop-blur" style={{ animationDelay: '0.7s' }}>
+        <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Live signal</div>
+        <div className="mt-1 text-lg font-black text-slate-950">Stress 8/10</div>
+        <div className="mt-2 text-xs font-bold text-orange-700">Volume adjusted</div>
       </div>
+      <div className="floating-card-3d floating-card-3d-deep absolute bottom-20 left-0 z-40 rounded-3xl border border-white/80 bg-white/90 p-4 shadow-2xl shadow-slate-900/15 backdrop-blur" style={{ animationDelay: '1.2s' }}>
+        <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">AI action</div>
+        <div className="mt-1 text-lg font-black text-slate-950">Draft reply ready</div>
+        <div className="mt-2 text-xs font-bold text-teal-700">Approve in one tap</div>
+      </div>
+      <div className="depth-shadow absolute bottom-3 left-[12%] h-20 w-[72%] rounded-full bg-slate-900/20 blur-3xl" />
     </div>
+  );
+}
+
+function AudienceCard({ audience, title, body, bullets, cta, href }: { audience: Audience; title: string; body: string; bullets: string[]; cta: string; href: string }) {
+  const isAi = audience === 'ai';
+  return (
+    <Link href={href} className={`audience-card group relative overflow-hidden rounded-[2.25rem] border p-7 shadow-2xl transition duration-500 hover:-translate-y-2 ${isAi ? 'border-teal-200 bg-white text-slate-950 shadow-teal-900/10' : 'border-slate-800 bg-slate-950 text-white shadow-slate-950/25'}`}>
+      <div className={`absolute inset-0 opacity-0 transition duration-500 group-hover:opacity-100 ${isAi ? 'bg-[radial-gradient(circle_at_25%_10%,rgba(20,184,166,.18),transparent_38%)]' : 'bg-[radial-gradient(circle_at_25%_10%,rgba(45,212,191,.22),transparent_42%)]'}`} />
+      <div className="relative">
+        <div className={`mb-8 inline-flex rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.18em] ${isAi ? 'bg-teal-50 text-teal-800' : 'bg-white/10 text-teal-200 ring-1 ring-white/10'}`}>{isAi ? 'I want coaching' : 'I coach clients'}</div>
+        <h3 className={`text-3xl font-black tracking-[-0.04em] ${isAi ? 'text-slate-950' : 'text-white'}`}>{title}</h3>
+        <p className={`mt-4 text-base leading-7 ${isAi ? 'text-slate-600' : 'text-slate-300'}`}>{body}</p>
+        <ul className="mt-6 space-y-2">
+          {bullets.map((bullet) => <CheckItem key={bullet} dark={!isAi}>{bullet}</CheckItem>)}
+        </ul>
+        <div className={`mt-8 inline-flex rounded-full px-5 py-3 text-sm font-black transition group-hover:scale-105 ${isAi ? 'bg-teal-700 text-white' : 'bg-white text-slate-950'}`}>{cta}</div>
+      </div>
+    </Link>
   );
 }
 
@@ -192,114 +235,40 @@ export default function Home() {
     window.location.replace(target.toString());
   }, []);
 
-  const platformCards = [
-    {
-      eyebrow: 'For coaches',
-      title: 'Coach workspace',
-      body: 'Run clients, programs, meals, messages, forms, payments, resources, teams, and AI reviews from one browser dashboard.',
-      items: ['Client CRM and notes', 'Program builder and templates', 'Check-ins, forms, resources', 'Payments, packages, referrals'],
-    },
-    {
-      eyebrow: 'For clients',
-      title: 'Mobile decision engine',
-      body: 'Clients open the app and immediately know what to do: today’s workout, nutrition directive, habit focus, progress trend, and coach message.',
-      items: ['Home directive card', 'Training, nutrition, habits, progress', 'Chat with coach or AI', 'Offline-first logging paths'],
-    },
-    {
-      eyebrow: 'For scale',
-      title: 'AI coach layer',
-      body: 'Propel analyses signals, drafts responses, generates plans, adapts training, and keeps clients supported when the coach is busy.',
-      items: ['Daily briefing', 'Reactive nudges', 'Coach reply drafts', 'Signal-gated decisions'],
-    },
+  const aiFeatures = [
+    ['Daily decision engine', 'Open the app and get one clear directive: train, recover, eat, or adjust.'],
+    ['AI programs + meal plans', 'Strength, running, cycling, triathlon, HYROX, combat, mobility, recipes, and macro targets.'],
+    ['Adaptive coaching', 'Briefings react to sleep, stress, energy, adherence, PRs, body metrics, and check-ins.'],
   ];
 
-  const featureGroups = [
-    {
-      title: 'AI coaching engine',
-      items: [
-        'Daily coaching briefing with one directive, adjustments, constraints, focus, and reasoning',
-        'Five-pillar decision logic: stimulus, fatigue, adherence, time horizon, and risk',
-        'Autonomous solo AI coach mode plus coach-assisted mode',
-        'AI response drafts, check-in reviews, scheduled nudges, and voice-note tone support',
-        'Provider fallback diagnostics for live AI proof and safer failure handling',
-      ],
-    },
-    {
-      title: 'Training and workout delivery',
-      items: [
-        'Program generation for strength, running, cycling, triathlon, HYROX, combat, and mobility flows',
-        'Live workout logger with set completion, RPE, rest timer, exercise rail, and finish ratings',
-        'Exercise swaps, previous-session history, PR detection, Epley 1RM estimates, and adaptive adjustments',
-        'Training calendar, manage programs, performance profile, workout history, and external-session logging',
-        'Exercise media catalogue wiring for demos without placeholder dependence',
-      ],
-    },
-    {
-      title: 'Nutrition intelligence',
-      items: [
-        'Macro targets, food logs, water tracking, weekly macro history, and nutrition insight cards',
-        'Meal plans with named meals, recipes, per-meal macros, alternatives, and log-meal flows',
-        'AI food vision, food accuracy feedback, meal swaps, weekly adjustments, and nutrition decision engine',
-        'Recipe media mapping, recent meals, smart suggestions, and safe coach nutrition guardrails',
-      ],
-    },
-    {
-      title: 'Client accountability',
-      items: [
-        'Structured daily and weekly check-ins with sleep, stress, energy, digestion, hunger, wins, and struggles',
-        'Habit tracking with completion haptics, contribution calendar, current streak, best streak, and freeze support',
-        'Body metrics, weight logs, measurements, progress photos, HealthKit-style health data, and progress reports',
-        'Real-time chat, suggested replies, file attachments, voice messages, read states, and fallback observability',
-      ],
-    },
-    {
-      title: 'Coach business tools',
-      items: [
-        'Client directory, client detail tabs, overview, training, nutrition, check-ins, chat, resources, and notes',
-        'Program templates, meal plans, resource collections, recipe books, video library, forms, tags, tasks, groups, and community surfaces',
-        'Branding, packages, marketplace, payments, referrals, reviews, teams, notifications, email sequences, and AI coach configuration',
-        'Admin, billing, privacy, settings, client invite, onboarding, and coach-client role separation',
-      ],
-    },
-    {
-      title: 'Platform quality',
-      items: [
-        'Shared Supabase backend across mobile and web with auth, RLS-aware queries, storage, and edge functions',
-        'Offline cache patterns, auth self-healing, safer query hardening, and defensive fallback UI',
-        'Accessibility work across logger controls, rest overlay, exercise rail, finish ratings, and tab navigation',
-        'Maestro smoke coverage for authenticated tab flows plus targeted Deno and unit tests around AI/provider behavior',
-      ],
-    },
+  const coachFeatures = [
+    ['Coach command centre', 'Manage clients, programs, meal plans, messages, forms, resources, payments, and teams.'],
+    ['AI as leverage', 'Draft replies, review check-ins, generate programs, create meal plans, and flag at-risk clients.'],
+    ['Client app included', 'Clients get the mobile execution layer while coaches keep control from the web dashboard.'],
   ];
 
   const faqs = [
     {
-      question: 'What is Propel Coaches?',
-      answer: 'Propel Coaches is a two-sided coaching platform: a web workspace for coaches and a mobile daily decision engine for clients. It is designed to tell clients exactly what to do next, not just display passive dashboards.',
+      question: 'Is Propel for athletes or coaches?',
+      answer: 'Both. Solo users can use the mobile AI Coach subscription as their daily decision engine. Human coaches can use Propel as business software for clients, programs, nutrition, check-ins, payments, and AI-assisted support.',
     },
     {
-      question: 'Who is it for?',
-      answer: 'Propel is built for personal trainers, strength coaches, online coaches, and nutrition coaches who want one platform for programming, nutrition, messaging, check-ins, progress, payments, and AI-assisted support.',
+      question: 'What is the AI Coach subscription?',
+      answer: 'The AI Coach path is for people who want coaching without a human coach. Propel generates plans, interprets check-ins and logs, and tells the user exactly what to do today.',
     },
     {
-      question: 'How is the AI different from a chatbot?',
-      answer: 'The AI layer is tied to training, nutrition, check-in, habit, progress, and adherence signals. It can draft coach replies, generate plans, adapt decisions, and explain why the client should take a specific action today.',
+      question: 'What is the coach software side?',
+      answer: 'The coach side is a web dashboard for personal trainers, strength coaches, online coaches, and nutrition coaches. It helps manage clients while AI handles repetitive interpretation, drafts, and plan generation.',
     },
     {
-      question: 'Can clients use it without a human coach?',
-      answer: 'Yes. Propel supports an autonomous AI coach path for solo users, while also supporting human-coach businesses that want AI assistance behind the scenes.',
-    },
-    {
-      question: 'Is everything on this page live?',
-      answer: 'This page lists the product surfaces and features built into the app and dashboard codebase. Some AI and launch-hardening paths still require deployed live smoke proof before they should be marketed as generally available.',
+      question: 'Can a coach use AI without replacing their coaching?',
+      answer: 'Yes. Coaches stay in control. AI can draft messages, suggest adjustments, generate starting points, and surface risks, but the coach can review and edit decisions before clients see them.',
     },
     {
       question: 'Is there a free trial?',
-      answer: 'Paid coach plans include a 14-day free trial. Stripe collects your card at signup, and you are not charged until the trial ends.',
+      answer: 'Paid coach plans include a 14-day free trial. The consumer AI Coach plans are priced separately for mobile users.',
     },
   ];
-
-  const professions = ['Personal trainers', 'Strength coaches', 'Online coaches', 'Nutrition coaches'];
 
   return (
     <>
@@ -309,208 +278,177 @@ export default function Home() {
             <Link href="/" className="flex items-center gap-3">
               <span className="grid h-10 w-10 place-items-center rounded-2xl bg-slate-950 text-lg font-black text-white shadow-lg shadow-slate-950/10">P</span>
               <span>
-                <span className="block text-lg font-black tracking-tight text-slate-950">Propel Coaches</span>
-                <span className="hidden text-[11px] font-bold uppercase tracking-[0.18em] text-teal-700 sm:block">Daily decision engine</span>
+                <span className="block text-lg font-black tracking-tight text-slate-950">Propel</span>
+                <span className="hidden text-[11px] font-bold uppercase tracking-[0.18em] text-teal-700 sm:block">AI coach + coach software</span>
               </span>
             </Link>
             <nav className="hidden items-center gap-7 md:flex">
-              <Link href="#platform" className="text-sm font-semibold text-slate-600 transition hover:text-teal-700">Platform</Link>
-              <Link href="#features" className="text-sm font-semibold text-slate-600 transition hover:text-teal-700">Features</Link>
-              <Link href="#ai" className="text-sm font-semibold text-slate-600 transition hover:text-teal-700">AI Coach</Link>
+              <Link href="#choose" className="text-sm font-semibold text-slate-600 transition hover:text-teal-700">Choose path</Link>
+              <Link href="#ai-coach" className="text-sm font-semibold text-slate-600 transition hover:text-teal-700">AI Coach</Link>
+              <Link href="#coach-software" className="text-sm font-semibold text-slate-600 transition hover:text-teal-700">For Coaches</Link>
               <Link href="#pricing" className="text-sm font-semibold text-slate-600 transition hover:text-teal-700">Pricing</Link>
               <Link href="#faq" className="text-sm font-semibold text-slate-600 transition hover:text-teal-700">FAQ</Link>
             </nav>
             <div className="flex items-center gap-3">
               <Link href="/login" className="hidden text-sm font-bold text-slate-600 transition hover:text-teal-700 sm:block">Log in</Link>
-              <Link href="/register" className="rounded-full bg-slate-950 px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-slate-950/15 transition hover:-translate-y-0.5 hover:bg-teal-800">
-                Start free trial
+              <Link href="#choose" className="rounded-full bg-slate-950 px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-slate-950/15 transition hover:-translate-y-0.5 hover:bg-teal-800">
+                Choose your path
               </Link>
             </div>
           </div>
         </header>
 
-        <section className="relative px-5 pb-24 pt-32 lg:px-8 lg:pb-32 lg:pt-40">
-          <div className="absolute left-1/2 top-24 h-[680px] w-[900px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(20,184,166,0.18),rgba(255,255,255,0)_66%)]" />
+        <section className="relative px-5 pb-20 pt-32 lg:px-8 lg:pb-28 lg:pt-40">
+          <div className="absolute left-1/2 top-24 h-[720px] w-[960px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(20,184,166,0.20),rgba(255,255,255,0)_66%)]" />
           <div className="absolute right-[-110px] top-48 h-72 w-72 rounded-full bg-teal-200/30 blur-3xl" />
           <div className="absolute bottom-12 left-[-90px] h-72 w-72 rounded-full bg-emerald-100 blur-3xl" />
 
-          <div className="relative mx-auto grid max-w-7xl items-center gap-14 lg:grid-cols-[0.9fr_1.1fr]">
+          <div className="relative mx-auto grid max-w-7xl items-center gap-14 lg:grid-cols-[0.86fr_1.14fr]">
             <div>
               <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-teal-700/15 bg-white/80 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-teal-800 shadow-sm backdrop-blur">
-                Built for coaches. Felt by clients.
+                Two products. One coaching engine.
               </div>
-              <h1 className="max-w-4xl text-5xl font-black tracking-[-0.055em] text-slate-950 sm:text-6xl lg:text-7xl">
-                Make your coaching app feel alive.
+              <h1 className="max-w-4xl text-5xl font-black tracking-[-0.06em] text-slate-950 sm:text-6xl lg:text-7xl">
+                Coaching software for coaches. AI coaching for everyone else.
               </h1>
               <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600 sm:text-xl">
-                Propel turns training, nutrition, check-ins, habits, progress, and messages into one clear directive: what the client should do right now.
+                Propel splits into two clear paths: a mobile AI Coach subscription for users who want daily guidance, and a coach workspace for professionals running clients at scale.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <Link href="/register" className="rounded-full bg-teal-700 px-7 py-4 text-sm font-black text-white shadow-xl shadow-teal-900/15 transition hover:-translate-y-0.5 hover:bg-teal-800">
-                  Start your free trial
+                <Link href="#choose" className="rounded-full bg-teal-700 px-7 py-4 text-sm font-black text-white shadow-xl shadow-teal-900/15 transition hover:-translate-y-0.5 hover:bg-teal-800">
+                  Pick your path
                 </Link>
-                <Link href="#platform" className="rounded-full border border-slate-200 bg-white px-7 py-4 text-sm font-black text-slate-800 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-200 hover:text-teal-800">
-                  See the platform
+                <Link href="#ai-coach" className="rounded-full border border-slate-200 bg-white px-7 py-4 text-sm font-black text-slate-800 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-200 hover:text-teal-800">
+                  Explore AI Coach
                 </Link>
               </div>
               <div className="mt-10 flex flex-wrap gap-3">
-                <FeaturePill>AI coaching engine</FeaturePill>
+                <FeaturePill>Mobile AI Coach</FeaturePill>
                 <FeaturePill>Coach web dashboard</FeaturePill>
-                <FeaturePill>Client iOS app</FeaturePill>
+                <FeaturePill>Client app</FeaturePill>
                 <FeaturePill>Training + nutrition + payments</FeaturePill>
               </div>
             </div>
+            <HeroStage />
+          </div>
+        </section>
 
-            <div className="perspective-stage relative min-h-[680px] lg:min-h-[620px]">
-              <div className="living-halo absolute left-1/2 top-1/2 z-0 h-[470px] w-[470px] -translate-x-1/2 -translate-y-1/2 rounded-full" />
-              <DashboardMockup />
-              <PhoneMockup className="absolute -bottom-10 right-2 z-20 animate-card-orbit lg:right-8" />
-              <div className="absolute left-4 top-10 z-30 animate-card-orbit rounded-3xl border border-white/80 bg-white/90 p-4 shadow-2xl shadow-slate-900/10 backdrop-blur" style={{ '--tilt': '-2deg', animationDelay: '0.8s' } as CSSProperties}>
-                <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Live signal</div>
-                <div className="mt-1 text-lg font-black text-slate-950">Stress 8/10</div>
-                <div className="mt-2 text-xs font-semibold text-orange-700">Training volume adjusted</div>
-              </div>
-              <div className="absolute bottom-20 left-0 z-30 animate-card-orbit rounded-3xl border border-white/80 bg-white/90 p-4 shadow-2xl shadow-slate-900/10 backdrop-blur" style={{ '--tilt': '3deg', animationDelay: '1.4s' } as CSSProperties}>
-                <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">AI action</div>
-                <div className="mt-1 text-lg font-black text-slate-950">Draft reply ready</div>
-                <div className="mt-2 text-xs font-semibold text-teal-700">Coach can approve in one tap</div>
-              </div>
+        <section id="choose" className="px-5 py-20 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <AnimatedSection className="mx-auto max-w-3xl text-center">
+              <div className="text-sm font-black uppercase tracking-[0.22em] text-teal-700">Start here</div>
+              <h2 className="mt-3 text-4xl font-black tracking-[-0.045em] text-slate-950 sm:text-5xl">What are you looking for?</h2>
+              <p className="mt-5 text-lg leading-8 text-slate-600">The homepage now routes visitors by intent, instead of forcing coaches and solo athletes through the same pitch.</p>
+            </AnimatedSection>
+            <div className="mt-12 grid gap-6 lg:grid-cols-2">
+              <AudienceCard
+                audience="ai"
+                title="I want an AI coach in my pocket"
+                body="For solo users who want Propel to decide the next best action: today’s session, nutrition target, recovery constraint, and why it matters."
+                bullets={['Mobile subscription', 'Daily briefings and plan generation', 'Workout, nutrition, habits, progress, and chat']}
+                cta="Go to AI Coach"
+                href="#ai-coach"
+              />
+              <AudienceCard
+                audience="coach"
+                title="I coach clients and need software"
+                body="For coaches who need a browser command centre, client app, programming, nutrition, messaging, payments, and AI assistance behind the scenes."
+                bullets={['Coach web dashboard', 'Client management and branded app', 'AI drafts, check-in reviews, programs, and meal plans']}
+                cta="Go to Coach Software"
+                href="#coach-software"
+              />
             </div>
           </div>
         </section>
 
-        <section className="border-y border-teal-900/10 bg-white/70 px-5 py-8 backdrop-blur lg:px-8">
-          <div className="mx-auto grid max-w-7xl gap-5 text-center md:grid-cols-4">
-            {[
-              ['One directive', 'Every client screen answers what to do next'],
-              ['Two-sided', 'Coach dashboard plus client mobile app'],
-              ['AI-assisted', 'Autonomous or coach-supervised workflows'],
-              ['Built wide', 'Training, nutrition, habits, chat, payments'],
-            ].map(([title, body]) => (
-              <div key={title} className="feature-line rounded-3xl bg-white/75 p-5 shadow-sm">
-                <div className="text-xl font-black text-slate-950">{title}</div>
-                <div className="mt-1 text-sm text-slate-500">{body}</div>
+        <section id="ai-coach" className="relative overflow-hidden bg-slate-950 px-5 py-24 text-white lg:px-8">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(20,184,166,.30),transparent_32%),radial-gradient(circle_at_78%_42%,rgba(45,212,191,.15),transparent_36%)]" />
+          <div className="relative mx-auto grid max-w-7xl items-center gap-14 lg:grid-cols-[0.92fr_1.08fr]">
+            <AnimatedSection>
+              <div className="text-sm font-black uppercase tracking-[0.22em] text-teal-300">AI Coach mobile subscription</div>
+              <h2 className="mt-3 text-4xl font-black tracking-[-0.045em] sm:text-5xl">For people who want the app to tell them exactly what to do today.</h2>
+              <p className="mt-5 text-lg leading-8 text-slate-300">Not a passive tracker. The AI Coach reads the user’s training, nutrition, check-ins, habits, body metrics, and progress, then makes a specific decision.</p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <FeaturePill dark>Daily directive</FeaturePill>
+                <FeaturePill dark>Program generation</FeaturePill>
+                <FeaturePill dark>AI meal plans</FeaturePill>
+                <FeaturePill dark>Check-ins + chat</FeaturePill>
               </div>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link href="https://apps.apple.com/app/propel-coaching/id6744426938" target="_blank" className="rounded-full bg-white px-7 py-4 text-sm font-black text-slate-950 transition hover:-translate-y-0.5">Download the app</Link>
+                <Link href="#ai-pricing" className="rounded-full border border-white/15 bg-white/10 px-7 py-4 text-sm font-black text-white transition hover:-translate-y-0.5 hover:bg-white/15">See AI plans</Link>
+              </div>
+            </AnimatedSection>
+            <AnimatedSection className="perspective-stage flex justify-center">
+              <PhoneMockup className="ai-phone-showcase" />
+            </AnimatedSection>
+          </div>
+          <div className="relative mx-auto mt-16 grid max-w-7xl gap-5 md:grid-cols-3">
+            {aiFeatures.map(([title, body], index) => (
+              <AnimatedSection key={title} style={{ animationDelay: `${index * 90}ms` }} className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-6 shadow-2xl shadow-black/20 backdrop-blur">
+                <div className="mb-5 grid h-12 w-12 place-items-center rounded-2xl bg-teal-300/10 text-sm font-black text-teal-200 ring-1 ring-teal-200/20">0{index + 1}</div>
+                <h3 className="text-xl font-black text-white">{title}</h3>
+                <p className="mt-3 text-sm leading-6 text-slate-300">{body}</p>
+              </AnimatedSection>
             ))}
           </div>
         </section>
 
-        <section id="platform" className="px-5 py-24 lg:px-8">
-          <div className="mx-auto max-w-7xl">
-            <AnimatedSection className="mx-auto max-w-3xl text-center">
-              <div className="text-sm font-black uppercase tracking-[0.22em] text-teal-700">Platform</div>
-              <h2 className="mt-3 text-4xl font-black tracking-[-0.04em] text-slate-950 sm:text-5xl">Three products working as one coaching system.</h2>
-              <p className="mt-5 text-lg leading-8 text-slate-600">The website should not undersell the app. Propel already spans the full coaching loop: prescribe, execute, adapt, communicate, and prove progress.</p>
+        <section id="coach-software" className="bg-white px-5 py-24 lg:px-8">
+          <div className="mx-auto grid max-w-7xl items-center gap-14 lg:grid-cols-[1.08fr_0.92fr]">
+            <AnimatedSection className="perspective-stage order-2 lg:order-1">
+              <CoachDashboardMockup />
             </AnimatedSection>
-
-            <div className="mt-14 grid gap-6 lg:grid-cols-3">
-              {platformCards.map((card, index) => (
-                <AnimatedSection key={card.title} style={{ animationDelay: `${index * 90}ms` }} className="group rounded-[2rem] border border-white bg-white p-7 shadow-xl shadow-slate-900/5 transition hover:-translate-y-2 hover:shadow-2xl hover:shadow-teal-900/10">
-                  <div className="mb-8 flex h-14 w-14 items-center justify-center rounded-2xl bg-teal-50 text-xl font-black text-teal-800 transition group-hover:rotate-6 group-hover:scale-105">0{index + 1}</div>
-                  <div className="text-xs font-black uppercase tracking-[0.2em] text-teal-700">{card.eyebrow}</div>
-                  <h3 className="mt-3 text-2xl font-black tracking-tight text-slate-950">{card.title}</h3>
-                  <p className="mt-4 text-sm leading-6 text-slate-600">{card.body}</p>
-                  <ul className="mt-6 space-y-2">
-                    {card.items.map((item) => <CheckItem key={item}>{item}</CheckItem>)}
-                  </ul>
-                </AnimatedSection>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section id="ai" className="relative overflow-hidden bg-slate-950 px-5 py-24 text-white lg:px-8">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_10%,rgba(20,184,166,.28),transparent_32%),radial-gradient(circle_at_80%_55%,rgba(45,212,191,.16),transparent_34%)]" />
-          <div className="relative mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[0.95fr_1.05fr]">
-            <AnimatedSection>
-              <div className="text-sm font-black uppercase tracking-[0.22em] text-teal-300">AI coach</div>
-              <h2 className="mt-3 text-4xl font-black tracking-[-0.04em] sm:text-5xl">Not another chatbot. A decision layer for the whole coaching business.</h2>
-              <p className="mt-5 text-lg leading-8 text-slate-300">Propel uses client context to make coaching specific: load, reps, protein, sleep, stress, adherence, risk, and next action. It can support solo users autonomously or assist a human coach behind the scenes.</p>
-              <div className="mt-8 grid gap-3 sm:grid-cols-2">
-                {['Daily briefings', 'Signal-gated nudges', 'Coach reply drafts', 'Program generation', 'Nutrition adjustments', 'Check-in reviews'].map((item) => (
-                  <div key={item} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold text-slate-100 backdrop-blur">{item}</div>
-                ))}
+            <AnimatedSection className="order-1 lg:order-2">
+              <div className="text-sm font-black uppercase tracking-[0.22em] text-teal-700">Coach software</div>
+              <h2 className="mt-3 text-4xl font-black tracking-[-0.045em] text-slate-950 sm:text-5xl">For professionals who need leverage without losing control.</h2>
+              <p className="mt-5 text-lg leading-8 text-slate-600">Coaches get the business operating system: clients, programming, nutrition, check-ins, chat, resources, payments, teams, and AI assistance that can draft but not hijack the relationship.</p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <FeaturePill>Client management</FeaturePill>
+                <FeaturePill>Programs + meals</FeaturePill>
+                <FeaturePill>Payments</FeaturePill>
+                <FeaturePill>AI assistant</FeaturePill>
               </div>
-            </AnimatedSection>
-            <AnimatedSection className="rounded-[2rem] border border-white/10 bg-white/10 p-4 shadow-2xl shadow-black/30 backdrop-blur-xl">
-              <div className="rounded-[1.5rem] bg-[#071311] p-5">
-                <div className="mb-5 flex items-center justify-between">
-                  <div>
-                    <div className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-300">Today&apos;s generated output</div>
-                    <div className="mt-1 text-2xl font-black">Keep intensity. Reduce volume.</div>
-                  </div>
-                  <div className="grid h-14 w-14 place-items-center rounded-full bg-teal-400/15 text-sm font-black text-teal-200 ring-1 ring-teal-300/30">LIVE</div>
-                </div>
-                <div className="space-y-3">
-                  {[
-                    ['Directive', 'Bench top set stays at 82.5kg. Remove one back-off set because sleep is 2/5.'],
-                    ['Nutrition', 'Hit 140g protein before 8pm. Use the Greek yoghurt meal if appetite drops.'],
-                    ['Constraint', 'No conditioning today. Keep shoulder work under RPE 7.'],
-                    ['Reasoning', 'Performance is trending up, but fatigue risk is elevated from sleep and stress.'],
-                  ].map(([label, body]) => (
-                    <div key={label} className="rounded-2xl border border-white/10 bg-white/[0.06] p-4">
-                      <div className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-300">{label}</div>
-                      <div className="mt-2 text-sm leading-6 text-slate-200">{body}</div>
-                    </div>
-                  ))}
-                </div>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link href="/register" className="rounded-full bg-teal-700 px-7 py-4 text-sm font-black text-white shadow-xl shadow-teal-900/15 transition hover:-translate-y-0.5 hover:bg-teal-800">Start coach trial</Link>
+                <Link href="#coach-pricing" className="rounded-full border border-slate-200 bg-white px-7 py-4 text-sm font-black text-slate-800 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-200 hover:text-teal-800">See coach plans</Link>
               </div>
             </AnimatedSection>
           </div>
-        </section>
-
-        <section id="features" className="px-5 py-24 lg:px-8">
-          <div className="mx-auto max-w-7xl">
-            <AnimatedSection className="max-w-3xl">
-              <div className="text-sm font-black uppercase tracking-[0.22em] text-teal-700">Feature inventory</div>
-              <h2 className="mt-3 text-4xl font-black tracking-[-0.04em] text-slate-950 sm:text-5xl">Showcase everything that has been built.</h2>
-              <p className="mt-5 text-lg leading-8 text-slate-600">A fuller picture of Propel: not just workouts, not just macros, and not just messaging. It is the operating system for a modern coaching practice.</p>
-            </AnimatedSection>
-            <div className="mt-14 grid gap-6 lg:grid-cols-2">
-              {featureGroups.map((group, index) => (
-                <AnimatedSection key={group.title} style={{ animationDelay: `${index * 60}ms` }} className="rounded-[2rem] border border-white bg-white p-7 shadow-xl shadow-slate-900/5">
-                  <div className="mb-5 flex items-center gap-4">
-                    <div className="grid h-12 w-12 place-items-center rounded-2xl bg-slate-950 text-sm font-black text-white">{String(index + 1).padStart(2, '0')}</div>
-                    <h3 className="text-2xl font-black tracking-tight text-slate-950">{group.title}</h3>
-                  </div>
-                  <ul className="space-y-3">
-                    {group.items.map((item) => <CheckItem key={item}>{item}</CheckItem>)}
-                  </ul>
-                </AnimatedSection>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="bg-white px-5 py-24 lg:px-8">
-          <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[0.9fr_1.1fr]">
-            <AnimatedSection>
-              <div className="text-sm font-black uppercase tracking-[0.22em] text-teal-700">Client experience</div>
-              <h2 className="mt-3 text-4xl font-black tracking-[-0.04em] text-slate-950 sm:text-5xl">Clients do not open Propel to browse. They open it to act.</h2>
-              <p className="mt-5 text-lg leading-8 text-slate-600">Every major surface is designed around coaching clarity: one dominant next action, supporting adjustments, and a reason why.</p>
-              <div className="mt-8 grid gap-3 sm:grid-cols-2">
-                {['Start today’s workout', 'Log meal or swap it', 'Complete habit', 'Send check-in', 'Review progress', 'Message coach'].map((item) => (
-                  <div key={item} className="rounded-2xl bg-[#f4f8f6] px-4 py-4 text-sm font-black text-slate-800">{item}</div>
-                ))}
-              </div>
-            </AnimatedSection>
-            <AnimatedSection className="perspective-stage flex justify-center gap-5">
-              <PhoneMockup className="animate-card-orbit" />
-              <div className="hidden translate-y-12 lg:block"><PhoneMockup className="scale-90 animate-card-orbit opacity-90" /></div>
-            </AnimatedSection>
+          <div className="mx-auto mt-16 grid max-w-7xl gap-5 md:grid-cols-3">
+            {coachFeatures.map(([title, body], index) => (
+              <AnimatedSection key={title} style={{ animationDelay: `${index * 90}ms` }} className="rounded-[2rem] border border-slate-100 bg-[#f8fbfa] p-6 shadow-xl shadow-slate-900/5">
+                <div className="mb-5 grid h-12 w-12 place-items-center rounded-2xl bg-slate-950 text-sm font-black text-white">0{index + 1}</div>
+                <h3 className="text-xl font-black text-slate-950">{title}</h3>
+                <p className="mt-3 text-sm leading-6 text-slate-600">{body}</p>
+              </AnimatedSection>
+            ))}
           </div>
         </section>
 
         <section className="px-5 py-24 lg:px-8">
           <div className="mx-auto max-w-7xl">
-            <AnimatedSection className="text-center">
-              <div className="text-sm font-black uppercase tracking-[0.22em] text-teal-700">Built for</div>
-              <h2 className="mt-3 text-4xl font-black tracking-[-0.04em] text-slate-950 sm:text-5xl">Serious coaches who want leverage.</h2>
-              <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-slate-600">Toggle the right surfaces for each client. Keep the human relationship, but let software handle the repetitive interpretation.</p>
-              <div className="mt-9 flex flex-wrap justify-center gap-3">
-                {professions.map((profession) => <FeaturePill key={profession}>{profession}</FeaturePill>)}
-              </div>
+            <AnimatedSection className="mx-auto max-w-3xl text-center">
+              <div className="text-sm font-black uppercase tracking-[0.22em] text-teal-700">Shared engine</div>
+              <h2 className="mt-3 text-4xl font-black tracking-[-0.045em] text-slate-950 sm:text-5xl">Same product brain. Different front doors.</h2>
+              <p className="mt-5 text-lg leading-8 text-slate-600">Whether the user arrives as an athlete or a coach, the message is the same: Propel interprets data and turns it into action.</p>
             </AnimatedSection>
+            <div className="mt-14 grid gap-6 lg:grid-cols-2">
+              <AnimatedSection className="rounded-[2.25rem] border border-white bg-white p-8 shadow-xl shadow-slate-900/5">
+                <div className="text-xs font-black uppercase tracking-[0.2em] text-teal-700">Client outcome</div>
+                <h3 className="mt-3 text-3xl font-black tracking-[-0.04em] text-slate-950">“I know exactly what to do.”</h3>
+                <ul className="mt-6 space-y-2">
+                  {['Train, recover, eat, or adjust — one main action', 'Specific numbers like 82.5kg, 140g protein, or reduce volume by 1 set', 'Reasoning explained without turning into a dashboard'].map((item) => <CheckItem key={item}>{item}</CheckItem>)}
+                </ul>
+              </AnimatedSection>
+              <AnimatedSection className="rounded-[2.25rem] border border-slate-800 bg-slate-950 p-8 text-white shadow-2xl shadow-slate-950/25">
+                <div className="text-xs font-black uppercase tracking-[0.2em] text-teal-300">Coach outcome</div>
+                <h3 className="mt-3 text-3xl font-black tracking-[-0.04em] text-white">“I can coach more clients without lowering quality.”</h3>
+                <ul className="mt-6 space-y-2">
+                  {['AI flags what needs attention first', 'Drafts and generated plans save repetitive work', 'Coach remains the authority before clients see sensitive changes'].map((item) => <CheckItem key={item} dark>{item}</CheckItem>)}
+                </ul>
+              </AnimatedSection>
+            </div>
           </div>
         </section>
 
@@ -518,32 +456,66 @@ export default function Home() {
           <div className="mx-auto max-w-7xl">
             <AnimatedSection className="mx-auto max-w-3xl text-center">
               <div className="text-sm font-black uppercase tracking-[0.22em] text-teal-700">Pricing</div>
-              <h2 className="mt-3 text-4xl font-black tracking-[-0.04em] text-slate-950 sm:text-5xl">Simple plans for solo coaches and teams.</h2>
-              <p className="mt-5 text-lg leading-8 text-slate-600">Start free, invite clients, and scale when the business needs it.</p>
+              <h2 className="mt-3 text-4xl font-black tracking-[-0.045em] text-slate-950 sm:text-5xl">Two pricing tracks for two buyer intents.</h2>
+              <p className="mt-5 text-lg leading-8 text-slate-600">AI Coach is the mobile consumer subscription. Coach plans are for professionals running client businesses.</p>
             </AnimatedSection>
-            <div className="mt-14 grid gap-6 lg:grid-cols-3">
-              {[
-                { tier: COACH_TIERS.coach_starter, label: 'For new coaches', featured: false, details: [`Up to ${COACH_TIERS.coach_starter.maxClients} clients`, 'Web dashboard', 'Coach mobile app', 'Branded client experience', 'AI coach assistant'] },
-                { tier: COACH_TIERS.coach_pro, label: 'For scaling coaches', featured: true, details: ['Unlimited clients', 'Payment processing', 'Advanced analytics', 'Group messaging', 'All core AI support'] },
-                { tier: COACH_TIERS.coach_scale, label: 'For teams and clinics', featured: false, details: [`Up to ${COACH_TIERS.coach_scale.teamSeats} practitioners`, 'Custom branding', 'Team dashboard and permissions', 'Dedicated onboarding call', 'Everything in Pro'] },
-              ].map(({ tier, label, featured, details }) => (
-                <AnimatedSection key={tier.name} className={`relative rounded-[2rem] border p-7 shadow-xl ${featured ? 'border-teal-700 bg-slate-950 text-white shadow-teal-950/20' : 'border-slate-100 bg-[#f8fbfa] text-slate-950 shadow-slate-900/5'}`}>
-                  {featured && <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-teal-500 px-4 py-1 text-xs font-black uppercase tracking-wider text-white">Most popular</div>}
-                  <h3 className="text-2xl font-black">{tier.name}</h3>
-                  <p className={`mt-2 text-sm ${featured ? 'text-slate-300' : 'text-slate-500'}`}>{label}</p>
-                  <div className="mt-7 text-5xl font-black tracking-tight">{formatPrice(tier.monthlyCents)}</div>
-                  <p className={`mt-1 text-sm ${featured ? 'text-slate-300' : 'text-slate-500'}`}>/month</p>
-                  <Link href="/register" className={`mt-7 block rounded-full px-5 py-3 text-center text-sm font-black transition hover:-translate-y-0.5 ${featured ? 'bg-white text-slate-950' : 'bg-slate-950 text-white'}`}>Start free trial</Link>
-                  <ul className="mt-7 space-y-3">
-                    {details.map((detail) => (
-                      <li key={detail} className={`flex gap-3 text-sm ${featured ? 'text-slate-200' : 'text-slate-700'}`}>
-                        <span className={`mt-1 grid h-5 w-5 flex-shrink-0 place-items-center rounded-full text-xs font-black ${featured ? 'bg-teal-400/20 text-teal-200' : 'bg-teal-50 text-teal-700'}`}>✓</span>
-                        <span>{detail}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </AnimatedSection>
-              ))}
+
+            <div id="ai-pricing" className="mt-14">
+              <div className="mb-6 flex items-end justify-between gap-5">
+                <div>
+                  <div className="text-sm font-black uppercase tracking-[0.22em] text-teal-700">AI Coach</div>
+                  <h3 className="mt-2 text-3xl font-black tracking-[-0.04em] text-slate-950">Mobile subscription</h3>
+                </div>
+                <Link href="https://apps.apple.com/app/propel-coaching/id6744426938" target="_blank" className="hidden rounded-full bg-slate-950 px-5 py-3 text-sm font-black text-white sm:inline-flex">Download app</Link>
+              </div>
+              <div className="grid gap-6 lg:grid-cols-3">
+                {[
+                  { tier: AI_TIERS.ai_starter, label: 'For structure', details: ['AI-generated workouts', 'AI meal plans', 'Daily decision engine', 'Habits and progress'] },
+                  { tier: AI_TIERS.ai_pro, label: 'For daily support', details: ['Everything in Starter', 'AI Coach chat', 'Weekly check-in feedback', 'Full progress analytics'] },
+                  { tier: AI_TIERS.ai_elite, label: 'For full AI coaching', details: ['Everything in Pro', 'Unlimited AI chat', 'Video form analysis', 'Wearable sync'] },
+                ].map(({ tier, label, details }) => (
+                  <AnimatedSection key={tier.name} className={`relative rounded-[2rem] border p-7 shadow-xl ${tier.popular ? 'border-teal-700 bg-slate-950 text-white shadow-teal-950/20' : 'border-slate-100 bg-[#f8fbfa] text-slate-950 shadow-slate-900/5'}`}>
+                    {tier.popular && <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-teal-500 px-4 py-1 text-xs font-black uppercase tracking-wider text-white">Most popular</div>}
+                    <h4 className="text-2xl font-black">{tier.name}</h4>
+                    <p className={`mt-2 text-sm ${tier.popular ? 'text-slate-300' : 'text-slate-500'}`}>{label}</p>
+                    <div className="mt-7 text-5xl font-black tracking-tight">{formatPrice(tier.monthlyCents)}</div>
+                    <p className={`mt-1 text-sm ${tier.popular ? 'text-slate-300' : 'text-slate-500'}`}>/month</p>
+                    <Link href="https://apps.apple.com/app/propel-coaching/id6744426938" target="_blank" className={`mt-7 block rounded-full px-5 py-3 text-center text-sm font-black transition hover:-translate-y-0.5 ${tier.popular ? 'bg-white text-slate-950' : 'bg-slate-950 text-white'}`}>Download app</Link>
+                    <ul className="mt-7 space-y-3">
+                      {details.map((detail) => <CheckItem key={detail} dark={tier.popular}>{detail}</CheckItem>)}
+                    </ul>
+                  </AnimatedSection>
+                ))}
+              </div>
+            </div>
+
+            <div id="coach-pricing" className="mt-20">
+              <div className="mb-6 flex items-end justify-between gap-5">
+                <div>
+                  <div className="text-sm font-black uppercase tracking-[0.22em] text-teal-700">Coach software</div>
+                  <h3 className="mt-2 text-3xl font-black tracking-[-0.04em] text-slate-950">Web dashboard + client app</h3>
+                </div>
+                <Link href="/register" className="hidden rounded-full bg-slate-950 px-5 py-3 text-sm font-black text-white sm:inline-flex">Start trial</Link>
+              </div>
+              <div className="grid gap-6 lg:grid-cols-3">
+                {[
+                  { tier: COACH_TIERS.coach_starter, label: 'For new coaches', details: [`Up to ${COACH_TIERS.coach_starter.maxClients} clients`, 'Web dashboard', 'Client app', 'AI-generated plans quota'] },
+                  { tier: COACH_TIERS.coach_pro, label: 'For scaling coaches', details: ['Unlimited clients', 'Payment processing', 'Advanced analytics', 'Group messaging', 'All core AI support'] },
+                  { tier: COACH_TIERS.coach_scale, label: 'For teams and clinics', details: [`Up to ${COACH_TIERS.coach_scale.teamSeats} practitioners`, 'Custom branding', 'Team dashboard and permissions', 'Dedicated onboarding call'] },
+                ].map(({ tier, label, details }) => (
+                  <AnimatedSection key={tier.name} className={`relative rounded-[2rem] border p-7 shadow-xl ${tier.popular ? 'border-teal-700 bg-slate-950 text-white shadow-teal-950/20' : 'border-slate-100 bg-[#f8fbfa] text-slate-950 shadow-slate-900/5'}`}>
+                    {tier.popular && <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-teal-500 px-4 py-1 text-xs font-black uppercase tracking-wider text-white">Most popular</div>}
+                    <h4 className="text-2xl font-black">{tier.name}</h4>
+                    <p className={`mt-2 text-sm ${tier.popular ? 'text-slate-300' : 'text-slate-500'}`}>{label}</p>
+                    <div className="mt-7 text-5xl font-black tracking-tight">{formatPrice(tier.monthlyCents)}</div>
+                    <p className={`mt-1 text-sm ${tier.popular ? 'text-slate-300' : 'text-slate-500'}`}>/month</p>
+                    <Link href="/register" className={`mt-7 block rounded-full px-5 py-3 text-center text-sm font-black transition hover:-translate-y-0.5 ${tier.popular ? 'bg-white text-slate-950' : 'bg-slate-950 text-white'}`}>Start free trial</Link>
+                    <ul className="mt-7 space-y-3">
+                      {details.map((detail) => <CheckItem key={detail} dark={tier.popular}>{detail}</CheckItem>)}
+                    </ul>
+                  </AnimatedSection>
+                ))}
+              </div>
             </div>
           </div>
         </section>
@@ -552,7 +524,7 @@ export default function Home() {
           <div className="mx-auto max-w-3xl">
             <AnimatedSection className="text-center">
               <div className="text-sm font-black uppercase tracking-[0.22em] text-teal-700">FAQ</div>
-              <h2 className="mt-3 text-4xl font-black tracking-[-0.04em] text-slate-950 sm:text-5xl">Questions coaches ask.</h2>
+              <h2 className="mt-3 text-4xl font-black tracking-[-0.045em] text-slate-950 sm:text-5xl">Which Propel is right for me?</h2>
             </AnimatedSection>
             <div className="mt-12 space-y-4">
               {faqs.map((faq, i) => (
@@ -580,12 +552,12 @@ export default function Home() {
         <section className="px-5 pb-24 lg:px-8">
           <AnimatedSection className="mx-auto max-w-6xl overflow-hidden rounded-[2.5rem] bg-slate-950 p-8 text-center text-white shadow-2xl shadow-slate-950/20 sm:p-14">
             <div className="mx-auto max-w-3xl">
-              <div className="text-sm font-black uppercase tracking-[0.22em] text-teal-300">Launch ready positioning</div>
-              <h2 className="mt-4 text-4xl font-black tracking-[-0.04em] sm:text-5xl">Show coaches the product is bigger than a dashboard.</h2>
-              <p className="mt-5 text-lg leading-8 text-slate-300">Propel is the coaching operating system: plan, coach, adapt, message, measure, and monetise from one connected platform.</p>
+              <div className="text-sm font-black uppercase tracking-[0.22em] text-teal-300">Choose your Propel</div>
+              <h2 className="mt-4 text-4xl font-black tracking-[-0.045em] sm:text-5xl">Get coached by AI, or use AI to coach better.</h2>
+              <p className="mt-5 text-lg leading-8 text-slate-300">One brand can now speak clearly to both sides of the market without blurring the offer.</p>
               <div className="mt-8 flex flex-wrap justify-center gap-3">
-                <Link href="/register" className="rounded-full bg-teal-500 px-8 py-4 text-sm font-black text-white transition hover:-translate-y-0.5 hover:bg-teal-400">Start free trial</Link>
-                <Link href="https://apps.apple.com/app/propel-coaching/id6744426938" target="_blank" className="rounded-full border border-white/15 bg-white/10 px-8 py-4 text-sm font-black text-white transition hover:-translate-y-0.5 hover:bg-white/15">Download client app</Link>
+                <Link href="https://apps.apple.com/app/propel-coaching/id6744426938" target="_blank" className="rounded-full bg-teal-500 px-8 py-4 text-sm font-black text-white transition hover:-translate-y-0.5 hover:bg-teal-400">Download AI Coach</Link>
+                <Link href="/register" className="rounded-full border border-white/15 bg-white/10 px-8 py-4 text-sm font-black text-white transition hover:-translate-y-0.5 hover:bg-white/15">Start coach trial</Link>
               </div>
             </div>
           </AnimatedSection>
@@ -594,14 +566,14 @@ export default function Home() {
         <footer className="border-t border-slate-200 bg-white px-5 py-12 lg:px-8">
           <div className="mx-auto grid max-w-7xl gap-10 md:grid-cols-4">
             <div>
-              <div className="text-2xl font-black text-slate-950">Propel Coaches</div>
-              <p className="mt-3 text-sm leading-6 text-slate-500">A daily decision engine for clients and a client-management workspace for coaches.</p>
+              <div className="text-2xl font-black text-slate-950">Propel</div>
+              <p className="mt-3 text-sm leading-6 text-slate-500">AI coaching for solo users and client-management software for coaches.</p>
             </div>
             <div>
-              <h4 className="font-black text-slate-950">Product</h4>
+              <h4 className="font-black text-slate-950">Paths</h4>
               <ul className="mt-4 space-y-2 text-sm text-slate-500">
-                <li><Link href="#platform" className="hover:text-teal-700">Platform</Link></li>
-                <li><Link href="#features" className="hover:text-teal-700">Features</Link></li>
+                <li><Link href="#ai-coach" className="hover:text-teal-700">AI Coach</Link></li>
+                <li><Link href="#coach-software" className="hover:text-teal-700">Coach Software</Link></li>
                 <li><Link href="#pricing" className="hover:text-teal-700">Pricing</Link></li>
               </ul>
             </div>
@@ -617,8 +589,8 @@ export default function Home() {
               <h4 className="font-black text-slate-950">Access</h4>
               <ul className="mt-4 space-y-2 text-sm text-slate-500">
                 <li><Link href="/login" className="hover:text-teal-700">Coach login</Link></li>
-                <li><Link href="/register" className="hover:text-teal-700">Start free trial</Link></li>
-                <li><Link href="https://apps.apple.com/app/propel-coaching/id6744426938" target="_blank" className="hover:text-teal-700">Client app</Link></li>
+                <li><Link href="/register" className="hover:text-teal-700">Start coach trial</Link></li>
+                <li><Link href="https://apps.apple.com/app/propel-coaching/id6744426938" target="_blank" className="hover:text-teal-700">Download AI Coach</Link></li>
               </ul>
             </div>
           </div>

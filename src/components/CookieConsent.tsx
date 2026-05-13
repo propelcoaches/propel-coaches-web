@@ -19,8 +19,8 @@ export default function CookieConsent() {
   if (!visible) return null
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 w-[calc(100%-2rem)] max-w-md md:bottom-6 md:right-6">
-      <div className="rounded-3xl border border-teal-900/10 bg-white/95 p-4 shadow-2xl shadow-slate-950/15 backdrop-blur-xl">
+    <div className="fixed bottom-3 left-1/2 z-50 w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 md:bottom-5">
+      <div className="rounded-3xl border border-teal-900/10 bg-white/95 p-3 shadow-2xl shadow-slate-950/15 backdrop-blur-xl md:p-4">
         <div className="mb-3 flex items-start gap-3">
           <div className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl bg-teal-50">
             <Cookie className="h-4 w-4 text-teal-700" />
