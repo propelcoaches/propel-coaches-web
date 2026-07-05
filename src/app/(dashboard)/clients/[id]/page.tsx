@@ -13,6 +13,12 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import clsx from 'clsx'
 import ClientProgressTab from '@/components/training/ClientProgressTab'
+import {
+  MODALITY_ICON,
+  MODALITY_LABEL,
+  ALL_MODALITIES,
+  type Modality,
+} from '@/lib/modalities'
 
 type Tab = 'overview' | 'checkins' | 'training' | 'progress' | 'nutrition' | 'habits' | 'autoflow' | 'photos' | 'metrics' | 'notes' | 'settings'
 
@@ -116,6 +122,9 @@ export default function ClientDetailPage() {
   const [calendarMode, setCalendarMode] = useState<'assignment' | 'history'>('assignment')
   const [calendarStartDate, setCalendarStartDate] = useState<Date>(() => startOfWeek(new Date(), { weekStartsOn: 1 }))
   const [programsAccordionOpen, setProgramsAccordionOpen] = useState(false)
+  // ID of the program whose engine_metadata "rationale" panel is open. Only
+  // one open at a time to keep the accordion compact.
+  const [expandedProgramRationale, setExpandedProgramRationale] = useState<string | null>(null)
 
   // Settings feature toggles
   const [featureToggles, setFeatureToggles] = useState<Record<string, boolean>>({
@@ -1064,51 +1073,45 @@ export default function ClientDetailPage() {
               {programsAccordionOpen ? <ChevronUp size={16} className="text-cb-muted" /> : <ChevronDown size={16} className="text-cb-muted" />}
             </button>
             {programsAccordionOpen && (
-              <div className="border-t border-cb-border p-4 space-y-3">
+              <div className="border-t border-cb-border p-4 space-y-5">
                 {programs.length === 0 ? (
                   <div className="py-8 text-center">
                     <Dumbbell size={28} className="mx-auto text-cb-muted mb-2" />
                     <p className="text-sm text-cb-muted">No workout programs assigned yet.</p>
                   </div>
-                ) : programs.map((program) => (
-                  <div key={program.id} className={clsx('bg-surface border rounded-xl p-4', program.is_active ? 'border-cb-teal/30' : 'border-cb-border')}>
-                    <div className="flex items-center justify-between mb-2">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-sm font-semibold text-cb-text">{program.name}</h3>
-                          {program.is_active && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-cb-teal/10 text-cb-teal">Active</span>
-                          )}
-                          {program.ai_generated && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-surface-light text-cb-muted">AI</span>
-                          )}
-                        </div>
-                        <p className="text-xs text-cb-muted mt-0.5">
-                          Week {program.current_week} of {program.weeks} · {program.days_per_week} days/week
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-24 h-1.5 bg-surface-light rounded-full overflow-hidden">
-                          <div className="h-full bg-cb-teal rounded-full" style={{ width: `${Math.min((program.current_week / program.weeks) * 100, 100)}%` }} />
-                        </div>
-                        <span className="text-xs text-cb-muted">{Math.round((program.current_week / program.weeks) * 100)}%</span>
-                      </div>
-                    </div>
-                    {program.description && <p className="text-xs text-cb-muted mb-2">{program.description}</p>}
-                    {program.is_active && programDays.length > 0 && (
-                      <div className="grid grid-cols-4 gap-2 mt-2">
-                        {programDays.map((day) => (
-                          <div key={day.id} className={clsx('rounded-xl px-3 py-2 text-xs font-medium',
-                            day.completed ? 'bg-cb-success/15 text-cb-success border border-cb-success/30' : 'bg-surface-light text-cb-secondary border border-cb-border'
-                          )}>
-                            <p>Day {day.day_number}</p>
-                            <p className="truncate mt-0.5">{day.name}</p>
+                ) : (
+                  // Group by modality. Programs without a modality (legacy
+                  // strength-only rows) bucket under 'strength'.
+                  ALL_MODALITIES
+                    .map(m => ({
+                      modality: m as Modality,
+                      list: programs.filter(p => ((p.modality ?? 'strength') as Modality) === m),
+                    }))
+                    .filter(g => g.list.length > 0)
+                    .map(({ modality, list }) => {
+                      const ModIcon = MODALITY_ICON[modality]
+                      return (
+                        <div key={modality} className="space-y-3">
+                          <div className="flex items-center gap-2 px-1">
+                            <ModIcon size={14} className="text-cb-secondary" />
+                            <p className="text-xs font-semibold uppercase tracking-wide text-cb-secondary">
+                              {MODALITY_LABEL[modality]} · {list.length}
+                            </p>
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
+                          {list.map(program => (
+                            <ProgramModalityCard
+                              key={program.id}
+                              program={program}
+                              modality={modality}
+                              programDays={programDays}
+                              onOpenRationale={(id) => setExpandedProgramRationale(prev => prev === id ? null : id)}
+                              isRationaleOpen={expandedProgramRationale === program.id}
+                            />
+                          ))}
+                        </div>
+                      )
+                    })
+                )}
               </div>
             )}
           </div>
@@ -2418,6 +2421,151 @@ function AutoflowAddEventModal({ onClose }: { onClose: () => void }) {
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+// ─── ProgramModalityCard ───────────────────────────────────────────────────
+// Per-program card inside the Assigned Programs accordion. Surfaces:
+//   • modality icon + name + status (active / paused / archived)
+//   • days/week, length, race_date if set
+//   • engine_metadata "Why this plan" panel (toggle)
+//
+// We don't have a dedicated coach-side program detail page yet — the
+// rationale toggle here stands in for that. When that page lands, swap the
+// outer wrapper for a <Link href={`/programs/${program.id}`}>.
+function ProgramModalityCard({
+  program,
+  modality,
+  programDays,
+  isRationaleOpen,
+  onOpenRationale,
+}: {
+  program: WorkoutProgram
+  modality: Modality
+  programDays: WorkoutDay[]
+  isRationaleOpen: boolean
+  onOpenRationale: (id: string) => void
+}) {
+  const ModIcon = MODALITY_ICON[modality]
+  const status = program.status ?? (program.is_active ? 'active' : 'archived')
+  const meta = program.engine_metadata ?? null
+  const methodology = meta?.evidence?.methodology ?? []
+  const safety = meta?.evidence?.safety_adjustments ?? []
+  const inputs = meta?.inputs_snapshot ?? null
+
+  const statusClass =
+    status === 'active' ? 'bg-cb-teal/10 text-cb-teal' :
+    status === 'paused' ? 'bg-amber-500/10 text-amber-600' :
+    'bg-surface-light text-cb-muted'
+
+  return (
+    <div className={clsx('bg-surface border rounded-xl p-4', status === 'active' ? 'border-cb-teal/30' : 'border-cb-border')}>
+      <div className="flex items-center justify-between mb-2">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <ModIcon size={14} className="text-cb-secondary flex-shrink-0" />
+            <h3 className="text-sm font-semibold text-cb-text">{program.name}</h3>
+            <span className={clsx('inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize', statusClass)}>
+              {status}
+            </span>
+            {program.ai_generated && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-surface-light text-cb-muted">AI</span>
+            )}
+          </div>
+          <p className="text-xs text-cb-muted mt-0.5">
+            Week {program.current_week} of {program.weeks} · {program.days_per_week} days/week
+            {program.race_date ? ` · race ${program.race_date.slice(0, 10)}` : ''}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="w-24 h-1.5 bg-surface-light rounded-full overflow-hidden">
+            <div
+              className="h-full bg-cb-teal rounded-full"
+              style={{ width: `${Math.min((program.current_week / program.weeks) * 100, 100)}%` }}
+            />
+          </div>
+          <span className="text-xs text-cb-muted">{Math.round((program.current_week / program.weeks) * 100)}%</span>
+        </div>
+      </div>
+
+      {program.description && <p className="text-xs text-cb-muted mb-2">{program.description}</p>}
+
+      {status === 'active' && programDays.length > 0 && (
+        <div className="grid grid-cols-4 gap-2 mt-2">
+          {programDays.map(day => (
+            <div
+              key={day.id}
+              className={clsx(
+                'rounded-xl px-3 py-2 text-xs font-medium',
+                day.completed
+                  ? 'bg-cb-success/15 text-cb-success border border-cb-success/30'
+                  : 'bg-surface-light text-cb-secondary border border-cb-border',
+              )}
+            >
+              <p>Day {day.day_number}</p>
+              <p className="truncate mt-0.5">{day.name}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Rationale toggle — only meaningful when engine_metadata exists. */}
+      {meta && (
+        <div className="mt-3 pt-3 border-t border-cb-border">
+          <button
+            onClick={() => onOpenRationale(program.id)}
+            className="text-xs font-medium text-cb-teal hover:text-cb-teal/80 flex items-center gap-1"
+          >
+            {isRationaleOpen ? 'Hide why this plan' : 'Why this plan'}
+          </button>
+          {isRationaleOpen && (
+            <div className="mt-3 space-y-3 text-xs">
+              {meta.engine_version && (
+                <p className="text-cb-muted">
+                  Engine v{meta.engine_version}
+                  {meta.generated_at ? ` · generated ${meta.generated_at.slice(0, 10)}` : ''}
+                </p>
+              )}
+              {methodology.length > 0 && (
+                <div>
+                  <p className="font-semibold text-cb-text mb-1">Methodology</p>
+                  <ul className="list-disc list-inside text-cb-secondary space-y-0.5">
+                    {methodology.map((m, i) => <li key={i}>{m}</li>)}
+                  </ul>
+                </div>
+              )}
+              {safety.length > 0 && (
+                <div>
+                  <p className="font-semibold text-cb-text mb-1">Safety adjustments</p>
+                  <ul className="list-disc list-inside text-cb-secondary space-y-0.5">
+                    {safety.map((s, i) => <li key={i}>{s}</li>)}
+                  </ul>
+                </div>
+              )}
+              {inputs && Object.keys(inputs).length > 0 && (
+                <div>
+                  <p className="font-semibold text-cb-text mb-1">Inputs snapshot</p>
+                  <div className="bg-surface-light rounded-lg border border-cb-border overflow-hidden">
+                    <table className="w-full text-xs">
+                      <tbody>
+                        {Object.entries(inputs).map(([k, v]) => (
+                          <tr key={k} className="border-b border-cb-border last:border-b-0">
+                            <td className="px-3 py-1.5 text-cb-muted font-mono whitespace-nowrap align-top">{k}</td>
+                            <td className="px-3 py-1.5 text-cb-secondary break-all">
+                              {typeof v === 'object' ? JSON.stringify(v) : String(v)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

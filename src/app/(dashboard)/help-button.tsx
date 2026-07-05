@@ -38,7 +38,7 @@ export default function HelpButton() {
             {/* Header */}
             <div
               className="px-4 py-4 text-white"
-              style={{ backgroundColor: '#119D93' }}
+              style={{ backgroundColor: '#245CFF' }}
             >
               <h3 className="font-semibold text-lg">Need help?</h3>
               <p className="text-sm opacity-90">Browse our resources or get in touch</p>
@@ -85,7 +85,7 @@ export default function HelpButton() {
               <Link
                 href="/help/contact"
                 className="block w-full text-center px-4 py-2 rounded-lg font-medium text-white transition-opacity hover:opacity-90"
-                style={{ backgroundColor: '#119D93' }}
+                style={{ backgroundColor: '#245CFF' }}
                 onClick={() => setIsOpen(false)}
               >
                 Chat with us
@@ -98,7 +98,7 @@ export default function HelpButton() {
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="w-12 h-12 rounded-full shadow-lg flex items-center justify-center text-white font-semibold transition-all hover:shadow-xl active:scale-95"
-          style={{ backgroundColor: '#119D93' }}
+          style={{ backgroundColor: '#245CFF' }}
           aria-label="Help and support"
           title="Help and support"
         >

@@ -1,26 +1,26 @@
 // Feeds Mission Control with recent Argus audit reports.
-// CORS open (origin: '*') because Mission Control is served as a local
-// HTML file from outside this app's domain.
+// Mission Control is served same-origin at /mission-control, so this is
+// gated by the same access cookie as /api/mission-control/*.
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
+import {
+  hasMissionControlCookieAccess,
+  missionControlAccessErrorResponse,
+} from '@/lib/mission-control/server';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+const baseHeaders = {
   'Cache-Control': 'no-store',
 };
 
-export async function OPTIONS() {
-  return new Response(null, { headers: corsHeaders });
-}
-
 export async function GET(req: Request) {
+  if (!hasMissionControlCookieAccess()) return missionControlAccessErrorResponse();
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) {
-    return NextResponse.json({ reports: [] }, { headers: corsHeaders });
+    return NextResponse.json({ reports: [] }, { headers: baseHeaders });
   }
 
   const { searchParams } = new URL(req.url);
@@ -41,10 +41,10 @@ export async function GET(req: Request) {
   if (!res.ok) {
     return NextResponse.json(
       { reports: [], error: `supabase ${res.status}` },
-      { status: 502, headers: corsHeaders },
+      { status: 502, headers: baseHeaders },
     );
   }
 
   const reports = await res.json();
-  return NextResponse.json({ reports }, { headers: corsHeaders });
+  return NextResponse.json({ reports }, { headers: baseHeaders });
 }

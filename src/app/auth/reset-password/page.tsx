@@ -78,7 +78,7 @@ export default function ResetPasswordPage() {
       <div className="w-full max-w-sm">
         <div className="bg-surface rounded-xl border border-cb-border shadow-lg p-8">
           <div className="mb-6 flex justify-center">
-            <div className="w-12 h-12 bg-[#119D93] rounded-xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-[#245CFF] rounded-xl flex items-center justify-center">
               <span className="text-white font-bold text-xl">P</span>
             </div>
           </div>

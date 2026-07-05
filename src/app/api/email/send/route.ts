@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import {
   sendWelcomeEmail, sendDay3Email, sendDay7Email,
   sendTrialExpiring3DayEmail, sendTrialExpiring1DayEmail,
@@ -31,6 +32,29 @@ export async function POST(req: NextRequest) {
     if (!handler) {
       return NextResponse.json({ error: 'Unknown email type' }, { status: 400 })
     }
+
+    // Recipient must be the caller or one of their own clients — automated
+    // sends to anyone else go through cron/email-sequences (CRON_SECRET).
+    const admin = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    const [coachProfile, clientsResult] = await Promise.all([
+      supabase.from('profiles').select('email').eq('id', user.id).single(),
+      admin.from('profiles').select('email').eq('coach_id', user.id).eq('role', 'client'),
+    ])
+    const allowedRecipients = new Set(
+      [user.email, coachProfile.data?.email, ...(clientsResult.data ?? []).map((c: { email: string }) => c.email)]
+        .filter(Boolean)
+        .map((e) => (e as string).toLowerCase())
+    )
+    if (typeof email !== 'string' || !allowedRecipients.has(email.toLowerCase())) {
+      return NextResponse.json(
+        { error: 'Recipient must be your own email or one of your clients' },
+        { status: 403 }
+      )
+    }
+
     const success = await handler(email, name, extra)
     return NextResponse.json({ success })
   } catch (err: any) {

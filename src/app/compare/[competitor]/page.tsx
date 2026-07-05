@@ -109,12 +109,12 @@ export default async function ComparisonPage({ params }: { params: Promise<{ com
         </header>
         <section className="pt-28 pb-16 px-6">
           <div className="max-w-3xl mx-auto text-center">
-            <Link href="/compare" className="inline-flex items-center gap-2 text-[#119D93] hover:text-[#0D7F78] font-semibold mb-8 transition-colors">
+            <Link href="/compare" className="inline-flex items-center gap-2 text-[#245CFF] hover:text-[#0F3FDB] font-semibold mb-8 transition-colors">
               <ArrowLeft size={16} /> Back to comparisons
             </Link>
             <h1 className="text-4xl font-black text-gray-900 mb-4">Comparison not found</h1>
             <p className="text-lg text-gray-500 mb-10">This competitor comparison doesn't exist yet.</p>
-            <Link href="/compare" className="inline-flex items-center gap-2 bg-[#119D93] hover:bg-[#0D7F78] text-white font-bold px-6 py-3 rounded-xl transition-colors">
+            <Link href="/compare" className="inline-flex items-center gap-2 bg-[#245CFF] hover:bg-[#0F3FDB] text-white font-bold px-6 py-3 rounded-xl transition-colors">
               See all comparisons
             </Link>
           </div>
@@ -147,7 +147,7 @@ export default async function ComparisonPage({ params }: { params: Promise<{ com
           </Link>
           <div className="flex items-center gap-3">
             <Link href="/login" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Sign in</Link>
-            <Link href="/register" className="bg-[#119D93] hover:bg-[#0D7F78] text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors">Get started</Link>
+            <Link href="/register" className="bg-[#245CFF] hover:bg-[#0F3FDB] text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors">Get started</Link>
           </div>
         </div>
       </header>
@@ -155,7 +155,7 @@ export default async function ComparisonPage({ params }: { params: Promise<{ com
       {/* ── Hero ────────────────────────────── */}
       <section className="pt-28 pb-16 px-6">
         <div className="max-w-4xl mx-auto">
-          <Link href="/compare" className="inline-flex items-center gap-2 text-[#119D93] hover:text-[#0D7F78] font-semibold mb-8 transition-colors">
+          <Link href="/compare" className="inline-flex items-center gap-2 text-[#245CFF] hover:text-[#0F3FDB] font-semibold mb-8 transition-colors">
             <ArrowLeft size={16} /> Back to all comparisons
           </Link>
           <h1 className="text-5xl font-black text-gray-900 leading-tight tracking-tight mb-4">
@@ -239,7 +239,7 @@ export default async function ComparisonPage({ params }: { params: Promise<{ com
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-4xl font-black text-gray-900 mb-4">Ready to make the switch?</h2>
           <p className="text-lg text-gray-500 mb-10">Join coaches who've upgraded to a platform that actually understands their needs.</p>
-          <Link href="/register" className="inline-flex items-center gap-2 bg-[#119D93] hover:bg-[#0D7F78] text-white font-bold px-10 py-4 rounded-2xl text-base transition-colors shadow-lg shadow-[#119D93]/20">
+          <Link href="/register" className="inline-flex items-center gap-2 bg-[#245CFF] hover:bg-[#0F3FDB] text-white font-bold px-10 py-4 rounded-2xl text-base transition-colors shadow-lg shadow-[#245CFF]/20">
             Start free trial →
           </Link>
           <p className="text-sm text-gray-400 mt-4">14-day free trial · Cancel anytime · No lock-in contracts</p>

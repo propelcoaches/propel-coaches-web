@@ -94,6 +94,26 @@ export type WorkoutProgram = {
   coach_approved: boolean
   created_at: string
   updated_at: string
+  // Multi-modality fields (added 2026-05-04, mirrors workout_programs.modality
+  // enum + engine_metadata JSONB from migration 20260504_001).
+  modality?: import('./modalities').Modality | null
+  engine_metadata?: EngineMetadata | null
+  race_date?: string | null
+  status?: 'active' | 'paused' | 'archived' | null
+}
+
+/** JSONB shape from workout_programs.engine_metadata. See ENGINE_CONTRACT.md
+ *  §"engine_metadata JSONB schema". */
+export type EngineMetadata = {
+  engine_version?: string
+  generated_at?: string
+  inputs_snapshot?: Record<string, unknown>
+  evidence?: {
+    methodology?: string[]
+    safety_adjustments?: string[]
+    [k: string]: unknown
+  }
+  [k: string]: unknown
 }
 
 export type WorkoutDay = {

@@ -38,7 +38,7 @@ export default function BillingSuccess({ searchParams }: SuccessProps) {
         <div className="flex flex-col gap-3 sm:flex-row">
           <a
             href={APP_DEEP_LINK}
-            className="inline-flex justify-center rounded-xl bg-[#119D93] px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-[#0D7F78]"
+            className="inline-flex justify-center rounded-xl bg-[#245CFF] px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-[#0F3FDB]"
           >
             Open Propel app
           </a>

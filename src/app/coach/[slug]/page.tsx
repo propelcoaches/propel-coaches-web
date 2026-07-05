@@ -84,7 +84,7 @@ export default async function CoachProfilePage({ params }: { params: Promise<{ s
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-4xl font-black text-gray-900 mb-4">Coach not found</h1>
             <p className="text-lg text-gray-500 mb-10">This coach profile doesn&apos;t exist, or the URL might be incorrect.</p>
-            <Link href="/" className="inline-flex items-center gap-2 bg-[#119D93] hover:bg-[#0D7F78] text-white font-bold px-6 py-3 rounded-xl transition-colors">
+            <Link href="/" className="inline-flex items-center gap-2 bg-[#245CFF] hover:bg-[#0F3FDB] text-white font-bold px-6 py-3 rounded-xl transition-colors">
               Back to home
             </Link>
           </div>
@@ -110,7 +110,7 @@ export default async function CoachProfilePage({ params }: { params: Promise<{ s
           </Link>
           <div className="flex items-center gap-3">
             <Link href="/login" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Sign in</Link>
-            <Link href="/register" className="bg-[#119D93] hover:bg-[#0D7F78] text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors">Get started</Link>
+            <Link href="/register" className="bg-[#245CFF] hover:bg-[#0F3FDB] text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors">Get started</Link>
           </div>
         </div>
       </header>
@@ -119,7 +119,7 @@ export default async function CoachProfilePage({ params }: { params: Promise<{ s
       <section className="pt-24 pb-16 px-6 bg-gradient-to-br from-gray-50 to-white border-b border-gray-100">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#119D93] to-[#0C615B] flex items-center justify-center text-white text-4xl font-bold mx-auto mb-6">
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#245CFF] to-[#102A80] flex items-center justify-center text-white text-4xl font-bold mx-auto mb-6">
               {coach.avatar_initials || name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
             </div>
             <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-2">{name}</h1>
@@ -127,7 +127,7 @@ export default async function CoachProfilePage({ params }: { params: Promise<{ s
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-8">
               {coach.location && (
                 <div className="flex items-center gap-2 text-gray-600">
-                  <MapPin size={18} className="text-[#119D93]" />
+                  <MapPin size={18} className="text-[#245CFF]" />
                   <span className="font-semibold">{coach.location}</span>
                 </div>
               )}
@@ -183,7 +183,7 @@ export default async function CoachProfilePage({ params }: { params: Promise<{ s
             <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">Coaching Packages</h2>
             <div className="grid md:grid-cols-3 gap-8">
               {services.map(service => (
-                <div key={service.name} className="bg-white border border-gray-200 rounded-2xl p-8 hover:shadow-lg hover:border-[#119D93] transition-all">
+                <div key={service.name} className="bg-white border border-gray-200 rounded-2xl p-8 hover:shadow-lg hover:border-[#245CFF] transition-all">
                   <h3 className="text-xl font-bold text-gray-900 mb-2">{service.name}</h3>
                   <p className="text-gray-500 text-sm mb-6">{service.description}</p>
                   <div className="mb-6">
@@ -195,14 +195,14 @@ export default async function CoachProfilePage({ params }: { params: Promise<{ s
                   <ul className="space-y-3 mb-8">
                     {(service.features ?? []).map(feature => (
                       <li key={feature} className="flex items-start gap-2 text-sm text-gray-600">
-                        <Zap size={14} className="text-[#119D93] flex-shrink-0 mt-0.5" />
+                        <Zap size={14} className="text-[#245CFF] flex-shrink-0 mt-0.5" />
                         {feature}
                       </li>
                     ))}
                   </ul>
                   <Link
                     href={`/register?coach=${slug}`}
-                    className="w-full inline-flex items-center justify-center gap-2 bg-[#119D93] hover:bg-[#0D7F78] text-white font-semibold px-6 py-3 rounded-xl transition-colors"
+                    className="w-full inline-flex items-center justify-center gap-2 bg-[#245CFF] hover:bg-[#0F3FDB] text-white font-semibold px-6 py-3 rounded-xl transition-colors"
                   >
                     Choose package →
                   </Link>
@@ -239,13 +239,13 @@ export default async function CoachProfilePage({ params }: { params: Promise<{ s
       )}
 
       {/* CTA */}
-      <section className="py-24 px-6 bg-gradient-to-br from-[#119D93] to-[#0C615B] text-white">
+      <section className="py-24 px-6 bg-gradient-to-br from-[#245CFF] to-[#102A80] text-white">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-4xl font-black mb-4">Ready to work with {firstName}?</h2>
           <p className="text-white/80 text-lg mb-10">Start your transformation today. Choose a package and get started with your first check-in.</p>
           <Link
             href={`/register?coach=${slug}`}
-            className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-[#119D93] font-bold px-10 py-4 rounded-2xl text-base transition-colors shadow-lg"
+            className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-[#245CFF] font-bold px-10 py-4 rounded-2xl text-base transition-colors shadow-lg"
           >
             Work with {firstName} →
           </Link>

@@ -19,34 +19,34 @@ export default function CookieConsent() {
   if (!visible) return null
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 p-4 md:p-6">
-      <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-2xl border border-gray-200 p-5">
-        <div className="flex items-start gap-3 mb-3">
-          <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-            <Cookie className="w-4 h-4 text-purple-600" />
+    <div className="fixed bottom-4 right-4 z-50 w-[calc(100%-2rem)] max-w-md md:bottom-6 md:right-6">
+      <div className="rounded-3xl border border-teal-900/10 bg-white/95 p-4 shadow-2xl shadow-slate-950/15 backdrop-blur-xl">
+        <div className="mb-3 flex items-start gap-3">
+          <div className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl bg-teal-50">
+            <Cookie className="h-4 w-4 text-teal-700" />
           </div>
           <div>
-            <div className="font-semibold text-gray-900">We use cookies</div>
-            <div className="text-gray-500 text-sm mt-0.5">
-              We use essential cookies to run the platform and optional analytics cookies to improve your experience.
-              {' '}<button onClick={() => setShowDetails(!showDetails)} className="text-purple-600 hover:underline text-sm">
+            <div className="font-black text-slate-950">We use cookies</div>
+            <div className="mt-1 text-sm leading-5 text-slate-500">
+              Essential cookies keep Propel running. Optional analytics help us improve the product.
+              {' '}<button onClick={() => setShowDetails(!showDetails)} className="font-bold text-teal-700 hover:underline">
                 {showDetails ? 'Hide details' : 'View details'}
               </button>
             </div>
           </div>
         </div>
         {showDetails && (
-          <div className="mb-4 pl-11 space-y-2 text-sm text-gray-600">
+          <div className="mb-4 space-y-2 rounded-2xl bg-slate-50 p-3 text-sm leading-5 text-slate-600">
             <p><strong>Essential:</strong> Authentication, session management, security (always active)</p>
             <p><strong>Analytics:</strong> PostHog usage analytics to improve product features (optional)</p>
             <p><strong>No advertising cookies</strong> are ever used on Propel.</p>
           </div>
         )}
-        <div className="flex gap-2 pl-11">
-          <button onClick={() => accept(true)} className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+        <div className="flex flex-wrap gap-2 pl-12">
+          <button onClick={() => accept(true)} className="rounded-full bg-teal-700 px-4 py-2 text-sm font-black text-white transition-colors hover:bg-teal-800">
             Accept All
           </button>
-          <button onClick={() => accept(false)} className="bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+          <button onClick={() => accept(false)} className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-700 transition-colors hover:bg-slate-50">
             Essential Only
           </button>
         </div>

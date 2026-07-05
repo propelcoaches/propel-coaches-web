@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
@@ -10,6 +10,14 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+
+  // Already signed in → straight into the app.
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) router.replace('/clients')
+    })
+  }, [router])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -35,7 +43,7 @@ export default function LoginPage() {
         <div className="bg-surface rounded-xl border border-cb-border shadow-lg p-8">
           {/* Logo */}
           <div className="mb-6 flex justify-center">
-            <div className="w-12 h-12 bg-[#119D93] rounded-xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-[#245CFF] rounded-xl flex items-center justify-center">
               <span className="text-white font-bold text-xl">P</span>
             </div>
           </div>

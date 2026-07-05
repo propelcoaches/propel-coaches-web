@@ -23,6 +23,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { sendSupportTicketEmail } from '@/lib/email';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 interface ContactFormData {
   name: string;
@@ -42,6 +43,15 @@ function getSupabaseAdmin() {
 
 
 export async function POST(request: NextRequest) {
+  // Public unauthenticated endpoint writing via service role — throttle per IP.
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  if (!checkRateLimit(`support-contact:${ip}`, 5, 15 * 60 * 1000)) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please try again later.' },
+      { status: 429 }
+    );
+  }
+
   const supabaseAdmin = getSupabaseAdmin()
   try {
     // Parse request body

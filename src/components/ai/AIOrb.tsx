@@ -79,7 +79,7 @@ export default function AIOrb({
       <div
         className={clsx('absolute inset-0 rounded-full overflow-hidden', breatheSpeed)}
         style={{
-          boxShadow: '0 6px 24px -6px rgba(17, 157, 147, 0.45), inset 0 1px 2px rgba(255,255,255,0.4)',
+          boxShadow: '0 6px 24px -6px rgba(36, 92, 255, 0.45), inset 0 1px 2px rgba(255,255,255,0.4)',
         }}
       >
         {/* Rotating conic gradient — creates iridescent core */}

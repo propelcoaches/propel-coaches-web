@@ -68,7 +68,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="text-xl font-semibold text-gray-900 mb-3">6. Your Data</h2>
-            <p>You own the data you upload to Propel. By using the platform, you grant us a limited licence to store and process that data solely for the purpose of providing the service. See our <Link href="/privacy-policy" className="text-[#119D93] underline">Privacy Policy</Link> for full details.</p>
+            <p>You own the data you upload to Propel. By using the platform, you grant us a limited licence to store and process that data solely for the purpose of providing the service. See our <Link href="/privacy-policy" className="text-[#245CFF] underline">Privacy Policy</Link> for full details.</p>
           </section>
 
           <section>
@@ -98,7 +98,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="text-xl font-semibold text-gray-900 mb-3">12. Contact</h2>
-            <p>Questions? Email <a href="mailto:hello@propelcoaches.com" className="text-[#119D93] underline">hello@propelcoaches.com</a>.</p>
+            <p>Questions? Email <a href="mailto:hello@propelcoaches.com" className="text-[#245CFF] underline">hello@propelcoaches.com</a>.</p>
           </section>
 
         </div>

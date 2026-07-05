@@ -94,8 +94,8 @@
 }
 
 @keyframes pulseGlow {
-  0%, 100% { box-shadow: 0 0 20px rgba(17,157,147,0.3); }
-  50% { box-shadow: 0 0 40px rgba(17,157,147,0.6); }
+  0%, 100% { box-shadow: 0 0 20px rgba(36,92,255,0.3); }
+  50% { box-shadow: 0 0 40px rgba(36,92,255,0.6); }
 }
 
 /* AI-thinking: three dots cycling opacity */
@@ -206,32 +206,32 @@
 .ai-thinking-dot:nth-child(4) { animation-delay: 0.45s; }
 
 :root {
-  --brand: #119D93;
-  --brand-light: #55DFAF;
-  --brand-bg: #E4F8F3;
-  --background: #F5F7FA;
+  --brand: #245CFF;
+  --brand-light: #6EA0FF;
+  --brand-bg: #EEF3FF;
+  --background: #F3F5F8;
   --surface: #FFFFFF;
-  --surface-light: #F0F4F7;
+  --surface-light: #F1F4F8;
   --surface-elevated: #FFFFFF;
-  --border: #E1E8EE;
-  --border-light: #EDF1F5;
+  --border: #E0E6EF;
+  --border-light: #EDF1F6;
   --text: #0D1B2A;
   --text-secondary: #4A5568;
   --text-muted: #94A3B8;
-  --success: #10B981;
+  --success: #245CFF;
   --warning: #F59E0B;
   --danger: #EF4444;
   --overlay: rgba(0,0,0,0.4);
   --radius: 12px;
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
-  --shadow-lg: 0 10px 30px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.04);
+  --shadow-sm: 0 1px 3px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04);
+  --shadow-md: 0 4px 12px rgba(15,23,42,0.08), 0 2px 4px rgba(15,23,42,0.04);
+  --shadow-lg: 0 10px 30px rgba(15,23,42,0.1), 0 4px 8px rgba(15,23,42,0.04);
 }
 
 html.dark {
-  --brand: #55DFAF;
-  --brand-light: #7AEAC5;
-  --brand-bg: rgba(85,223,175,0.12);
+  --brand: #6EA0FF;
+  --brand-light: #9BB8FF;
+  --brand-bg: rgba(36,92,255,0.18);
   --background: #0F1117;
   --surface: #1A1D27;
   --surface-light: #222535;
@@ -241,7 +241,7 @@ html.dark {
   --text: #F0F2F8;
   --text-secondary: #8892A4;
   --text-muted: #4A5270;
-  --success: #10B981;
+  --success: #6EA0FF;
   --warning: #F59E0B;
   --danger: #EF4444;
   --overlay: rgba(0,0,0,0.6);
@@ -295,7 +295,7 @@ input:focus, textarea:focus, select:focus {
 
 .field:focus {
   border-color: var(--brand);
-  box-shadow: 0 0 0 3px rgba(17, 157, 147, 0.12);
+  box-shadow: 0 0 0 3px rgba(36, 92, 255, 0.12);
   outline: none;
 }
 
@@ -339,7 +339,7 @@ tr:hover td {
 
 /* Landing page — hero gradient */
 .hero-gradient {
-  background: radial-gradient(ellipse 80% 60% at 60% -10%, rgba(17, 157, 147, 0.08) 0%, transparent 70%),
+  background: radial-gradient(ellipse 80% 60% at 60% -10%, rgba(36, 92, 255, 0.08) 0%, transparent 70%),
               linear-gradient(to bottom, #ffffff 0%, #F5F7FA 100%);
 }
 
@@ -348,8 +348,8 @@ tr:hover td {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: rgba(17, 157, 147, 0.07);
-  border: 1px solid rgba(17, 157, 147, 0.18);
+  background: rgba(36, 92, 255, 0.07);
+  border: 1px solid rgba(36, 92, 255, 0.18);
   border-radius: 9999px;
   padding: 0.375rem 0.875rem;
   font-size: 0.75rem;
@@ -370,13 +370,13 @@ tr:hover td {
   border-radius: 14px;
   font-size: 0.9375rem;
   transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
-  box-shadow: 0 4px 16px rgba(17, 157, 147, 0.28);
+  box-shadow: 0 4px 16px rgba(36, 92, 255, 0.28);
   cursor: pointer;
 }
 
 .btn-primary:hover {
-  background: #0D7F78;
-  box-shadow: 0 6px 24px rgba(17, 157, 147, 0.38);
+  background: #0F3FDB;
+  box-shadow: 0 6px 24px rgba(36, 92, 255, 0.38);
   transform: translateY(-1px);
 }
 
@@ -406,7 +406,7 @@ tr:hover td {
 .step-dot.active {
   background: var(--brand);
   color: #fff;
-  box-shadow: 0 0 0 4px rgba(17, 157, 147, 0.15);
+  box-shadow: 0 0 0 4px rgba(36, 92, 255, 0.15);
 }
 
 .step-dot.done {
@@ -431,9 +431,147 @@ tr:hover td {
   background: var(--brand);
 }
 
+/* ----------------------------------------------------------------------
+ * Public website 3D/living product stage utilities
+ * --------------------------------------------------------------------*/
+
+@keyframes landingFloat {
+  0%, 100% { transform: translate3d(0,0,0) rotateX(0deg) rotateY(0deg); }
+  50% { transform: translate3d(0,-14px,0) rotateX(2deg) rotateY(-3deg); }
+}
+
+@keyframes dashboardFloat {
+  0%, 100% { transform: rotateX(10deg) rotateY(-11deg) translateY(0); }
+  50% { transform: rotateX(12deg) rotateY(-7deg) translateY(-10px); }
+}
+
+@keyframes haloSpin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes cardOrbit {
+  0%, 100% { transform: translateY(0) rotate(var(--tilt, 0deg)); }
+  50% { transform: translateY(-8px) rotate(calc(var(--tilt, 0deg) * -1)); }
+}
+
+@keyframes lineDraw {
+  0% { width: 0; opacity: .35; }
+  55% { width: 100%; opacity: 1; }
+  100% { width: 100%; opacity: .45; }
+}
+
+.perspective-stage { perspective: 1400px; }
+.preserve-3d { transform-style: preserve-3d; }
+.animate-dashboard-float { animation: dashboardFloat 8s ease-in-out infinite; }
+.animate-card-orbit { animation: cardOrbit 5.5s ease-in-out infinite; }
+
+.feature-line::after {
+  content: '';
+  display: block;
+  height: 2px;
+  margin-top: 12px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(36,92,255,0), rgba(36,92,255,.45), rgba(36,92,255,0));
+  animation: lineDraw 3.5s ease-in-out infinite;
+}
+
+.living-halo::before {
+  content: '';
+  position: absolute;
+  inset: -26%;
+  border-radius: 999px;
+  background: conic-gradient(from 120deg, rgba(36,92,255,.05), rgba(36,92,255,.35), rgba(110,160,255,.12), rgba(36,92,255,.05));
+  filter: blur(22px);
+  animation: haloSpin 18s linear infinite;
+  z-index: -1;
+}
+
+/* Legacy image assets still carry the old mint Propel mark and phone UI.
+ * Hue-shift them at render time so screenshots do not reintroduce green while
+ * updated source assets are produced. */
+img[src*="/logo/icon-dark"],
+img[src*="/logo/icon-light"],
+img[src*="/screenshots/app/"] {
+  filter: hue-rotate(54deg) saturate(1.45) brightness(1.02);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+
+  .animate-dashboard-float,
+  .animate-card-orbit,
+  .living-halo::before,
+  .feature-line::after {
+    animation: none !important;
+  }
+}
+
+/* ----------------------------------------------------------------------
+ * App-wide brand correction: volt blue, no watery mint/green washes.
+ * These selectors intentionally neutralise legacy Tailwind green/teal/emerald
+ * classes until every older screen is hand-tokenised. Light fills become crisp
+ * blue tints; active pills/buttons become volt blue; hover/focus states follow.
+ * --------------------------------------------------------------------*/
+@layer utilities {
+  .bg-teal-50, .bg-teal-100, .bg-teal-200,
+  .bg-emerald-50, .bg-emerald-100, .bg-emerald-200,
+  .bg-green-50, .bg-green-100, .bg-green-200,
+  .bg-teal-400\/15, .bg-teal-400\/20, .bg-teal-500\/10, .bg-teal-500\/20,
+  .bg-emerald-500\/10, .bg-emerald-500\/20,
+  .bg-green-500\/10, .bg-green-500\/20 {
+    background-color: #EEF3FF !important;
+  }
+
+  .bg-teal-300, .bg-teal-400, .bg-teal-500, .bg-teal-600, .bg-teal-700,
+  .bg-emerald-300, .bg-emerald-400, .bg-emerald-500, .bg-emerald-600,
+  .bg-green-300, .bg-green-400, .bg-green-500, .bg-green-600,
+  .hover\:bg-teal-400:hover, .hover\:bg-teal-500:hover, .hover\:bg-teal-600:hover, .hover\:bg-teal-700:hover,
+  .hover\:bg-emerald-500:hover, .hover\:bg-emerald-600:hover,
+  .hover\:bg-green-500:hover, .hover\:bg-green-600:hover {
+    background-color: #245CFF !important;
+  }
+
+  .bg-teal-800, .bg-teal-900,
+  .hover\:bg-teal-800:hover, .hover\:bg-teal-900:hover {
+    background-color: #0F3FDB !important;
+  }
+
+  .text-teal-200, .text-teal-300, .text-teal-400, .text-teal-500, .text-teal-600, .text-teal-700, .text-teal-800, .text-teal-900,
+  .text-emerald-400, .text-emerald-500, .text-emerald-600, .text-emerald-700, .text-emerald-800, .text-emerald-900,
+  .text-green-400, .text-green-500, .text-green-600, .text-green-700, .text-green-800, .text-green-900,
+  .hover\:text-teal-700:hover, .hover\:text-teal-800:hover, .hover\:text-teal-900:hover,
+  .hover\:text-emerald-700:hover, .hover\:text-emerald-800:hover,
+  .hover\:text-green-700:hover, .hover\:text-green-800:hover {
+    color: #245CFF !important;
+  }
+
+  .bg-teal-300.text-white, .bg-teal-400.text-white, .bg-teal-500.text-white, .bg-teal-600.text-white, .bg-teal-700.text-white,
+  .bg-emerald-300.text-white, .bg-emerald-400.text-white, .bg-emerald-500.text-white, .bg-emerald-600.text-white,
+  .bg-green-300.text-white, .bg-green-400.text-white, .bg-green-500.text-white, .bg-green-600.text-white {
+    color: #FFFFFF !important;
+  }
+
+  .border-teal-200, .border-teal-300, .border-teal-600, .border-teal-700, .border-teal-900,
+  .border-teal-700\/15, .border-teal-900\/10,
+  .border-emerald-200, .border-emerald-500, .border-emerald-500\/20,
+  .border-green-200, .border-green-300, .border-green-500\/20, .border-green-500\/30,
+  .hover\:border-teal-200:hover, .hover\:border-teal-300:hover,
+  .hover\:border-emerald-200:hover, .hover\:border-green-200:hover {
+    border-color: rgba(36, 92, 255, 0.28) !important;
+  }
+
+  .focus\:ring-teal-500:focus, .focus\:ring-teal-500\/40:focus,
+  .ring-teal-300, .ring-teal-300\/30, .ring-emerald-100, .ring-emerald-200 {
+    --tw-ring-color: rgba(36, 92, 255, 0.42) !important;
+  }
+
+  .shadow-teal-900\/15, .shadow-teal-900\/10, .shadow-teal-950\/20,
+  .hover\:shadow-teal-900\/10:hover {
+    --tw-shadow-color: rgb(15 63 219 / 0.22) !important;
+  }
+
+  .stroke-emerald-500, .stroke-green-500 { stroke: #245CFF !important; }
 }

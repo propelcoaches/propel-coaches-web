@@ -11,6 +11,12 @@ import SportCategoryPicker from '@/components/programs/SportCategoryPicker'
 import WorkoutFormatPicker from '@/components/programs/WorkoutFormatPicker'
 import { Workout, SportCategory, WorkoutFormat } from '@/types/workout'
 import { SPORT_CONFIGS, getSportConfig } from '@/constants/workoutConfigs'
+import {
+  MODALITY_CARDS,
+  MODALITY_INPUT_SCHEMA,
+  MODALITY_LABEL,
+  type Modality,
+} from '@/lib/modalities'
 
 // ─── AI Generator Config ─────────────────────────────────────────────────────
 const SPORT_GOALS: Record<SportCategory, { value: string; label: string }[]> = {
@@ -77,6 +83,16 @@ export default function ProgramsPage() {
   // AI Generator state
   const [showAiGenerator, setShowAiGenerator] = useState(false)
   const [generating, setGenerating] = useState(false)
+
+  // ── Multi-modality picker state ─────────────────────────────────────────
+  // 'picker' = step 1 (choose modality). 'form' = step 2 (per-modality form).
+  // Strength shortcuts straight to the existing form (modality stays null
+  // and the legacy aiForm is rendered below).
+  const [modalityStep, setModalityStep] = useState<'picker' | 'form'>('picker')
+  const [selectedModality, setSelectedModality] = useState<Modality | null>(null)
+  const [modalityClientId, setModalityClientId] = useState('')
+  const [modalityOverrides, setModalityOverrides] = useState<Record<string, string>>({})
+  const [modalityErrors, setModalityErrors] = useState<Record<string, string>>({})
   const [aiClients, setAiClients] = useState<AiClient[]>([])
   const [aiFormErrors, setAiFormErrors] = useState<Record<string, string>>({})
   const [aiForm, setAiForm] = useState({
@@ -369,12 +385,205 @@ export default function ProgramsPage() {
     )
   }
 
+  // ─── Multi-modality dispatch ────────────────────────────────────────────
+  // Coerces stringified form values back to numbers where the schema asks
+  // for one, drops empty strings so the engine falls back to profile data.
+  function buildModalityPayload(): Record<string, unknown> {
+    if (!selectedModality) return {}
+    const schema = MODALITY_INPUT_SCHEMA[selectedModality]
+    const out: Record<string, unknown> = {}
+    for (const field of schema) {
+      const raw = modalityOverrides[field.key]
+      if (raw === undefined || raw === '') continue
+      if (field.type === 'number') {
+        const n = Number(raw)
+        if (!Number.isNaN(n)) out[field.key] = n
+      } else {
+        out[field.key] = raw
+      }
+    }
+    return out
+  }
+
+  async function handleModalityGenerate() {
+    if (!selectedModality) return
+    const errs: Record<string, string> = {}
+    if (!modalityClientId) errs.client_id = 'Select a client'
+    setModalityErrors(errs)
+    if (Object.keys(errs).length) return
+
+    setGenerating(true)
+    try {
+      const res = await fetch('/api/ai/generate-modality', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          modality: selectedModality,
+          client_id: modalityClientId,
+          overrides: buildModalityPayload(),
+        }),
+      })
+      const json = await res.json()
+      if (json.success && json.program_id) {
+        toast.info(`${MODALITY_LABEL[selectedModality]} program generated`)
+        setShowAiGenerator(false)
+        setModalityStep('picker')
+        setSelectedModality(null)
+        setModalityOverrides({})
+        setModalityClientId('')
+        fetchPrograms()
+      } else {
+        toast.error(json.error || 'Generator failed')
+      }
+    } catch {
+      toast.error('Network error — try again')
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  // ─── Modality picker step (shown when AI Generator is open) ─────────────
+  if (showAiGenerator && modalityStep === 'picker') {
+    return (
+      <div className="max-w-3xl mx-auto p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <button
+            onClick={() => { setShowAiGenerator(false); setModalityStep('picker'); setSelectedModality(null) }}
+            className="flex items-center gap-1.5 text-sm text-cb-secondary hover:text-cb-text transition-colors"
+          >
+            <ArrowLeft size={16} /> Back to Programs
+          </button>
+        </div>
+        <h1 className="text-xl font-bold text-cb-text mb-1">What kind of program?</h1>
+        <div className="h-0.5 w-12 bg-gradient-to-r from-brand to-brand/40 rounded-full mb-2" />
+        <p className="text-sm text-cb-muted mb-6">Pick the modality. Strength stays on the legacy builder; the others use their dedicated AI engines.</p>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {MODALITY_CARDS.map(card => {
+            const Icon = card.Icon
+            return (
+              <button
+                key={card.id}
+                type="button"
+                onClick={() => {
+                  setSelectedModality(card.id)
+                  if (card.id === 'strength') {
+                    // Strength uses the existing form below.
+                    setModalityStep('form')
+                  } else {
+                    setModalityStep('form')
+                  }
+                }}
+                className="flex flex-col items-start gap-1.5 p-4 rounded-xl border text-left transition-all border-cb-border bg-surface hover:border-brand/40 hover:bg-surface-light"
+              >
+                <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-surface-light text-cb-secondary">
+                  <Icon size={18} />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-cb-text leading-tight">{card.title}</p>
+                  <p className="text-[11px] text-cb-muted leading-snug mt-0.5">{card.subhead}</p>
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
+
+  // ─── Non-strength modality form (dynamic from schema) ───────────────────
+  if (showAiGenerator && modalityStep === 'form' && selectedModality && selectedModality !== 'strength') {
+    const schema = MODALITY_INPUT_SCHEMA[selectedModality]
+    return (
+      <div className="max-w-2xl mx-auto p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <button
+            onClick={() => { setModalityStep('picker'); setSelectedModality(null); setModalityOverrides({}) }}
+            className="flex items-center gap-1.5 text-sm text-cb-secondary hover:text-cb-text transition-colors"
+          >
+            <ArrowLeft size={16} /> Change modality
+          </button>
+        </div>
+        <h1 className="text-xl font-bold text-cb-text mb-1">{MODALITY_LABEL[selectedModality]} program</h1>
+        <div className="h-0.5 w-12 bg-gradient-to-r from-brand to-brand/40 rounded-full mb-2" />
+        <p className="text-sm text-cb-muted mb-6">
+          The engine reads the rest from the client&apos;s profile. Override below only what you want to change for this run.
+        </p>
+
+        <div className="space-y-5 bg-surface border border-cb-border rounded-xl p-6">
+          {/* Client picker */}
+          <div>
+            <label className="block text-sm font-medium text-cb-secondary mb-1">
+              Client <span className="text-red-500 ml-0.5">*</span>
+            </label>
+            <select
+              value={modalityClientId}
+              onChange={e => { setModalityClientId(e.target.value); setModalityErrors(p => ({ ...p, client_id: '' })) }}
+              className={`w-full border border-cb-border rounded-lg px-3 py-2 bg-surface text-cb-text focus:outline-none focus:ring-2 focus:ring-brand/40 ${modalityErrors.client_id ? 'border-red-500' : ''}`}
+            >
+              <option value="">Select a client...</option>
+              {aiClients.filter(c => !c.isPending).map(c => (
+                <option key={c.id} value={c.id}>{c.full_name}</option>
+              ))}
+            </select>
+            {modalityErrors.client_id && <p className="text-red-500 text-xs mt-1">{modalityErrors.client_id}</p>}
+          </div>
+
+          {/* Dynamic per-modality fields */}
+          {schema.map(field => (
+            <div key={field.key}>
+              <label className="block text-sm font-medium text-cb-secondary mb-1">{field.label}</label>
+              {field.type === 'select' ? (
+                <select
+                  value={modalityOverrides[field.key] ?? ''}
+                  onChange={e => setModalityOverrides(o => ({ ...o, [field.key]: e.target.value }))}
+                  className="w-full border border-cb-border rounded-lg px-3 py-2 bg-surface text-cb-text focus:outline-none focus:ring-2 focus:ring-brand/40"
+                >
+                  <option value="">— use client default —</option>
+                  {field.options?.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type={field.type}
+                  value={modalityOverrides[field.key] ?? ''}
+                  min={field.min}
+                  max={field.max}
+                  placeholder={field.placeholder}
+                  onChange={e => setModalityOverrides(o => ({ ...o, [field.key]: e.target.value }))}
+                  className="w-full border border-cb-border rounded-lg px-3 py-2 bg-surface text-cb-text placeholder-cb-muted focus:outline-none focus:ring-2 focus:ring-brand/40"
+                />
+              )}
+              {field.help && <p className="text-[11px] text-cb-muted mt-1">{field.help}</p>}
+            </div>
+          ))}
+
+          <button
+            onClick={handleModalityGenerate}
+            disabled={generating}
+            className="w-full py-3 bg-brand text-white rounded-lg font-semibold hover:bg-brand/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {generating ? (
+              <><Loader2 size={18} className="animate-spin" /> Generating program...</>
+            ) : (
+              <><Sparkles size={17} /> Generate {MODALITY_LABEL[selectedModality]} program</>
+            )}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   // ─── AI Generator View ──────────────────────────────────────────────────────
   if (showAiGenerator) {
     return (
       <div className="max-w-3xl mx-auto p-6">
         <div className="flex items-center gap-3 mb-6">
-          <button onClick={() => setShowAiGenerator(false)} className="flex items-center gap-1.5 text-sm text-cb-secondary hover:text-cb-text transition-colors">
+          <button
+            onClick={() => { setShowAiGenerator(false); setModalityStep('picker'); setSelectedModality(null) }}
+            className="flex items-center gap-1.5 text-sm text-cb-secondary hover:text-cb-text transition-colors"
+          >
             <ArrowLeft size={16} /> Back to Programs
           </button>
         </div>

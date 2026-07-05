@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import ClientLayoutShell from './ClientLayoutShell'
 
@@ -13,10 +14,11 @@ export default async function ClientLayout({ children }: { children: React.React
 
   // Get current client's coach_id
   const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
 
   let branding: CoachBranding | null = null
 
-  if (user) {
+  {
     const { data: profile } = await supabase
       .from('profiles')
       .select('coach_id')

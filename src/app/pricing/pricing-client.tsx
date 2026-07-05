@@ -5,6 +5,9 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Check } from 'lucide-react'
 
+const TEAL = '#0FA89C'
+const TEAL_INK = '#2BD4C5'
+
 export interface PricingPlan {
   name: string
   slug: string
@@ -31,12 +34,13 @@ export function PricingBanner() {
 
   return (
     <div className="px-6 pt-24">
-      <div className="mx-auto flex max-w-4xl items-start justify-between gap-4 rounded-2xl border border-[#119D93]/20 bg-[#119D93]/5 p-4 text-left">
-        <p className="text-sm font-medium text-gray-800">{copy}</p>
+      <div className="mx-auto flex max-w-4xl items-start justify-between gap-4 rounded-2xl border border-teal-500/25 bg-teal-500/10 p-4 text-left">
+        <p className="text-sm font-medium text-slate-200">{copy}</p>
         <button
           type="button"
           onClick={() => setDismissed(true)}
-          className="text-sm font-bold text-[#119D93] hover:text-[#0D7F78]"
+          className="text-sm font-bold transition hover:brightness-125"
+          style={{ color: TEAL_INK }}
         >
           Dismiss
         </button>
@@ -86,7 +90,7 @@ export default function PricingClient({
   return (
     <>
       <div className="mb-10 flex justify-center">
-        <div className="inline-flex rounded-2xl bg-gray-100 p-1">
+        <div className="inline-flex rounded-full border border-white/10 bg-white/5 p-1">
           {[
             { key: 'ai' as const, label: 'AI plans (for individuals)' },
             { key: 'coach' as const, label: 'Coach plans (for trainers)' },
@@ -100,10 +104,10 @@ export default function PricingClient({
                   setSegment(option.key)
                   setCheckoutError(null)
                 }}
-                className={`rounded-xl px-4 py-2.5 text-sm font-bold transition-colors sm:px-5 ${
+                className={`rounded-full px-4 py-2.5 text-sm font-bold transition-colors sm:px-5 ${
                   active
-                    ? 'bg-white text-[#119D93] shadow-sm'
-                    : 'text-gray-500 hover:text-gray-800'
+                    ? 'bg-white text-[#0A0E11]'
+                    : 'text-slate-400 hover:text-white'
                 }`}
               >
                 {option.label}
@@ -119,43 +123,47 @@ export default function PricingClient({
             {/* Most Popular badge — sits on the top border */}
             {plan.highlight && (
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
-                <span className="whitespace-nowrap bg-[#119D93] text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-md">
+                <span
+                  className="whitespace-nowrap text-white text-xs font-black uppercase tracking-wider px-4 py-1.5 rounded-full shadow-md"
+                  style={{ backgroundColor: TEAL }}
+                >
                   Most Popular
                 </span>
               </div>
             )}
 
             <div
-              className={`rounded-2xl border-2 transition-all h-full ${
+              className={`rounded-3xl border transition-all h-full ${
                 plan.highlight
-                  ? 'border-[#119D93] shadow-xl shadow-[#119D93]/15'
-                  : 'border-gray-200 shadow-sm hover:shadow-md hover:border-gray-300'
+                  ? 'border-teal-500/40 bg-[#10181A] shadow-[0_30px_90px_rgba(15,168,156,0.12)]'
+                  : 'border-white/10 bg-[#10151A] hover:border-white/20'
               }`}
             >
               <div className="p-8">
                 {/* Plan name + description */}
-                <h3 className="text-2xl font-black text-gray-900 mb-1">{plan.name}</h3>
-                <p className="text-sm text-gray-500 mb-6">{plan.description}</p>
+                <h3 className="text-2xl font-black tracking-tight text-white mb-1">{plan.name}</h3>
+                <p className="text-sm leading-6 text-slate-400 mb-6">{plan.description}</p>
 
                 {/* Price */}
                 <div className="flex items-end gap-1 mb-6">
-                  <span className="text-5xl font-black text-gray-900">
+                  <span className="text-5xl font-black tabular-nums tracking-tight text-white">
                     {plan.monthlyPrice}
                   </span>
-                  <span className="text-sm text-gray-500 mb-2">{plan.period}</span>
+                  <span className="text-sm text-slate-500 mb-2">{plan.period}</span>
                 </div>
-                <p className="text-sm font-semibold text-gray-600 mb-1">{plan.annualPrice}/year</p>
-                <p className="text-xs font-bold text-[#119D93] mb-6">{plan.trial}</p>
+                <p className="text-sm font-semibold tabular-nums text-slate-400 mb-1">{plan.annualPrice}/year</p>
+                <p className="text-xs font-bold tabular-nums mb-6" style={{ color: TEAL_INK }}>{plan.trial}</p>
 
                 {/* CTA */}
                 {segment === 'coach' && plan.slug === 'starter' ? (
                   <Link
                     href="/trial/setup?plan=starter"
-                    className={`block w-full text-center font-bold py-3 px-6 rounded-xl text-sm transition-colors mb-8 ${
+                    className={`block w-full text-center font-black py-3 px-6 rounded-full text-sm transition mb-8 ${
                       plan.highlight
-                        ? 'bg-[#119D93] text-white hover:bg-[#0D7F78]'
-                        : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                        ? 'text-white hover:brightness-110'
+                        : 'border border-white/15 bg-white/5 text-white hover:bg-white/10'
                     }`}
+                    style={plan.highlight ? { backgroundColor: TEAL } : undefined}
                   >
                     Get started free
                   </Link>
@@ -163,11 +171,12 @@ export default function PricingClient({
                   <button
                     onClick={() => handleCheckout(plan)}
                     disabled={loading === plan.slug}
-                    className={`block w-full text-center font-bold py-3 px-6 rounded-xl text-sm transition-colors mb-8 disabled:opacity-70 disabled:cursor-not-allowed ${
+                    className={`block w-full text-center font-black py-3 px-6 rounded-full text-sm transition mb-8 disabled:opacity-70 disabled:cursor-not-allowed ${
                       plan.highlight
-                        ? 'bg-[#119D93] text-white hover:bg-[#0D7F78]'
-                        : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                        ? 'text-white hover:brightness-110'
+                        : 'border border-white/15 bg-white/5 text-white hover:bg-white/10'
                     }`}
+                    style={plan.highlight ? { backgroundColor: TEAL } : undefined}
                   >
                     {loading === plan.slug ? 'Starting…' : segment === 'ai' ? 'Continue' : 'Start free trial'}
                   </button>
@@ -176,10 +185,11 @@ export default function PricingClient({
                 {/* Features */}
                 <ul className="space-y-3">
                   {plan.features.map(feature => (
-                    <li key={feature} className="flex items-start gap-3 text-sm text-gray-700">
+                    <li key={feature} className="flex items-start gap-3 text-sm leading-6 text-slate-300">
                       <Check
                         size={17}
-                        className="flex-shrink-0 mt-0.5 text-[#119D93]"
+                        className="flex-shrink-0 mt-0.5"
+                        style={{ color: TEAL_INK }}
                       />
                       {feature}
                     </li>
@@ -192,7 +202,7 @@ export default function PricingClient({
       </div>
 
       {checkoutError && (
-        <p className="text-center text-sm text-red-600 mt-6">{checkoutError}</p>
+        <p className="text-center text-sm text-red-400 mt-6">{checkoutError}</p>
       )}
     </>
   )

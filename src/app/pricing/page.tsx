@@ -12,6 +12,9 @@ import {
   type CoachTier,
 } from '@/lib/pricing'
 
+const TEAL = '#0FA89C'
+const TEAL_INK = '#2BD4C5'
+
 export const metadata = {
   title: 'Pricing',
   description: 'Simple, transparent pricing for Propel coaching platform.',
@@ -72,27 +75,33 @@ const FAQ = [
   },
   {
     question: 'Can I have multiple coaches on one account?',
-    answer: 'Yes! The Team plan supports up to 5 coaches with separate logins and role-based permissions. Each coach can manage their own client list or collaborate on shared clients.',
+    answer: 'Yes! The Scale plan supports up to 5 coaches with separate logins and role-based permissions. Each coach can manage their own client list or collaborate on shared clients.',
   },
   {
     question: 'Is there a setup fee?',
-    answer: 'Nope. No setup fees, no hidden charges, no per-client fees. You only pay for your plan. If you want dedicated onboarding support, that\'s included on Team plans.',
+    answer: 'Nope. No setup fees, no hidden charges, no per-client fees. You only pay for your plan. If you want dedicated onboarding support, that\'s included on the Scale plan.',
   },
 ]
 
 export default function PricingPage() {
   return (
-    <div className="min-h-screen bg-white" style={{ fontFamily: 'var(--font-inter, system-ui, sans-serif)' }}>
+    <div className="min-h-screen bg-[#0A0E11] text-slate-200 antialiased" style={{ fontFamily: 'var(--font-inter, system-ui, sans-serif)' }}>
       {/* ── Nav ─────────────────────────────── */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-[#0D1216]/80 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
+          <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
             <img src="/logo.png" alt="Propel" className="w-8 h-8 rounded-lg" />
-            <span className="font-bold text-gray-900 text-lg tracking-tight">Propel</span>
+            <span className="font-black text-white text-lg tracking-tight">Propel</span>
           </Link>
           <div className="flex items-center gap-3">
-            <Link href="/login" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Sign in</Link>
-            <Link href="/pricing" className="bg-[#119D93] hover:bg-[#0D7F78] text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors">Get started free</Link>
+            <Link href="/login" className="text-sm font-semibold text-slate-400 transition-colors hover:text-white">Sign in</Link>
+            <Link
+              href="/pricing"
+              className="rounded-full px-5 py-2.5 text-sm font-bold text-white transition hover:brightness-110"
+              style={{ backgroundColor: TEAL }}
+            >
+              Get started free
+            </Link>
           </div>
         </div>
       </header>
@@ -102,10 +111,13 @@ export default function PricingPage() {
       </Suspense>
 
       {/* ── Hero ────────────────────────────── */}
-      <section className="pt-32 pb-20 px-6">
+      <section className="pt-36 pb-16 px-6">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-5xl md:text-6xl font-black text-gray-900 mb-6">Simple, transparent pricing</h1>
-          <p className="text-xl text-gray-500 mb-8">Start free for 14 days. Cancel anytime.</p>
+          <div className="text-sm font-bold uppercase tracking-[0.24em]" style={{ color: TEAL_INK }}>
+            Pricing
+          </div>
+          <h1 className="mt-4 text-5xl md:text-6xl font-black tracking-[-0.03em] text-white mb-6">Simple, transparent pricing</h1>
+          <p className="text-xl leading-8 text-slate-400 tabular-nums mb-8">Start free for 14 days. Cancel anytime.</p>
         </div>
       </section>
 
@@ -116,25 +128,28 @@ export default function PricingPage() {
             <PricingClient coachPlans={COACH_PRICING_PLANS} aiPlans={AI_PRICING_PLANS} />
           </Suspense>
 
-          <p className="text-center text-sm text-gray-500 mt-12">
+          <p className="text-center text-sm text-slate-500 tabular-nums mt-12">
             Coach plans include a 14-day free trial. AI plans include a 7-day free trial. Cancel anytime.
           </p>
         </div>
       </section>
 
       {/* ── FAQ ──────────────────────────────── */}
-      <section className="py-24 px-6 bg-gray-50">
+      <section className="py-24 px-6 border-y border-white/5 bg-[#0D1216]">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-black text-gray-900 mb-4">Frequently asked questions</h2>
-            <p className="text-lg text-gray-500">Everything you need to know about Propel pricing.</p>
+            <div className="text-sm font-bold uppercase tracking-[0.24em]" style={{ color: TEAL_INK }}>
+              Straight answers
+            </div>
+            <h2 className="mt-4 text-4xl font-black tracking-[-0.03em] text-white mb-4">Frequently asked questions</h2>
+            <p className="text-lg leading-8 text-slate-400">Everything you need to know about Propel pricing.</p>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-5">
             {FAQ.map((item, idx) => (
-              <div key={idx} className="bg-white rounded-2xl p-8 border border-gray-100">
-                <h3 className="font-bold text-gray-900 text-lg mb-3">{item.question}</h3>
-                <p className="text-gray-600 leading-relaxed">{item.answer}</p>
+              <div key={idx} className="rounded-3xl border border-white/10 bg-[#10151A] p-8">
+                <h3 className="font-bold text-white text-lg mb-3">{item.question}</h3>
+                <p className="leading-7 text-slate-400 tabular-nums">{item.answer}</p>
               </div>
             ))}
           </div>
@@ -144,13 +159,14 @@ export default function PricingPage() {
       {/* ── CTA ─────────────────────────────── */}
       <section className="py-24 px-6">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-4xl font-black text-gray-900 mb-4">Ready to get started?</h2>
-          <p className="text-lg text-gray-500 mb-10">
+          <h2 className="text-4xl font-black tracking-[-0.03em] text-white mb-4">Ready to get started?</h2>
+          <p className="text-lg leading-8 text-slate-400 tabular-nums mb-10">
             Pick a plan above and start your 14-day free trial.
           </p>
           <Link
             href="/pricing"
-            className="inline-flex items-center gap-2 bg-[#119D93] hover:bg-[#0D7F78] text-white font-bold px-10 py-4 rounded-2xl text-base transition-colors shadow-lg shadow-[#119D93]/20"
+            className="inline-flex items-center gap-2 rounded-full px-10 py-4 text-base font-black text-white shadow-[0_16px_48px_rgba(15,168,156,0.35)] transition hover:brightness-110"
+            style={{ backgroundColor: TEAL }}
           >
             Start free trial
           </Link>
@@ -158,17 +174,17 @@ export default function PricingPage() {
       </section>
 
       {/* ── Footer ──────────────────────────── */}
-      <footer className="border-t border-gray-100 py-10 px-6">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+      <footer className="border-t border-white/5 bg-[#0D1216] py-10 px-6">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">
           <div className="flex items-center gap-2">
             <img src="/logo.png" alt="Propel" className="w-7 h-7 rounded-lg" />
-            <span className="font-bold text-gray-900">Propel</span>
+            <span className="font-bold text-slate-300">Propel</span>
           </div>
-          <p className="text-sm text-gray-400">© {new Date().getFullYear()} Propel. Built for coaches, by coaches.</p>
-          <div className="flex gap-6 text-sm text-gray-400">
-            <a href="/privacy-policy" className="hover:text-gray-600 transition-colors">Privacy</a>
-            <a href="/terms" className="hover:text-gray-600 transition-colors">Terms</a>
-            <Link href="/login" className="hover:text-gray-600 transition-colors">Sign in</Link>
+          <p className="tabular-nums">© {new Date().getFullYear()} Propel. Built for coaches, by coaches.</p>
+          <div className="flex gap-6">
+            <a href="/privacy-policy" className="transition-colors hover:text-white">Privacy</a>
+            <a href="/terms" className="transition-colors hover:text-white">Terms</a>
+            <Link href="/login" className="transition-colors hover:text-white">Sign in</Link>
           </div>
         </div>
       </footer>

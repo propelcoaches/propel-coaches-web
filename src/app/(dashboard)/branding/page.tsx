@@ -24,7 +24,7 @@ const DEFAULTS: BrandingConfig = {
   logo_url: '',
   logo_dark_url: '',
   favicon_url: '',
-  accent_color: '#119D93',
+  accent_color: '#245CFF',
   custom_domain: '',
   domain_verified: false,
   email_from_name: '',
@@ -33,7 +33,7 @@ const DEFAULTS: BrandingConfig = {
 };
 
 const PRESET_COLORS = [
-  { hex: '#119D93', name: 'Teal' },
+  { hex: '#245CFF', name: 'Teal' },
   { hex: '#4f46e5', name: 'Indigo' },
   { hex: '#7c3aed', name: 'Violet' },
   { hex: '#ec4899', name: 'Pink' },

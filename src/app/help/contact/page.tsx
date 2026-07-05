@@ -75,7 +75,7 @@ export default function ContactPage() {
             <a href="https://propelcoaches.com" className="flex items-center gap-2">
               <div
                 className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold"
-                style={{ backgroundColor: '#119D93' }}
+                style={{ backgroundColor: '#245CFF' }}
               >
                 P
               </div>
@@ -155,7 +155,7 @@ export default function ContactPage() {
                   required
                   placeholder="Your full name"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-opacity-50"
-                  style={{ '--tw-ring-color': '#119D93' } as React.CSSProperties}
+                  style={{ '--tw-ring-color': '#245CFF' } as React.CSSProperties}
                 />
               </div>
 
@@ -173,7 +173,7 @@ export default function ContactPage() {
                   required
                   placeholder="your.email@example.com"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-opacity-50"
-                  style={{ '--tw-ring-color': '#119D93' } as React.CSSProperties}
+                  style={{ '--tw-ring-color': '#245CFF' } as React.CSSProperties}
                 />
               </div>
 
@@ -188,7 +188,7 @@ export default function ContactPage() {
                   value={formData.subject}
                   onChange={handleChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-opacity-50"
-                  style={{ '--tw-ring-color': '#119D93' } as React.CSSProperties}
+                  style={{ '--tw-ring-color': '#245CFF' } as React.CSSProperties}
                 >
                   <option value="General Question">General Question</option>
                   <option value="Bug Report">Bug Report</option>
@@ -213,7 +213,7 @@ export default function ContactPage() {
                   placeholder="Please describe your question or concern in detail..."
                   rows={6}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-opacity-50 resize-none"
-                  style={{ '--tw-ring-color': '#119D93' } as React.CSSProperties}
+                  style={{ '--tw-ring-color': '#245CFF' } as React.CSSProperties}
                 />
               </div>
 
@@ -229,7 +229,7 @@ export default function ContactPage() {
                 type="submit"
                 disabled={isSubmitting}
                 className="w-full px-6 py-3 rounded-lg font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ backgroundColor: '#119D93' }}
+                style={{ backgroundColor: '#245CFF' }}
               >
                 {isSubmitting ? 'Sending...' : 'Send Message'}
               </button>

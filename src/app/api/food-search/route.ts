@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -50,6 +51,14 @@ const LOCAL_FOODS: FoodResult[] = [
 ]
 
 export async function GET(request: NextRequest) {
+  // Session required — sole consumer is the coach nutrition page, and an
+  // open OpenFoodFacts proxy invites abuse of our hosting + their API.
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const { searchParams } = new URL(request.url)
   const query = searchParams.get('q')?.trim() ?? ''
 

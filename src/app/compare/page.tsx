@@ -1,6 +1,9 @@
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 
+const TEAL = '#0FA89C'
+const TEAL_INK = '#2BD4C5'
+
 export const metadata = {
   title: 'Compare Propel to Other Platforms',
   description: 'See how Propel stacks up against other coaching software platforms.',
@@ -21,41 +24,50 @@ export default function ComparePage() {
   ]
 
   return (
-    <div className="min-h-screen bg-white" style={{ fontFamily: 'var(--font-inter, system-ui, sans-serif)' }}>
+    <div className="min-h-screen bg-[#0A0E11] text-slate-200 antialiased" style={{ fontFamily: 'var(--font-inter, system-ui, sans-serif)' }}>
       {/* ── Nav ─────────────────────────────── */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-[#0D1216]/80 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
+          <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
             <img src="/logo.svg" alt="Propel" className="w-8 h-8" />
-            <span className="font-bold text-gray-900 text-lg">Propel</span>
+            <span className="font-black text-white text-lg tracking-tight">Propel</span>
           </Link>
           <div className="flex items-center gap-3">
-            <Link href="/login" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Sign in</Link>
-            <Link href="/register" className="bg-[#119D93] hover:bg-[#0D7F78] text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors">Get started</Link>
+            <Link href="/login" className="text-sm font-semibold text-slate-400 transition-colors hover:text-white">Sign in</Link>
+            <Link
+              href="/register"
+              className="rounded-full px-5 py-2.5 text-sm font-bold text-white transition hover:brightness-110"
+              style={{ backgroundColor: TEAL }}
+            >
+              Get started
+            </Link>
           </div>
         </div>
       </header>
 
       {/* ── Hero ────────────────────────────── */}
-      <section className="pt-28 pb-16 px-6">
+      <section className="pt-36 pb-16 px-6">
         <div className="max-w-3xl mx-auto text-center">
-          <h1 className="text-5xl font-black text-gray-900 leading-tight tracking-tight mb-4">See how Propel compares</h1>
-          <p className="text-xl text-gray-500">We've built Propel from the ground up for coaches. Here's how we stack up against other platforms.</p>
+          <div className="text-sm font-bold uppercase tracking-[0.24em]" style={{ color: TEAL_INK }}>
+            Comparisons
+          </div>
+          <h1 className="mt-4 text-5xl font-black leading-tight tracking-[-0.03em] text-white mb-4">See how Propel compares</h1>
+          <p className="text-xl leading-8 text-slate-400">We've built Propel from the ground up for coaches. Here's how we stack up against other platforms.</p>
         </div>
       </section>
 
       {/* ── Comparison Cards ────────────────── */}
       <section className="px-6 pb-24">
-        <div className="max-w-2xl mx-auto space-y-6">
+        <div className="max-w-2xl mx-auto space-y-5">
           {comparisons.map(comparison => (
             <Link key={comparison.name} href={comparison.href}>
-              <div className="group bg-white border border-gray-100 rounded-2xl p-8 hover:border-[#119D93] hover:shadow-lg transition-all">
+              <div className="group rounded-3xl border border-white/10 bg-[#10151A] p-8 transition-colors duration-300 hover:border-teal-500/30">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-2xl font-bold text-gray-900">Propel vs {comparison.name}</h2>
-                  <ArrowRight size={24} className="text-gray-300 group-hover:text-[#119D93] transition-colors" />
+                  <h2 className="text-2xl font-black tracking-tight text-white">Propel vs {comparison.name}</h2>
+                  <ArrowRight size={24} className="text-slate-600 transition-colors group-hover:text-[#2BD4C5]" />
                 </div>
-                <p className="text-gray-500 mb-6">{comparison.description}</p>
-                <div className="text-sm font-semibold text-[#119D93]">View full comparison →</div>
+                <p className="leading-7 text-slate-400 mb-6">{comparison.description}</p>
+                <div className="text-sm font-bold" style={{ color: TEAL_INK }}>View full comparison →</div>
               </div>
             </Link>
           ))}
@@ -63,28 +75,32 @@ export default function ComparePage() {
       </section>
 
       {/* ── CTA ─────────────────────────────── */}
-      <section className="py-24 px-6 bg-gray-50 border-y border-gray-100">
+      <section className="py-24 px-6 border-y border-white/5 bg-[#0D1216]">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-4xl font-black text-gray-900 mb-4">Ready to upgrade your coaching?</h2>
-          <p className="text-lg text-gray-500 mb-10">Start your 14-day free trial of Propel today.</p>
-          <Link href="/register" className="inline-flex items-center gap-2 bg-[#119D93] hover:bg-[#0D7F78] text-white font-bold px-10 py-4 rounded-2xl text-base transition-colors shadow-lg shadow-[#119D93]/20">
+          <h2 className="text-4xl font-black tracking-[-0.03em] text-white mb-4">Ready to upgrade your coaching?</h2>
+          <p className="text-lg leading-8 text-slate-400 tabular-nums mb-10">Start your 14-day free trial of Propel today.</p>
+          <Link
+            href="/register"
+            className="inline-flex items-center gap-2 rounded-full px-10 py-4 text-base font-black text-white shadow-[0_16px_48px_rgba(15,168,156,0.35)] transition hover:brightness-110"
+            style={{ backgroundColor: TEAL }}
+          >
             Start for free →
           </Link>
         </div>
       </section>
 
       {/* ── Footer ──────────────────────────── */}
-      <footer className="border-t border-gray-100 py-10 px-6">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+      <footer className="border-t border-white/5 bg-[#0D1216] py-10 px-6">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">
           <div className="flex items-center gap-2">
             <img src="/logo.svg" alt="Propel" className="w-7 h-7" />
-            <span className="font-bold text-gray-900">Propel</span>
+            <span className="font-bold text-slate-300">Propel</span>
           </div>
-          <p className="text-sm text-gray-400">© {new Date().getFullYear()} Propel. Built for coaches, by coaches.</p>
-          <div className="flex gap-6 text-sm text-gray-400">
-            <a href="/privacy-policy" className="hover:text-gray-600 transition-colors">Privacy</a>
-            <a href="/terms" className="hover:text-gray-600 transition-colors">Terms</a>
-            <Link href="/login" className="hover:text-gray-600 transition-colors">Sign in</Link>
+          <p className="tabular-nums">© {new Date().getFullYear()} Propel. Built for coaches, by coaches.</p>
+          <div className="flex gap-6">
+            <a href="/privacy-policy" className="transition-colors hover:text-white">Privacy</a>
+            <a href="/terms" className="transition-colors hover:text-white">Terms</a>
+            <Link href="/login" className="transition-colors hover:text-white">Sign in</Link>
           </div>
         </div>
       </footer>

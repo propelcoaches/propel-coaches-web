@@ -163,7 +163,7 @@ export default function AdminDashboard() {
         <div className="w-full max-w-md">
           <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-200">
             <div className="flex items-center justify-center mb-8">
-              <div className="w-12 h-12 rounded-lg bg-[#119D93] flex items-center justify-center text-white text-lg font-bold">
+              <div className="w-12 h-12 rounded-lg bg-[#245CFF] flex items-center justify-center text-white text-lg font-bold">
                 P
               </div>
             </div>
@@ -188,7 +188,7 @@ export default function AdminDashboard() {
                     setPasswordError('');
                   }}
                   placeholder="Enter admin password"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#119D93] focus:border-transparent text-gray-900"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#245CFF] focus:border-transparent text-gray-900"
                 />
               </div>
 
@@ -201,7 +201,7 @@ export default function AdminDashboard() {
 
               <button
                 type="submit"
-                className="w-full bg-[#119D93] hover:bg-[#0D7F78] text-white font-semibold py-3 px-4 rounded-xl transition-colors"
+                className="w-full bg-[#245CFF] hover:bg-[#0F3FDB] text-white font-semibold py-3 px-4 rounded-xl transition-colors"
               >
                 Access Dashboard
               </button>
@@ -220,7 +220,7 @@ export default function AdminDashboard() {
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-[#119D93] flex items-center justify-center text-white font-bold text-lg">
+              <div className="w-10 h-10 rounded-lg bg-[#245CFF] flex items-center justify-center text-white font-bold text-lg">
                 P
               </div>
               <div>
@@ -240,7 +240,7 @@ export default function AdminDashboard() {
                 href="https://propelcoaches.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 text-[#119D93] hover:text-[#0D7F78] font-medium text-sm"
+                className="flex items-center gap-2 text-[#245CFF] hover:text-[#0F3FDB] font-medium text-sm"
               >
                 Visit Site
                 <ExternalLink className="w-4 h-4" />
@@ -271,7 +271,7 @@ export default function AdminDashboard() {
       {loading && !stats ? (
         <div className="max-w-7xl mx-auto px-6 py-12">
           <div className="flex flex-col items-center justify-center py-12">
-            <Loader className="w-8 h-8 text-[#119D93] animate-spin mb-4" />
+            <Loader className="w-8 h-8 text-[#245CFF] animate-spin mb-4" />
             <p className="text-gray-600">Loading dashboard data...</p>
           </div>
         </div>
@@ -303,7 +303,7 @@ export default function AdminDashboard() {
                 <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow">
                   <p className="text-gray-600 text-sm font-medium mb-2">Monthly Revenue</p>
                   <div className="flex items-end gap-2">
-                    <p className="text-4xl font-bold text-[#119D93]">
+                    <p className="text-4xl font-bold text-[#245CFF]">
                       {formatCurrency(stats.mrr)}
                     </p>
                   </div>
@@ -340,7 +340,7 @@ export default function AdminDashboard() {
                     placeholder="Search by name or email..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#119D93] focus:border-transparent text-gray-900 text-sm"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#245CFF] focus:border-transparent text-gray-900 text-sm"
                   />
                 </div>
               </div>
@@ -419,7 +419,7 @@ export default function AdminDashboard() {
                                   href={`https://dashboard.stripe.com/customers/${coach.stripe_customer_id}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="p-2 text-[#119D93] hover:bg-blue-50 rounded-lg transition-colors"
+                                  className="p-2 text-[#245CFF] hover:bg-blue-50 rounded-lg transition-colors"
                                   title="Manage subscription"
                                 >
                                   <ExternalLink className="w-4 h-4" />

@@ -5,19 +5,24 @@ export const dynamic = 'force-dynamic'
 
 type Ctx = { params: { workoutId: string } }
 
-async function assertCoach(
+/** Resolve whether the caller (coach or client) can access this workout */
+async function resolveAccess(
   supabase: ReturnType<typeof createClient>,
   workoutId: string,
   userId: string
-): Promise<boolean> {
+): Promise<{ allowed: boolean; isCoach: boolean }> {
   const { data } = await supabase
     .from('program_workouts')
-    .select('program:programs(coach_id)')
+    .select('program:programs(coach_id, client_id, status)')
     .eq('id', workoutId)
     .single()
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (data as any)?.program?.coach_id === userId
+  const p = (data as any)?.program
+  const isCoach  = p?.coach_id === userId
+  const isClient = p?.client_id === userId && ['active', 'completed'].includes(p?.status)
+
+  return { allowed: isCoach || isClient, isCoach }
 }
 
 /**
@@ -28,6 +33,9 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { allowed } = await resolveAccess(supabase, params.workoutId, user.id)
+  if (!allowed) return NextResponse.json({ error: 'Forbidden or not found' }, { status: 403 })
 
   const { data, error } = await supabase
     .from('program_workout_exercises')
@@ -54,7 +62,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const isCoach = await assertCoach(supabase, params.workoutId, user.id)
+  const { isCoach } = await resolveAccess(supabase, params.workoutId, user.id)
   if (!isCoach) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const body = await req.json()

@@ -230,7 +230,7 @@ export default function PrivacyPolicyPage() {
             <h2 className="text-xl font-semibold text-gray-900 mb-3">14. Contact</h2>
             <p>If you have questions about this Privacy Policy, want to access or correct your data, or have a complaint:</p>
             <ul className="list-disc pl-6 space-y-1 mt-2">
-              <li>Email: <a href="mailto:support@propelcoaches.com" className="text-[#119D93] underline">support@propelcoaches.com</a></li>
+              <li>Email: <a href="mailto:support@propelcoaches.com" className="text-[#245CFF] underline">support@propelcoaches.com</a></li>
               <li>Mail: Charles Bettiol, Propel Coaches, Australia</li>
             </ul>
             <p className="mt-3">If you are not satisfied with our response, you can contact the OAIC at oaic.gov.au or 1300 363 992.</p>

@@ -46,7 +46,7 @@ export default function RefundPolicyPage() {
             </ul>
 
             <h3 className="text-lg font-semibold text-gray-900 mt-4 mb-2">On the web</h3>
-            <p>If you subscribed through our website, you can manage or cancel your subscription from the Propel web dashboard at <Link href="/dashboard/settings" className="text-[#119D93] underline">Settings → Billing</Link>, which opens the Stripe customer portal. Alternatively, email <a href="mailto:support@propelcoaches.com" className="text-[#119D93] underline">support@propelcoaches.com</a> and we will cancel on your behalf within 2 business days.</p>
+            <p>If you subscribed through our website, you can manage or cancel your subscription from the Propel web dashboard at <Link href="/dashboard/settings" className="text-[#245CFF] underline">Settings → Billing</Link>, which opens the Stripe customer portal. Alternatively, email <a href="mailto:support@propelcoaches.com" className="text-[#245CFF] underline">support@propelcoaches.com</a> and we will cancel on your behalf within 2 business days.</p>
           </section>
 
           <section>
@@ -55,8 +55,8 @@ export default function RefundPolicyPage() {
               <li><strong>Partial billing periods:</strong> Propel does not provide refunds or credits for unused time in a billing period. When you cancel, you retain access until the end of the period you paid for.</li>
               <li><strong>Annual subscriptions:</strong> We do not pro-rate refunds for cancelled annual subscriptions. Consider the monthly plan if you would prefer shorter commitments.</li>
               <li><strong>Technical issues:</strong> If a technical problem prevented you from using Propel for an extended period and our team cannot resolve it, contact us and we will evaluate a refund on a case-by-case basis.</li>
-              <li><strong>Apple App Store purchases:</strong> Refund requests for subscriptions purchased through the App Store must be made directly to Apple via <a href="https://reportaproblem.apple.com" className="text-[#119D93] underline" target="_blank" rel="noopener noreferrer">reportaproblem.apple.com</a>. Apple makes the final decision on App Store refunds; Propel cannot issue them on Apple&apos;s behalf.</li>
-              <li><strong>Stripe (web) purchases:</strong> To request a refund for a web subscription, email <a href="mailto:support@propelcoaches.com" className="text-[#119D93] underline">support@propelcoaches.com</a> within 7 days of the charge and include your account email and the reason for the request.</li>
+              <li><strong>Apple App Store purchases:</strong> Refund requests for subscriptions purchased through the App Store must be made directly to Apple via <a href="https://reportaproblem.apple.com" className="text-[#245CFF] underline" target="_blank" rel="noopener noreferrer">reportaproblem.apple.com</a>. Apple makes the final decision on App Store refunds; Propel cannot issue them on Apple&apos;s behalf.</li>
+              <li><strong>Stripe (web) purchases:</strong> To request a refund for a web subscription, email <a href="mailto:support@propelcoaches.com" className="text-[#245CFF] underline">support@propelcoaches.com</a> within 7 days of the charge and include your account email and the reason for the request.</li>
             </ul>
           </section>
 
@@ -77,7 +77,7 @@ export default function RefundPolicyPage() {
 
           <section>
             <h2 className="text-xl font-semibold text-gray-900 mb-3">8. Contact</h2>
-            <p>Questions about billing, cancellations, or refunds? Email <a href="mailto:support@propelcoaches.com" className="text-[#119D93] underline">support@propelcoaches.com</a>. We aim to respond within 2 business days.</p>
+            <p>Questions about billing, cancellations, or refunds? Email <a href="mailto:support@propelcoaches.com" className="text-[#245CFF] underline">support@propelcoaches.com</a>. We aim to respond within 2 business days.</p>
           </section>
 
         </div>

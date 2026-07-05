@@ -164,7 +164,7 @@ export async function POST(req: NextRequest) {
       html: `
         <h1 style="margin:0 0 8px;color:#111827;font-size:22px;font-weight:700;">You've been invited to join a Propel team</h1>
         <p style="color:#6b7280;font-size:15px;line-height:1.6;">${ownerName} has invited you to join <strong>${teamName}</strong> as a ${role} on Propel Coaches.</p>
-        <a href="${inviteUrl}" style="display:inline-block;background:#119D93;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:16px;margin-top:8px;">Accept invitation →</a>
+        <a href="${inviteUrl}" style="display:inline-block;background:#245CFF;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:16px;margin-top:8px;">Accept invitation →</a>
         <p style="color:#9ca3af;font-size:13px;margin-top:16px;">This invitation expires in 7 days. If you didn't expect this email you can safely ignore it.</p>
       `,
       emailType: 'team_invite',

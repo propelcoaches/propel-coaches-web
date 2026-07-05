@@ -31,7 +31,7 @@ function BillingError({ message }: { message: string }) {
         <div className="flex flex-col gap-3 sm:flex-row">
           <Link
             href="/billing"
-            className="inline-flex justify-center rounded-xl bg-[#119D93] px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-[#0D7F78]"
+            className="inline-flex justify-center rounded-xl bg-[#245CFF] px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-[#0F3FDB]"
           >
             Try again
           </Link>

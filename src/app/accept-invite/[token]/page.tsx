@@ -84,15 +84,15 @@ export default function AcceptInvitePage() {
       <div className="max-w-md w-full">
         {state.kind === 'loading' && (
           <div className="text-center">
-            <div className="w-6 h-6 border-2 border-gray-200 border-t-[#119D93] rounded-full animate-spin mx-auto mb-4" />
+            <div className="w-6 h-6 border-2 border-gray-200 border-t-[#245CFF] rounded-full animate-spin mx-auto mb-4" />
             <p className="text-sm text-gray-500">Loading invitation…</p>
           </div>
         )}
 
         {state.kind === 'needs_login' && (
           <div className="text-center">
-            <div className="mx-auto w-14 h-14 rounded-full bg-[#119D93]/10 flex items-center justify-center mb-5">
-              <UserPlus size={24} className="text-[#119D93]" />
+            <div className="mx-auto w-14 h-14 rounded-full bg-[#245CFF]/10 flex items-center justify-center mb-5">
+              <UserPlus size={24} className="text-[#245CFF]" />
             </div>
             <h1 className="text-2xl font-black text-gray-900 mb-2">You&apos;re invited to a Propel team</h1>
             <p className="text-sm text-gray-500 mb-8">
@@ -100,7 +100,7 @@ export default function AcceptInvitePage() {
             </p>
             <Link
               href={`/login?next=${encodeURIComponent(`/accept-invite/${token}`)}`}
-              className="inline-flex items-center gap-2 bg-[#119D93] hover:opacity-90 text-white text-sm font-bold px-6 py-3 rounded-xl transition-colors"
+              className="inline-flex items-center gap-2 bg-[#245CFF] hover:opacity-90 text-white text-sm font-bold px-6 py-3 rounded-xl transition-colors"
             >
               Sign in to accept →
             </Link>
@@ -108,7 +108,7 @@ export default function AcceptInvitePage() {
               New to Propel?{' '}
               <Link
                 href={`/register?team_invite=${token}&email=${encodeURIComponent(state.invitedEmail)}`}
-                className="text-[#119D93] underline"
+                className="text-[#245CFF] underline"
               >
                 Create an account
               </Link>{' '}
@@ -119,7 +119,7 @@ export default function AcceptInvitePage() {
 
         {state.kind === 'accepting' && (
           <div className="text-center">
-            <div className="w-6 h-6 border-2 border-gray-200 border-t-[#119D93] rounded-full animate-spin mx-auto mb-4" />
+            <div className="w-6 h-6 border-2 border-gray-200 border-t-[#245CFF] rounded-full animate-spin mx-auto mb-4" />
             <p className="text-sm text-gray-500">Accepting invitation…</p>
           </div>
         )}
@@ -144,7 +144,7 @@ export default function AcceptInvitePage() {
             <p className="text-xs text-gray-400 mb-6">Code: {state.code}</p>
             <Link
               href="/login"
-              className="inline-flex items-center gap-2 text-[#119D93] font-semibold text-sm hover:underline"
+              className="inline-flex items-center gap-2 text-[#245CFF] font-semibold text-sm hover:underline"
             >
               Go to sign in
             </Link>

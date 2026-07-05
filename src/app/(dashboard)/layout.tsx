@@ -17,9 +17,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('full_name, name')
+    .select('full_name, name, role, onboarding_completed')
     .eq('id', user.id)
     .single()
+
+  // Coaches must finish onboarding before using the dashboard.
+  if (profile?.role === 'coach' && !profile.onboarding_completed) redirect('/onboarding')
+
   const userName = (profile?.full_name || profile?.name || '').split(' ')[0] || null
 
   return (

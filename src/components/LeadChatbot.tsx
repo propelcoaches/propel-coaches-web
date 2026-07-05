@@ -135,7 +135,7 @@ export default function LeadChatbot() {
       {/* Floating Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-[#119D93] text-white shadow-lg hover:shadow-xl hover:scale-110 transition-all flex items-center justify-center"
+        className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-[#245CFF] text-white shadow-lg hover:shadow-xl hover:scale-110 transition-all flex items-center justify-center"
       >
         <div className="relative">
           <MessageCircle size={24} />
@@ -151,7 +151,7 @@ export default function LeadChatbot() {
       {isOpen && (
         <div className="fixed bottom-24 right-6 z-40 w-96 h-[520px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden">
           {/* Header */}
-          <div className="bg-[#119D93] text-white px-6 py-5 flex items-center justify-between">
+          <div className="bg-[#245CFF] text-white px-6 py-5 flex items-center justify-between">
             <div>
               <h3 className="font-bold text-base">Propel Assistant</h3>
               <p className="text-xs text-white/70">Typically replies instantly</p>
@@ -180,7 +180,7 @@ export default function LeadChatbot() {
                     <div
                       className={`max-w-xs px-4 py-3 rounded-lg text-sm ${
                         msg.sender === 'user'
-                          ? 'bg-[#119D93] text-white rounded-br-none'
+                          ? 'bg-[#245CFF] text-white rounded-br-none'
                           : 'bg-gray-100 text-gray-900 rounded-bl-none'
                       }`}
                     >
@@ -223,12 +223,12 @@ export default function LeadChatbot() {
                 }
               }}
               placeholder="Ask me anything..."
-              className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#119D93] text-sm"
+              className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#245CFF] text-sm"
             />
             <button
               onClick={() => handleSendMessage()}
               disabled={!inputValue.trim()}
-              className="bg-[#119D93] text-white px-4 py-2 rounded-lg hover:bg-[#0D7F78] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+              className="bg-[#245CFF] text-white px-4 py-2 rounded-lg hover:bg-[#0F3FDB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
             >
               <Send size={16} />
             </button>

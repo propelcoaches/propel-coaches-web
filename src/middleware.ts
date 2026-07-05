@@ -1,3 +1,7 @@
+// This is the ONLY middleware in this app (app dir is src/, so Next resolves
+// middleware from src/ — a root-level middleware.ts would be silently DEAD).
+// It handles CORS only. There is deliberately no auth here: every layout,
+// page, and API route enforces its own auth in-route.
 import { NextRequest, NextResponse } from 'next/server';
 
 const allowedOrigins = [
