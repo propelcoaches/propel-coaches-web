@@ -102,7 +102,7 @@ interface WeeklySummary {
 
 async function buildClientSummary(clientId: string, weekStartISO: string): Promise<WeeklySummary> {
   // Parallel fetch all relevant data
-  const [workoutsRes, nutritionRes, weightsRes, checkInRes, prsRes] = await Promise.all([
+  const [workoutsRes, nutritionRes, waterRes, weightsRes, checkInRes, prsRes] = await Promise.all([
     // Workouts completed this week
     supabase
       .from('workout_sessions')
@@ -110,12 +110,19 @@ async function buildClientSummary(clientId: string, weekStartISO: string): Promi
       .eq('client_id', clientId)
       .gte('created_at', weekStartISO),
 
-    // Nutrition logs this week
+    // Nutrition logs this week (one row per food logged)
     supabase
       .from('nutrition_logs')
-      .select('calories, protein_g, water_ml')
+      .select('calories, protein_g, logged_at')
       .eq('client_id', clientId)
-      .gte('date', weekStartISO),
+      .gte('logged_at', weekStartISO),
+
+    // Water logs this week (one row per day)
+    supabase
+      .from('water_logs')
+      .select('ml_total')
+      .eq('client_id', clientId)
+      .gte('logged_at', weekStartISO.slice(0, 10)),
 
     // Weight entries this week
     supabase
@@ -143,20 +150,24 @@ async function buildClientSummary(clientId: string, weekStartISO: string): Promi
 
   const workouts = workoutsRes.data || [];
   const nutrition = nutritionRes.data || [];
+  const waterDays = waterRes.data || [];
   const weights = weightsRes.data || [];
   const checkIns = checkInRes.data || [];
   const prs = prsRes.data || [];
 
   // Calculate metrics
   const workoutsCompleted = workouts.filter((w) => w.completed).length;
-  const avgCalories = nutrition.length > 0
-    ? Math.round(nutrition.reduce((sum, n) => sum + (n.calories || 0), 0) / nutrition.length)
+
+  // Nutrition logs are per-food — average across the days that have logs
+  const daysLogged = new Set(nutrition.map((n) => (n.logged_at as string).slice(0, 10))).size;
+  const avgCalories = daysLogged > 0
+    ? Math.round(nutrition.reduce((sum, n) => sum + (n.calories || 0), 0) / daysLogged)
     : 0;
-  const avgProtein = nutrition.length > 0
-    ? Math.round(nutrition.reduce((sum, n) => sum + (n.protein_g || 0), 0) / nutrition.length)
+  const avgProtein = daysLogged > 0
+    ? Math.round(nutrition.reduce((sum, n) => sum + (n.protein_g || 0), 0) / daysLogged)
     : 0;
-  const waterAvg = nutrition.length > 0
-    ? Math.round((nutrition.reduce((sum, n) => sum + (n.water_ml || 0), 0) / nutrition.length) / 100) / 10
+  const waterAvg = waterDays.length > 0
+    ? Math.round((waterDays.reduce((sum, w) => sum + (w.ml_total || 0), 0) / waterDays.length) / 100) / 10
     : 0;
 
   let weightChange = 'No data';

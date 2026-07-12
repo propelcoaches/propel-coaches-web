@@ -22,6 +22,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/notifications-broadcast':'Broadcasts',
   '/my-plan':                'My Meal Plan',
   '/my-workout':             'My Training',
+  '/my-nutrition':           'My Nutrition',
   '/programs':               'Programs',
   '/meal-plans':             'Nutrition',
   '/workout-programs':       'Programs',
