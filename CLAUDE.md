@@ -31,7 +31,6 @@ Coach-facing web dashboard for Propel Coaches — Next.js 14 app with marketing 
 - **`(client)`:** client-facing web views (alternative to mobile app)
 
 ## Vercel Crons (`vercel.json`)
-- `/api/emails/weekly-summary` — Sun 08:00
 - `/api/messages/scheduled` — daily 09:00
 - `/api/cron/email-sequences` — daily 10:00
 - `/api/cron/ai-coach-expiry` — daily 12:00
