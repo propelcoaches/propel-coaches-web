@@ -11,7 +11,7 @@ export default function PrivacyPolicyPage() {
       <header className="border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <img src="/logo.svg" alt="Propel" className="w-8 h-8" />
+            <img src="/brand/propel-mark-graphite.png" alt="Propel" className="w-8 h-8" />
             <span className="font-semibold text-gray-900">Propel</span>
           </Link>
           <Link href="/" className="text-sm text-gray-500 hover:text-gray-900">← Back to home</Link>
@@ -20,7 +20,7 @@ export default function PrivacyPolicyPage() {
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <h1 className="text-4xl font-bold text-gray-900 mb-2">Privacy Policy</h1>
-        <p className="text-gray-500 mb-10">Last updated: 20 April 2026</p>
+        <p className="text-gray-500 mb-10">Last updated: 28 September 2026</p>
 
         <div className="prose prose-gray max-w-none space-y-8 text-gray-700">
 
@@ -36,7 +36,7 @@ export default function PrivacyPolicyPage() {
             <ul className="list-disc pl-6 space-y-1">
               <li>Name, email address, password</li>
               <li>Subscription plan and payment method (Stripe processes the payment — we never see your full card number)</li>
-              <li>Date of birth (used to verify you are 16 or older and to calculate appropriate calorie targets)</li>
+              <li>Date of birth (used to verify you are 18 or older and to calculate appropriate calorie targets)</li>
               <li>Gender, height, weight, target weight</li>
             </ul>
 
@@ -203,7 +203,7 @@ export default function PrivacyPolicyPage() {
 
           <section>
             <h2 className="text-xl font-semibold text-gray-900 mb-3">9. Children</h2>
-            <p>Propel is not designed for and not available to anyone under the age of 16. We block users from completing onboarding if their date of birth shows they are under 16. If we discover an account belongs to someone under 16, we will close it and delete the data.</p>
+            <p>Propel is not designed for and not available to anyone under the age of 18. We block users from completing onboarding if their date of birth shows they are under 18. If we discover an account belongs to someone under 18, we will close it and delete the data.</p>
           </section>
 
           <section>

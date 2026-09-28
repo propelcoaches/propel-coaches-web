@@ -11,7 +11,7 @@ export default function RefundPolicyPage() {
       <header className="border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <img src="/logo.svg" alt="Propel" className="w-8 h-8" />
+            <img src="/brand/propel-mark-graphite.png" alt="Propel" className="w-8 h-8" />
             <span className="font-semibold text-gray-900">Propel</span>
           </Link>
           <Link href="/" className="text-sm text-gray-500 hover:text-gray-900">← Back to home</Link>
